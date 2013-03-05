@@ -11,7 +11,6 @@ import pimchelp
 from optparse import OptionParser
 from pylab import *
 
-
 # -----------------------------------------------------------------------------
 def mergeData(pimc,type,newID,skip,baseDir):
     ''' Merge the results of the PIMC data files to a single file. '''
