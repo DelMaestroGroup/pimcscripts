@@ -1,6 +1,7 @@
 ''' PimcHelp - helper methods for analzing pimc output data.
 '''
 import os
+import glob
 from operator import itemgetter, attrgetter
 
 # ----------------------------------------------------------------------
@@ -9,7 +10,7 @@ def getVectorEstimatorName(fileName):
 
     # Get the actual file name and then split at the '-' returning the first
     # word
-    if fileName.find('/') != -1:
+    if '/' in fileName:
         estName = fileName.split('/')[-1].split('-')[0]
     else:
         estName = fileName.split('-')[0]
@@ -120,7 +121,7 @@ def getParFromPIMCFile(fileName):
 
     # The volume is either in the file name, or computed depending
     # on whether we are in the GCE
-    if dataName[0].find('gce') != -1:
+    if 'gce' in dataName[0]:
         dataMap['V'] = float(dataName[3])
         dataMap['mu'] = float(dataName[4])
         dataMap['gce'] = True
@@ -133,25 +134,26 @@ def getParFromPIMCFile(fileName):
     return dataMap
 
 # -----------------------------------------------------------------------------
-def getHeadersFromFile(fileName): 
+def getHeadersFromFile(fileName, skipLines=0): 
     ''' Get the data column headers from a PIMC output file. '''
 
-    inFile = open(fileName,'r');
-    inLines = inFile.readlines();
-    if inLines[0].find('PIMCID') != -1:
-        headers = inLines[1].split()
-    else:
-        headers = inLines[0].split()
-    headers.pop(0)
-    inFile.close()
+    with open(fileName,'r') as inFile:
+        inLines = inFile.readlines();
+        n = skipLines
+        if 'PIMCID' in inLines[n]:
+            headers = inLines[n+1].split()
+        else:
+            headers = inLines[n].split()
+        headers.pop(0)
+
     return headers
 
 # -----------------------------------------------------------------------------
-def getHeadersDict(fileName, removeLab=None): 
+def getHeadersDict(fileName, removeLab=None, skipLines=0): 
     '''Construct a header dictionary from a filename.'''
 
     # Get all headers
-    headers = getHeadersFromFile(fileName)
+    headers = getHeadersFromFile(fileName,skipLines)
 
     if removeLab != None:
         headers.remove(removeLab)
@@ -169,7 +171,7 @@ def getHeadersDict(fileName, removeLab=None):
 def checkEnsemble(canonical):
     ''' Here we make sure that the correct ensemble flag is specified. '''
 
-    import sys,glob
+    import sys
     gceFiles = (len(glob.glob('gce-*'))>0)
     ceFiles = (len(glob.glob('ce-*'))>0)
 
@@ -248,10 +250,13 @@ class PimcHelp:
             self.prefix='gce'
 
         # The data file and all output file names
-        self.dataType = ['estimator','obdm','pair','pcycle','super','worm','radial']
+        self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
+                         'radial', 'radwind', 'radarea', 'planedensity',
+                         'planewind', 'planearea']
         if not canonical:
             self.dataType.append('number')
-        self.outType  = ['estimator','number','obdm','pair','pcycle','super','worm','radial','log','state']
+        self.outType  = ['estimator', 'number', 'obdm', 'pair', 'pcycle', 'super', 
+                         'worm', 'radial', 'log', 'state']
 
     # -----------------------------------------------------------------------------
     def getID(self,fileName): 
@@ -264,26 +269,19 @@ class PimcHelp:
     def getParameterMap(self,logName): 
         '''Given a log file name, return the parameter map. '''
 
-        # open the log file
-        logFile = open(logName,'r');
-        logLines = logFile.readlines();
-
         # Get the values of all simulation parameters
         paramsMap = {}
         params = False
-        for line in logLines:
-            if params:
-                if line.find('End Simulation Parameters') != -1:
-                    params = False
-                else:
-                    if line.find(':') != -1:
-                        keyVal = line.split(':')
-                        paramsMap[keyVal[0].strip()] = keyVal[1].strip()
-            else:
-                if line.find('Begin Simulation Parameters') != -1:
+        with open(logName, 'r') as logFile:
+            for line in logFile:
+                if 'Begin Simulation Parameters' in line:
                     params = True
+                elif 'End Simulation Parameters' in line:
+                    break
 
-        logFile.close()
+                if params and ':' in line:
+                    keyVal = line.split(':')
+                    paramsMap[keyVal[0].strip()] = keyVal[1].strip()
 
         # Add an element to the parameter map for the linear dimension (Lz) of
         # the container
@@ -307,25 +305,25 @@ class PimcHelp:
             self.params[ID] = self.getParameterMap(fname)
 
     # -----------------------------------------------------------------------------
-    def getFileInfo(self,type):
-        ''' Get the names of the input files, how many of them there are, and how many
-            columns of data they contain.'''
+    # def getFileInfo(self,type):
+    #     ''' Get the names of the input files, how many of them there are, 
+    #         and how many columns of data they contain.'''
 
-        fileNames = self.getFileList(type)
+    #     fileNames = self.getFileList(type)
 
-        # The number of parameter files
-        numParams = len(fileNames);
+    #     # The number of parameter files
+    #     numParams = len(fileNames);
 
-        # Open a sample data file and count the number of columns
-        inFile = open(fileNames[0],'r')
-        lines = inFile.readlines();
-        for line in lines:
-            if not (line[0] == '#'):
-                cols = line.split()
-                break
-        numDataCols = len(cols)
-        
-        return fileNames,numParams,numDataCols
+    #     # Open a sample data file and count the number of columns
+    #     inFile = open(fileNames[0],'r')
+    #     lines = inFile.readlines();
+    #     for line in lines:
+    #         if not (line[0] == '#'):
+    #             cols = line.split()
+    #             break
+    #     numDataCols = len(cols)
+    #     
+    #     return fileNames,numParams,numDataCols
 
     # -----------------------------------------------------------------------------
     def getFileList(self,type,idList=None):
@@ -336,9 +334,8 @@ class PimcHelp:
 
         # We want all the file names here
         if not idList:
-            lsCommand = 'ls -1 %s%s-%s-%s' % (self.baseDir,self.prefix,type,self.dataName)
-            fileNames = os.popen(lsCommand).read().split('\n')
-            fileNames.pop()
+            fileLoc = '%s%s-%s-%s' % (self.baseDir,self.prefix,type,self.dataName)
+            fileNames = glob.glob(fileLoc)
 
             # Now sort them
             fileNames  = sortFileNames(fileNames) 
@@ -346,10 +343,34 @@ class PimcHelp:
         # Otherwise we just go through and get the ID's we need
         else:
             for id in idList: 
-                lsCommand = 'ls -1 %s%s-log-*%s.dat' % (self.baseDir,self.prefix,id)
-                fileNames.append(os.popen(lsCommand).read().rstrip('\n'))
+                fileLoc = '%s%s-log-*%s.dat' % (self.baseDir,self.prefix,id)
+                fileNames.extend(glob.glob(fileLoc))
 
         return fileNames
+
+    # -----------------------------------------------------------------------------
+    # def getFileList(self,type,idList=None):
+    #     ''' Get a list of input files based on their type, and possibly a number
+    #         of unique ID's'''
+
+    #     fileNames = []
+
+    #     # We want all the file names here
+    #     if not idList:
+    #         lsCommand = 'ls -1 %s%s-%s-%s' % (self.baseDir,self.prefix,type,self.dataName)
+    #         fileNames = os.popen(lsCommand).read().split('\n')
+    #         fileNames.pop()
+
+    #         # Now sort them
+    #         fileNames  = sortFileNames(fileNames) 
+
+    #     # Otherwise we just go through and get the ID's we need
+    #     else:
+    #         for id in idList: 
+    #             lsCommand = 'ls -1 %s%s-log-*%s.dat' % (self.baseDir,self.prefix,id)
+    #             fileNames.append(os.popen(lsCommand).read().rstrip('\n'))
+
+    #     return fileNames
 
 # -------------------------------------------------------------------------------
 # CLASS SCALAR REDUCE
@@ -376,7 +397,7 @@ class ScalarReduce:
 
         # Determine the reduction variable and get its values
         self.reduceLabel = fileNames[0].partition('reduce')[0][-2]
-        data = np.loadtxt(fileNames[0])
+        data = np.loadtxt(fileNames[0],ndmin=2)
         self.param_[self.reduceLabel] = data[:,0]
 
         # Determine the number of estimators
@@ -426,7 +447,7 @@ class ScalarReduce:
                                    self.numEstimators])
 
         for n,fileName in enumerate(fileNames):
-            data = np.loadtxt(fileName)
+            data = np.loadtxt(fileName,ndmin=2)
             self.estimator_[n,:,: ] = data[:,1:]
 
     # ----------------------------------------------------------------------
@@ -534,7 +555,7 @@ class VectorReduce:
 
         # Now we must determine how many vector coordinates there are in our
         # vector estimator
-        data = np.loadtxt(fileNames[0])
+        data = np.loadtxt(fileNames[0],ndmin=2)
         self.numVectorRows = np.size(data,0)
         
         # Initialize and fill up the main estimator data array
@@ -543,7 +564,7 @@ class VectorReduce:
                                     3*self.numParams[self.reduceLabel]]) 
 
         for n,fileName in enumerate(fileNames):
-            data = np.loadtxt(fileName)
+            data = np.loadtxt(fileName,ndmin=2)
             self.estimator_[n,:,:] = data
 
 
@@ -695,7 +716,10 @@ class Description:
                                   'obdm':'One Body Density Matrix',
                                   'rho_s/rho':'Superfluid Fraction',
                                   'Area_rho_s':'Area Superfluid Fraction',
-                                  'rho_s/rho|Z':r'$\rho_s/\rho_0$'}
+                                  'rho_s/rho|Z':r'$\rho_s/\rho_0$',
+                                  'radwind':r'Radial Winding Superfliud Density $[\mathrm{\AA}^{-3}]$',
+                                  'radarea':r'Radial Area Superfliud Density $[\mathrm{\AA}^{-3}]$'
+                                 }
 
         self.estimatorShortName = {'K':'K [K]',
                                   'V':'V [K]',
@@ -720,4 +744,6 @@ class Description:
         self.estimatorXLongName = {'number':'Number of Particles',
                                    'pair':'r  %s' % lengthTUnit,
                                    'obdm':'r  %s' % lengthTUnit,
-                                   'radial':'r  %s' % lengthTUnit}
+                                   'radial':'r  %s' % lengthTUnit,
+                                   'radwind':'r  %s' % lengthTUnit,
+                                   'radarea':'r  %s' % lengthTUnit}

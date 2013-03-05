@@ -8,6 +8,7 @@
 import os,sys,glob
 import loadgmt,kevent
 import pimchelp
+import MCstat
 from optparse import OptionParser
 from pylab import *
 
@@ -19,7 +20,11 @@ def getStats(data,dim=0):
         numBins  = size(data,dim) 
         dataAve  = average(data,dim) 
         dataAve2 = average(data*data,dim) 
-        dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+        try:
+            bins = MCstat.bin(data) 
+            dataErr = amax(bins,axis=0)
+        except:
+            dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
     else:
         dataAve = data
         dataErr = 0.0*data
@@ -27,7 +32,7 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
-def getScalarEst(type,pimc,outName,reduceFlag):
+def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
     ''' Return the arrays containing the reduced averaged scalar
         estimators in question.'''
 
@@ -38,7 +43,7 @@ def getScalarEst(type,pimc,outName,reduceFlag):
     err = zeros([len(fileNames),len(headers)],float)
     for i,fname in enumerate(fileNames):
         # Compute the averages and error
-        data = loadtxt(fname)
+        data = loadtxt(fname,ndmin=2)[skip:,:]
         ave[i,:],err[i,:] = getStats(data)
     
     # output the estimator data to disk
@@ -61,7 +66,7 @@ def getScalarEst(type,pimc,outName,reduceFlag):
     return headers,ave,err;
 
 # -----------------------------------------------------------------------------
-def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab):
+def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0):
     ''' Return the arrays consisting of the reduec averaged vector 
         estimators. '''
 
@@ -79,7 +84,7 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab):
     for i,fname in enumerate(fileNames):
 
         # Get the estimator data and compute averages
-        data = loadtxt(fname)
+        data = loadtxt(fname,ndmin=2)[skip:,:]
         ave[i,:],err[i,:] = getStats(data)
 
         # get the headers
@@ -116,7 +121,7 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab):
     return x,ave,err
 
 # -----------------------------------------------------------------------------
-def getKappa(pimc,outName,reduceFlag):
+def getKappa(pimc,outName,reduceFlag,skip=0):
     ''' Return the arrays containing the reduced averaged compressibility. '''
 
     fileNames = pimc.getFileList('estimator')
@@ -208,20 +213,28 @@ def main():
                       help="variable name for reduction [T,N,n,u,M,L,V]") 
     parser.add_option("--canonical", action="store_true", dest="canonical",
                       help="are we in the canonical ensemble?")
-    parser.add_option("-o", "--obdm", action="store_false", dest="obdm",
-                      help="do we want to measure the obdm?") 
     parser.add_option("-p", "--plot", action="store_true", dest="plot",
                       help="do we want to produce data plots?") 
     parser.add_option("-R", "--radius", dest="R", type="float",
                       help="radius in Angstroms") 
+    parser.add_option("-s", "--skip", dest="skip", type="int",
+                      help="number of measurements to skip") 
     parser.set_defaults(canonical=False)
     parser.set_defaults(plot=False)
-    parser.set_defaults(obdm=True)
+    parser.set_defaults(skip=0)
 
     # parse the command line options and get the reduce flag
     (options, args) = parser.parse_args() 
-    if len(args) > 0: 
-        parser.error("incorrect number of arguments")
+
+    # Determine the working directory
+    if args:
+        baseDir = args[0]
+        if baseDir == '.':
+            baseDir = ''
+    else:
+        baseDir = ''
+
+    skip = options.skip
     
     if (not options.reduce):
         parser.error("need a correct reduce flag (-r,--reduce): [T,N,n,u,t,L,V]")
@@ -235,7 +248,7 @@ def main():
     reduceFlag.append(parMap[options.reduce])
 
     # Create the PIMC analysis helper and fill up the simulation parameters maps
-    pimc = pimchelp.PimcHelp(dataName,options.canonical)
+    pimc = pimchelp.PimcHelp(dataName,options.canonical,baseDir=baseDir)
     pimc.getSimulationParameters()
 
     # Form the full output file name
@@ -244,26 +257,57 @@ def main():
     else:
         outName += '-R-%04.1f.dat' % options.R
 
+    # possible types of estimators we may want to reduce
+    estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
+               'radwind', 'radarea', 'planedensity', 'planearea', 'planewind']
+    estDo = {}
+    for e in estList:
+        if pimc.getFileList(e):
+            estDo[e] = True
+        else:
+            estDo[e] = False
+
     # We first reduce the scalar estimators and output them to disk
-    head1,scAve1,scErr1 = getScalarEst('estimator',pimc,outName,reduceFlag)
-    head2,scAve2,scErr2 = getScalarEst('super',pimc,outName,reduceFlag)
+    if estDo['estimator']:
+        head1,scAve1,scErr1 = getScalarEst('estimator',pimc,outName,reduceFlag,skip=skip)
+
+    if estDo['super']:
+        head2,scAve2,scErr2 = getScalarEst('super',pimc,outName,reduceFlag,skip=skip)
 
     # Now we do the normalized one body density matrix
-    if options.obdm:
-        x1,ave1,err1 = getVectorEst('obdm',pimc,outName,reduceFlag,'r [A]','n(r)')
+    if estDo['obdm']:
+        x1,ave1,err1 = getVectorEst('obdm',pimc,outName,reduceFlag,'r [A]','n(r)',skip=skip)
 
     # Now we do the pair correlation function
-    x2,ave2,err2 = getVectorEst('pair',pimc,outName,reduceFlag,'r [A]','g(r)')
+    if estDo['pair']:
+        x2,ave2,err2 = getVectorEst('pair',pimc,outName,reduceFlag,'r [A]','g(r)',skip=skip)
 
-    # If we are reducing for the case of a cylindrical geometry
-    if len(glob.glob('CYLINDER')) > 0:
-        x3,ave3,err3 = getVectorEst('radial',pimc,outName,reduceFlag,'r [A]','rho(r)')
+    # The radial Density
+    if estDo['radial']:
+        x3,ave3,err3 = getVectorEst('radial',pimc,outName,reduceFlag,'r [A]','rho(r)',skip=skip)
+
+    # The radially averaged Winding superfluid density
+    if estDo['radwind']:
+        x4,ave4,err4 = getVectorEst('radwind',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
+
+    # The radially averaged area superfliud density
+    if estDo['radarea']:
+        x5,ave5,err5 = getVectorEst('radarea',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
 
     # Compute the number distribution function and compressibility if we are in
     # the grand canonical ensemble
-    if not options.canonical:
-        x4,ave4,err4 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)')
+    if estDo['number']:
+        x6,ave6,err6 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
         kappa,kappaErr = getKappa(pimc,outName,reduceFlag)
+
+    if estDo['planewind']:
+        x7,ave7,err7 = getVectorEst('planewind',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)
+
+    if estDo['planearea']:
+        x8,ave8,err8 = getVectorEst('planearea',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)
+
+    if estDo['planedensity']:
+        x9,ave9,err9 = getVectorEst('planedensity',pimc,outName,reduceFlag,'n','rho(r)',skip=skip)
 
     # Do we show plots?
     if options.plot:
@@ -308,7 +352,6 @@ def main():
             xlabel('%s'%options.reduce)
             ylabel(yLabelCol[n])
             tight_layout()
-            #savefig('tba-energy.eps')
             figNum += 1
     
         # ============================================================================
@@ -344,7 +387,6 @@ def main():
             ylabel('One Body Density Matrix')
             tight_layout()
             legend(loc='best', frameon=False, prop={'size':16},ncol=2)
-            #savefig('tba-obdm.eps')
     
         # ============================================================================
         # Figure -- The pair correlation function
@@ -363,7 +405,6 @@ def main():
         ylabel('Pair Correlation Function')
         legend(loc='best', frameon=False, prop={'size':16},ncol=2)
         tight_layout()
-        #savefig('tba-pair.eps')
     
         # We only plot the compressibility if we are in the grand-canonical ensemble
         if not options.canonical:
