@@ -20,11 +20,19 @@ def getStats(data,dim=0):
         numBins  = size(data,dim) 
         dataAve  = average(data,dim) 
         dataAve2 = average(data*data,dim) 
-        try:
-            bins = MCstat.bin(data) 
-            dataErr = amax(bins,axis=0)
-        except:
-            dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+        bins = MCstat.bin(data) 
+        dataErr = amax(bins,axis=0)
+        dataErr2 = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+
+        for n,d in enumerate(dataErr):
+            if d > 2.0*dataErr2[n]:
+                dataErr[n] = 2.0*dataErr2[n]
+
+#        try:
+#            bins = MCstat.bin(data) 
+#            dataErr = amax(bins,axis=0)
+#        except:
+#            dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
     else:
         dataAve = data
         dataErr = 0.0*data
@@ -71,54 +79,59 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0):
         estimators. '''
 
     fileNames = pimc.getFileList(type)
-    headers   = pimchelp.getHeadersFromFile(fileNames[0])
+    try:
+        headers   = pimchelp.getHeadersFromFile(fileNames[0])
 
-    numParams = len(fileNames)
-    Nx = len(headers)
+        numParams = len(fileNames)
+        Nx = len(headers)
 
-    x   = zeros([numParams,Nx],float)
-    ave = zeros([numParams,Nx],float)
-    err = zeros([numParams,Nx],float)
+        x   = zeros([numParams,Nx],float)
+        ave = zeros([numParams,Nx],float)
+        err = zeros([numParams,Nx],float)
 
-    
-    for i,fname in enumerate(fileNames):
+        
+        for i,fname in enumerate(fileNames):
 
-        # Get the estimator data and compute averages
-        data = loadtxt(fname,ndmin=2)[skip:,:]
-        ave[i,:],err[i,:] = getStats(data)
+            # Get the estimator data and compute averages
+            data = loadtxt(fname,ndmin=2)[skip:,:]
+            ave[i,:],err[i,:] = getStats(data)
 
-        # get the headers
-        x[i,:] = pimchelp.getHeadersFromFile(fname)
+            # get the headers
+            x[i,:] = pimchelp.getHeadersFromFile(fname)
 
-        # Compute the normalized averages and error for the OBDM
-        if type == 'obdm':
-            norm = ave[i,0]
-            ave[i,:] /= norm
-            err[i,:] /= norm
+            # Compute the normalized averages and error for the OBDM
+            if type == 'obdm':
+                norm = ave[i,0]
+                ave[i,:] /= norm
+                err[i,:] /= norm
 
-    # output the vector data to disk
-    outFile = open('%s-%s' % (type,outName),'w');
+        # output the vector data to disk
+        outFile = open('%s-%s' % (type,outName),'w');
 
-    # the headers
-    lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[0]][reduceFlag[1]]))
-    outFile.write('#%15s%16s%16s' % ('',lab,''))
-    for j in range(numParams-1):
-        lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j+1]][reduceFlag[1]]))
-        outFile.write('%16s%16s%16s' % ('',lab,''))
-    outFile.write('\n')
-    outFile.write('#%15s%16s%16s' % (xlab,ylab,'+/-'))
-    for j in range(numParams-1):
-        outFile.write('%16s%16s%16s' % (xlab,ylab,'+/-'))
-    outFile.write('\n')
-
-    # the data
-    for i,h in enumerate(headers):
-        for j in range(numParams):
-            outFile.write('%16.8E%16.8E%16.8E' % (x[j,i],ave[j,i],err[j,i]))
+        # the headers
+        lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[0]][reduceFlag[1]]))
+        outFile.write('#%15s%16s%16s' % ('',lab,''))
+        for j in range(numParams-1):
+            lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j+1]][reduceFlag[1]]))
+            outFile.write('%16s%16s%16s' % ('',lab,''))
         outFile.write('\n')
-    outFile.close()
+        outFile.write('#%15s%16s%16s' % (xlab,ylab,'+/-'))
+        for j in range(numParams-1):
+            outFile.write('%16s%16s%16s' % (xlab,ylab,'+/-'))
+        outFile.write('\n')
 
-    return x,ave,err
+        # the data
+        for i,h in enumerate(headers):
+            for j in range(numParams):
+                outFile.write('%16.8E%16.8E%16.8E' % (x[j,i],ave[j,i],err[j,i]))
+            outFile.write('\n')
+        outFile.close()
+        return x,ave,err
+
+    except:
+        print 'Problem Reducing %s files' % type
+        return 0,0,0
+
 
 # -----------------------------------------------------------------------------
 def getKappa(pimc,outName,reduceFlag,skip=0):
@@ -144,17 +157,19 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
             V = float(pimc.params[ID]['Container Volume'])
 
         # Compute the average compressibility and its error
-        estData = loadtxt(fname)
+        estData = loadtxt(fname,ndmin=2)
 
         N     = estData[:,headers.index('N')]
         N2    = estData[:,headers.index('N^2')] 
+        N3 = N*N2
 
         numBins = len(N)
-            
+
         # Get the averages
         aveN,errN = getStats(N)
         aveN2,errN2 = getStats(N2)
-        aveNN2,errNN2 = getStats(N*N2)
+        aveNN2,errNN2 = getStats(N3)
+
 
         # Get the covariance
         # This is finite, so it must be calculated!
@@ -219,6 +234,8 @@ def main():
                       help="radius in Angstroms") 
     parser.add_option("-s", "--skip", dest="skip", type="int",
                       help="number of measurements to skip") 
+    parser.add_option("-e", "--estimator", dest="estimator", type="str",
+                      help="specify a single estimator to reduce") 
     parser.set_defaults(canonical=False)
     parser.set_defaults(plot=False)
     parser.set_defaults(skip=0)
@@ -260,12 +277,18 @@ def main():
     # possible types of estimators we may want to reduce
     estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea', 'planewind']
-    estDo = {}
-    for e in estList:
-        if pimc.getFileList(e):
-            estDo[e] = True
-        else:
-            estDo[e] = False
+    estDo = {e:False for e in estList}
+
+    # if we specify a single estimator, only do that one
+    if options.estimator:
+        estDo[options.estimator] = True
+    # otherwise test to see if the file exists
+    else:
+        for e in estList:
+            if pimc.getFileList(e):
+                estDo[e] = True
+            else:
+                estDo[e] = False
 
     # We first reduce the scalar estimators and output them to disk
     if estDo['estimator']:
@@ -298,7 +321,9 @@ def main():
     # the grand canonical ensemble
     if estDo['number']:
         x6,ave6,err6 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
-        kappa,kappaErr = getKappa(pimc,outName,reduceFlag)
+# I don't know why this isn't working, MCStat is giving me an error, will
+# return to this later. AGD 
+#        kappa,kappaErr = getKappa(pimc,outName,reduceFlag)
 
     if estDo['planewind']:
         x7,ave7,err7 = getVectorEst('planewind',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)

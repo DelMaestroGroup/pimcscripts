@@ -20,9 +20,10 @@ import sys
 def bin(MC):
     
     # minimum number of MC bins required
-    min_bin = 8
+    min_bin = 2
     # initialize B to MC data
     B = MC
+
     # Resize if 1D array
     if B.ndim == 1:
         B.resize(B.shape[0],1)
