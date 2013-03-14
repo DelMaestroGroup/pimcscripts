@@ -8,7 +8,7 @@
 # =============================================================================
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, PathPatch, Rectangle
+from matplotlib.patches import PathPatch, Rectangle
 from mpl_toolkits.mplot3d import Axes3D
 import mpl_toolkits.mplot3d.art3d as art3d
 import numpy as np
@@ -62,7 +62,6 @@ def buildOuter(Lx,Ly,Lz,ax,col='Purple'):
     """
     Builds rectangular prism (outer cell walls).
     """
-    #col = 'Purple'
     r7 = Rectangle((-Lx/2,-Lz/2),Lx,Lz, color=col)
     r8 = Rectangle((-Lx/2,-Lz/2),Lx,Lz, color=col)
     r9 = Rectangle((-Ly/2,-Lz/2),Ly,Lz, color=col)
@@ -120,10 +119,13 @@ def main():
     ax = fig.add_subplot(111, projection='3d')
     ax.set_aspect('equal')
 
+    # set up excluded volume walls
     buildExcVol(cutX,cutY,cutZ,ax)
 
+    # set up outer cell wells
     buildOuter(Lx,Ly,Lz,ax)
 
+    # plot the actual configuration
     ax.scatter(X, Y, Z, s=60,color='Navy')
 
     #ax.set_xlim3d(-Lx/2-1, Lx/2+1)
