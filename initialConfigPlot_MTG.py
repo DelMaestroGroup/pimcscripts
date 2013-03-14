@@ -34,12 +34,12 @@ def buildExcVol(cutX,cutY,cutZ,ax):
     """
     Builds rectangular prism (excluded volume).
     """
-    r1 = Rectangle((-cutX/2,-cutZ/2),cutX,cutZ)
-    r4 = Rectangle((-cutX/2,-cutZ/2),cutX,cutZ)
-    r2 = Rectangle((-cutY/2,-cutZ/2),cutY,cutZ)
-    r5 = Rectangle((-cutY/2,-cutZ/2),cutY,cutZ)
-    r3 = Rectangle((-cutX/2,-cutY/2),cutX,cutY)
-    r6 = Rectangle((-cutX/2,-cutY/2),cutX,cutY)
+    r1 = Rectangle((-cutX,-cutZ),2.0*cutX,2.0*cutZ)
+    r4 = Rectangle((-cutX,-cutZ),2.0*cutX,2.0*cutZ)
+    r2 = Rectangle((-cutY,-cutZ),2.0*cutY,2.0*cutZ)
+    r5 = Rectangle((-cutY,-cutZ),2.0*cutY,2.0*cutZ)
+    r3 = Rectangle((-cutX,-cutY),2.0*cutX,2.0*cutY)
+    r6 = Rectangle((-cutX,-cutY),2.0*cutX,2.0*cutY)
     r1.set_alpha(0.1)
     r2.set_alpha(0.1)
     r3.set_alpha(0.1)
@@ -50,12 +50,12 @@ def buildExcVol(cutX,cutY,cutZ,ax):
     ax.add_patch(r3), ax.add_patch(r4)
     ax.add_patch(r5), ax.add_patch(r6)
 
-    art3d.pathpatch_2d_to_3d(r1, z=-cutY/2, zdir="y")
-    art3d.pathpatch_2d_to_3d(r4, z=cutY/2, zdir="y")
-    art3d.pathpatch_2d_to_3d(r2, z=cutX/2, zdir="x")
-    art3d.pathpatch_2d_to_3d(r5, z=-cutX/2, zdir="x")
-    art3d.pathpatch_2d_to_3d(r3, z=cutZ/2, zdir="z")
-    art3d.pathpatch_2d_to_3d(r6, z=-cutZ/2, zdir="z")
+    art3d.pathpatch_2d_to_3d(r1, z=-cutY, zdir="y")
+    art3d.pathpatch_2d_to_3d(r4, z=cutY, zdir="y")
+    art3d.pathpatch_2d_to_3d(r2, z=cutX, zdir="x")
+    art3d.pathpatch_2d_to_3d(r5, z=-cutX, zdir="x")
+    art3d.pathpatch_2d_to_3d(r3, z=cutZ, zdir="z")
+    art3d.pathpatch_2d_to_3d(r6, z=-cutZ, zdir="z")
 
 # =============================================================================
 def buildOuter(Lx,Ly,Lz,ax,col='Purple'):
@@ -111,7 +111,7 @@ def main():
     
     # assign values to variables from data file
     Lx, Ly, Lz = float(cellDims[0]), float(cellDims[1]), float(cellDims[2])
-    cutX, cutY, cutZ = 1.0*Lx, float(excDims[0]), float(excDims[1])
+    cutX, cutY, cutZ = 0.5*Lx, float(excDims[0]), float(excDims[1])
     #cutX, cutY, cutZ = 1.0*Lx, 0.5*Ly, 0.5*Lz
     
     # set up plotting
