@@ -101,8 +101,6 @@ def main():
     args = parser.parse_args()
     fileName = args.file
 
-    #fileName = 'initialConfig.dat'
-
     # load in initial configs
     X,Y,Z = np.loadtxt(fileName, unpack=True)
 
@@ -112,7 +110,6 @@ def main():
     # assign values to variables from data file
     Lx, Ly, Lz = float(cellDims[0]), float(cellDims[1]), float(cellDims[2])
     cutX, cutY, cutZ = 0.5*Lx, float(excDims[0]), float(excDims[1])
-    #cutX, cutY, cutZ = 1.0*Lx, 0.5*Ly, 0.5*Lz
     
     # set up plotting
     fig = plt.figure()
