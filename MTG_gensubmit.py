@@ -169,7 +169,7 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run, initCheckPt,resta
 #PBS -o out/pimc-${PBS_JOBID}
 #PBS -m n\n
 # Launch job script
-cd $PBS_0_WORKDIR
+cd $PBS_O_WORKDIR
 case ${PBS_ARRAYID} in\n''')
 
     # submit an array of jobs with checkpointing enabled
