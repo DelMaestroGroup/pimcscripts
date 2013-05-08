@@ -1,4 +1,24 @@
 #!/usr/bin/python
+"""pimcplot
+
+Description:
+  Performs a cumulative average plot of raw Monte Carlo data
+
+Usage:
+    pimcplot.py [options] [--legend=<label>...] --estimator=<name> <file>...
+
+    pimcplot.py -h | --help 
+
+Options:
+  -h, --help                    Show this screen.
+  --estimator=<name>, -e <name> The estimator to be plotted.
+  --skip=<n>, -s <n>            Number of measurements to be skipped [default: 0].
+  --period=<m>, -p <m>          The period of the average window [default: 50].
+  --legend=<label>, -l <label>  A legend label
+  --error=<units>, -d           Size of the error bars
+  --bin                         Use the binned errorbars
+"""
+
 # pimcplot.py
 # Adrian Del Maestro
 # 07.20.2009
@@ -12,8 +32,33 @@ import os,sys
 import pyutils
 import loadgmt,kevent
 from pylab import *
-import argparse
 import pimchelp
+from docopt import docopt
+from scipy import stats
+import MCstat
+
+# ----------------------------------------------------------------------
+def getStats(data,dim=0):
+    ''' Get the average and error of all columns in the data matrix. '''
+
+    if ndim(data) > dim:
+        numBins  = size(data,dim) 
+        dataAve  = average(data,dim) 
+        dataAve2 = average(data*data,dim) 
+        bins = MCstat.bin(data) 
+        dataErr = amax(bins,axis=0)
+        dataErr2 = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+
+#        try:
+#            bins = MCstat.bin(data) 
+#            dataErr = amax(bins,axis=0)
+#        except:
+#            dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+    else:
+        dataAve = data
+        dataErr = 0.0*data
+
+    return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
 def cumulativeMovingAverage(data):
@@ -25,60 +70,72 @@ def cumulativeMovingAverage(data):
     return CMA
 
 # -----------------------------------------------------------------------------
+def cumulativeMovingAverageWithError(data):
+    '''Compute the cumulative mean as a function of bin index.'''
+    CMA = zeros_like(data)
+    CME = zeros_like(data)
+    CMA[0] = data[0]
+    CME[0] = 0.0;
+    for n in range(len(data)-1):
+        CMA[n+1] = average(data[:n+2])
+        CME[n+1] = stats.sem(data[:n+2])
+
+    return CMA,CME
+
+# -----------------------------------------------------------------------------
 def simpleMovingAverage(period,data):
     assert period == int(period) and period > 0, "Period must be an integer >0"
 
     import numpy as np
     weightings = np.repeat(1.0, period) / period 
     return np.convolve(data, weightings, 'valid')
-    #return array([sum(data[i:i+period])/(1.0*period) for i in xrange(len(data)-period+1)])
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 
 # -----------------------------------------------------------------------------
 def main(): 
 
-    # setup the command line parser options 
-    parser = argparse.ArgumentParser(description='Plot Raw MC Equilibration Data for Scalar Estimators.')
-    parser.add_argument('fileNames', help='Scalar estimator files', nargs='+')
-    parser.add_argument('--estimator','-e', help='A list of estimator names that \
-                        are to be plotted.', type=str)
-    parser.add_argument('--skip','-s', help='Number of measurements to be skipped \
-                        in the average plot.', type=int, default=0)
-    parser.add_argument('--period','-p', help='Period of the simple moving \
-                        average.', type=int, default=5)
-    args = parser.parse_args()
+    # parse the command line options
+    args = docopt(__doc__)
 
-    fileNames = args.fileNames
+    fileNames = args['<file>']
+    skip = int(args['--skip'])
+    period = int(args['--period'])
+    estimator = args['--estimator']
+    leglabel = args['--legend'] and args['--legend']
+    error = args['--error'] and float(args['--error'])
 
-    if len(fileNames) < 1:
-        parser.error("Need to specify at least one scalar estimator file")
+    # if labels are not assigned, we default to the PIMCID
+    if not leglabel:
+        leglabel = []
+        for n,fileName in enumerate(fileNames):
+            leglabel.append(fileName[-13:-4])
 
     # We count the number of lines in the estimator file to make sure we have
     # some data and grab the headers
     headers = pimchelp.getHeadersDict(fileNames[0])
 
     # If we don't choose an estimator, provide a list of possible ones
-    if not args.estimator or args.estimator not in headers:
+    if estimator not in headers:
         errorString = "Need to specify one of:\n"
         for head,index in headers.iteritems():
             errorString += "\"%s\"" % head + "   "
         parser.error(errorString)
 
     numFiles = len(fileNames)
-    col = list([headers[args.estimator]])
+    col = list([headers[estimator]])
 
     # Attempt to find a 'pretty name' for the label, otherwise just default to
     # the column heading
     label = pimchelp.Description()
     try:
-        yLong = label.estimatorLongName[args.estimator]
+        yLong = label.estimatorLongName[estimator]
     except:
-        yLong = args.estimator
+        yLong = estimator
     try:
-        yShort = label.estimatorShortName[args.estimator]
+        yShort = label.estimatorShortName[estimator]
     except:
-        yShort = args.estimator
+        yShort = estimator
 
     # ============================================================================
     # Figure 1 : column vs. MC Steps
@@ -101,14 +158,13 @@ def main():
             if not pyutils.isList(data):
                data = list([data])
 
-            plot(data[args.skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
+            plot(data[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
                         markersize=4,linestyle='-',linewidth=1.0)
     
             n += 1
 
     ylabel(yLong)
     xlabel("MC Bin Number")
-
 
     # ============================================================================
     # Figure 2 : running average of column vs. MC Bins
@@ -128,18 +184,28 @@ def main():
             if size(data) > 1:
                 
                 # Get the cumulative moving average
-                cma = cumulativeMovingAverage(data[args.skip:])
-                sma = simpleMovingAverage(50,data[args.skip:])
-                plot(cma,color=colors[n],linewidth=1.5,marker='None',linestyle='-',
-                    label='cumulative')
-                plot(sma,color=colors[n],linewidth=1.0,marker='None',linestyle='--', 
-                    label='Running(%d)' % args.period)
-    
+                if args['--error']:
+                    cma = cumulativeMovingAverage(data[skip:])
+                    sem = error*ones_like(cma)
+                elif args['--bin']:
+                    cma = cumulativeMovingAverage(data[skip:])
+                    ave,err = getStats(data[skip:])
+                    sem = err*ones_like(cma)
+                    print '%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err) 
+                else:
+                    cma,sem = cumulativeMovingAverageWithError(data[skip:])
+
+                sma = simpleMovingAverage(50,data[skip:])
+                x = range(int(0.04*len(cma)),len(cma))
+                plot(x,cma[x],color=colors[n],linewidth=1.0,marker='None',linestyle='-',
+                    label=leglabel[n])
+                fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
                 n += 1
 
     ylabel(yLong)
     xlabel("MC Bin Number")
     tight_layout()
+    legend(loc='best', frameon=False, prop={'size':14},ncol=2)
 
     show()
 # ----------------------------------------------------------------------
