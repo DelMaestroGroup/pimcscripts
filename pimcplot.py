@@ -196,7 +196,7 @@ def main():
                     cma,sem = cumulativeMovingAverageWithError(data[skip:])
 
                 sma = simpleMovingAverage(50,data[skip:])
-                x = range(int(0.04*len(cma)),len(cma))
+                x = range(int(0.10*len(cma)),len(cma))
                 plot(x,cma[x],color=colors[n],linewidth=1.0,marker='None',linestyle='-',
                     label=leglabel[n])
                 fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
@@ -205,7 +205,7 @@ def main():
     ylabel(yLong)
     xlabel("MC Bin Number")
     tight_layout()
-    legend(loc='best', frameon=False, prop={'size':14},ncol=2)
+    legend(loc='best', frameon=False, prop={'size':16},ncol=2)
 
     show()
 # ----------------------------------------------------------------------
