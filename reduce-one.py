@@ -340,63 +340,65 @@ def main():
         # -----------------------------------------------------------------------------
         # Plot the averaged data
         # -----------------------------------------------------------------------------
+        if estDo['estimator']:
     
-        # Get the changing parameter that we are plotting against
-        param = []
-        for ID in pimc.id:
-            param.append(float(pimc.params[ID][reduceFlag[1]]))
+            # Get the changing parameter that we are plotting against
+            param = []
+            for ID in pimc.id:
+                param.append(float(pimc.params[ID][reduceFlag[1]]))
 
-        numParams = len(param)
-        markers = loadgmt.getMarkerList()
-        headLab = ['E/N','K/N','V/N','N', 'diagonal']
-        dataCol = []
-        for head in headLab:
-            n = 0
-            for h in head1:
-                if head == h:
-                    dataCol.append(n)
-                    break
-                n += 1
-        yLabelCol = ['Energy / N', 'Kinetic Energy / N', 'Potential Energy / N',\
-                'Number Particles', 'Diagonal Fraction']
+            numParams = len(param)
+            markers = loadgmt.getMarkerList()
+            headLab = ['E/N','K/N','V/N','N', 'diagonal']
+            dataCol = []
+            for head in headLab:
+                n = 0
+                for h in head1:
+                    if head == h:
+                        dataCol.append(n)
+                        break
+                    n += 1
+            yLabelCol = ['Energy / N', 'Kinetic Energy / N', 'Potential Energy / N',\
+                    'Number Particles', 'Diagonal Fraction']
 
-        colors  = loadgmt.getColorList('cw/1','cw1-029',max(numParams,len(headLab))+1)
-    
-        # ============================================================================
-        # Figure -- Various thermodynamic quantities
-        # ============================================================================
-        figNum = 1
-        for n in range(len(dataCol)):
-            figure(figNum)
-            connect('key_press_event',kevent.press)
-    
-            errorbar(param, scAve1[:,dataCol[n]], yerr=scErr1[:,dataCol[n]],\
-                    color=colors[n],marker=markers[n],markeredgecolor=colors[n],\
-                    markersize=8,linestyle='None',capsize=4)
-    
-            xlabel('%s'%options.reduce)
-            ylabel(yLabelCol[n])
-            tight_layout()
-            figNum += 1
+            colors  = loadgmt.getColorList('cw/1','cw1-029',max(numParams,len(headLab))+1)
+        
+            # ============================================================================
+            # Figure -- Various thermodynamic quantities
+            # ============================================================================
+            figNum = 1
+            for n in range(len(dataCol)):
+                figure(figNum)
+                connect('key_press_event',kevent.press)
+        
+                errorbar(param, scAve1[:,dataCol[n]], yerr=scErr1[:,dataCol[n]],\
+                        color=colors[n],marker=markers[n],markeredgecolor=colors[n],\
+                        markersize=8,linestyle='None',capsize=4)
+        
+                xlabel('%s'%options.reduce)
+                ylabel(yLabelCol[n])
+                tight_layout()
+                figNum += 1
     
         # ============================================================================
         # Figure -- The superfluid density
         # ============================================================================
-        figure(figNum)
-        connect('key_press_event',kevent.press)
-    
-        errorbar(param, scAve2[:,0], yerr=scErr2[:,0],\
-                color=colors[0],marker=markers[0],markeredgecolor=colors[0],\
-                markersize=8,linestyle='None',capsize=4)
-    
-        tight_layout()
-        xlabel('%s'%options.reduce)
-        ylabel('Superfluid Density')
+        if estDo['super']:
+            figure(figNum)
+            connect('key_press_event',kevent.press)
+        
+            errorbar(param, scAve2[:,0], yerr=scErr2[:,0],\
+                    color=colors[0],marker=markers[0],markeredgecolor=colors[0],\
+                    markersize=8,linestyle='None',capsize=4)
+        
+            tight_layout()
+            xlabel('%s'%options.reduce)
+            ylabel('Superfluid Density')
     
         # ============================================================================
         # Figure -- The one body density matrix
         # ============================================================================
-        if options.obdm:
+        if estDo['obdm']:
             figNum += 1
             figure(figNum)
             connect('key_press_event',kevent.press)
@@ -416,20 +418,21 @@ def main():
         # ============================================================================
         # Figure -- The pair correlation function
         # ============================================================================
-        figNum += 1
-        figure(figNum)
-        connect('key_press_event',kevent.press)
-    
-        for n in range(numParams):
-            lab = '%s = %s' % (options.reduce,param[n])
-            errorbar(x2[n,:], ave2[n,:], yerr=err2[n,:],color=colors[n],marker=markers[0],\
-                    markeredgecolor=colors[n], markersize=8,linestyle='None',label=lab,capsize=6)
-    
-            #   axis([0,256,1.0E-5,1.2])
-        xlabel('r [Angstroms]')
-        ylabel('Pair Correlation Function')
-        legend(loc='best', frameon=False, prop={'size':16},ncol=2)
-        tight_layout()
+        if estDo['pair']:
+            figNum += 1
+            figure(figNum)
+            connect('key_press_event',kevent.press)
+        
+            for n in range(numParams):
+                lab = '%s = %s' % (options.reduce,param[n])
+                errorbar(x2[n,:], ave2[n,:], yerr=err2[n,:],color=colors[n],marker=markers[0],\
+                        markeredgecolor=colors[n], markersize=8,linestyle='None',label=lab,capsize=6)
+        
+                #   axis([0,256,1.0E-5,1.2])
+            xlabel('r [Angstroms]')
+            ylabel('Pair Correlation Function')
+            legend(loc='best', frameon=False, prop={'size':16},ncol=2)
+            tight_layout()
     
         # We only plot the compressibility if we are in the grand-canonical ensemble
         if not options.canonical:
