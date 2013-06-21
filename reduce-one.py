@@ -236,6 +236,8 @@ def main():
                       help="number of measurements to skip") 
     parser.add_option("-e", "--estimator", dest="estimator", type="str",
                       help="specify a single estimator to reduce") 
+    parser.add_option("-i", "--pimcid", dest="pimcid", type="str",
+                      help="specify a single pimcid") 
     parser.set_defaults(canonical=False)
     parser.set_defaults(plot=False)
     parser.set_defaults(skip=0)
@@ -309,21 +311,21 @@ def main():
     if estDo['radial']:
         x3,ave3,err3 = getVectorEst('radial',pimc,outName,reduceFlag,'r [A]','rho(r)',skip=skip)
 
-    # The radially averaged Winding superfluid density
-    if estDo['radwind']:
-        x4,ave4,err4 = getVectorEst('radwind',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
-
-    # The radially averaged area superfliud density
-    if estDo['radarea']:
-        x5,ave5,err5 = getVectorEst('radarea',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
-
     # Compute the number distribution function and compressibility if we are in
     # the grand canonical ensemble
     if estDo['number']:
-        x6,ave6,err6 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
+        x4,ave4,err4 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
 # I don't know why this isn't working, MCStat is giving me an error, will
-# return to this later. AGD 
-#        kappa,kappaErr = getKappa(pimc,outName,reduceFlag)
+    # return to this later. AGD 
+        #kappa,kappaErr = getKappa(pimc,outName,reduceFlag)
+
+    # The radially averaged Winding superfluid density
+    if estDo['radwind']:
+        x5,ave5,err5 = getVectorEst('radwind',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
+
+    # The radially averaged area superfliud density
+    if estDo['radarea']:
+        x6,ave6,err6 = getVectorEst('radarea',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
 
     if estDo['planewind']:
         x7,ave7,err7 = getVectorEst('planewind',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)
@@ -337,18 +339,20 @@ def main():
     # Do we show plots?
     if options.plot:
 
+        figNum = 1
+        # Get the changing parameter that we are plotting against
+        param = []
+        for ID in pimc.id:
+            param.append(float(pimc.params[ID][reduceFlag[1]]))
+        numParams = len(param)
+        markers = loadgmt.getMarkerList()
+        colors  = loadgmt.getColorList('cw/1','cw1-029',10)
+
         # -----------------------------------------------------------------------------
         # Plot the averaged data
         # -----------------------------------------------------------------------------
         if estDo['estimator']:
-    
-            # Get the changing parameter that we are plotting against
-            param = []
-            for ID in pimc.id:
-                param.append(float(pimc.params[ID][reduceFlag[1]]))
 
-            numParams = len(param)
-            markers = loadgmt.getMarkerList()
             headLab = ['E/N','K/N','V/N','N', 'diagonal']
             dataCol = []
             for head in headLab:
@@ -361,12 +365,10 @@ def main():
             yLabelCol = ['Energy / N', 'Kinetic Energy / N', 'Potential Energy / N',\
                     'Number Particles', 'Diagonal Fraction']
 
-            colors  = loadgmt.getColorList('cw/1','cw1-029',max(numParams,len(headLab))+1)
         
             # ============================================================================
             # Figure -- Various thermodynamic quantities
             # ============================================================================
-            figNum = 1
             for n in range(len(dataCol)):
                 figure(figNum)
                 connect('key_press_event',kevent.press)
@@ -440,41 +442,42 @@ def main():
             # ============================================================================
             # Figure -- The Number distribution
             # ============================================================================
-            figNum += 1
-            figure(figNum)
-            connect('key_press_event',kevent.press) 
+            if estDo['number']:
+                figNum += 1
+                figure(figNum)
+                connect('key_press_event',kevent.press) 
 
-            # Find which column contains the average number of particles
-            for hn,h in enumerate(head1):
-                if h == 'N':
-                    break
+                # Find which column contains the average number of particles
+                for hn,h in enumerate(head1):
+                    if h == 'N':
+                        break
 
-            for n in range(numParams): 
-                lab = '%s = %s' % (options.reduce,param[n]) 
-                aN = scAve1[n,hn] 
-                errorbar(x4[n,:]-aN, ave4[n,:], err4[n,:],color=colors[n],marker=markers[0],\
-                         markeredgecolor=colors[n],\
-                         markersize=8,linestyle='None',label=lab,capsize=6) 
-    
-            axis([-30,30,0.0,1.2])
-            xlabel(r'$N-\langle N \rangle$')
-            ylabel('P(N)')
-            tight_layout()
-            legend(loc='best', frameon=False, prop={'size':16},ncol=2)
-    
-            # ============================================================================
-            # Figure -- The Compressibility
-            # ============================================================================
-            figNum += 1
-            figure(figNum)
-            connect('key_press_event',kevent.press)
+                for n in range(numParams): 
+                    lab = '%s = %s' % (options.reduce,param[n]) 
+                    aN = scAve1[n,hn] 
+                    errorbar(x4[n,:]-aN, ave4[n,:], err4[n,:],color=colors[n],marker=markers[0],\
+                             markeredgecolor=colors[n],\
+                             markersize=8,linestyle='None',label=lab,capsize=6) 
+        
+                axis([-30,30,0.0,1.2])
+                xlabel(r'$N-\langle N \rangle$')
+                ylabel('P(N)')
+                tight_layout()
+                legend(loc='best', frameon=False, prop={'size':16},ncol=2)
+        
+                # ============================================================================
+                # Figure -- The Compressibility
+                # ============================================================================
+                #figNum += 1
+                #figure(figNum)
+                #connect('key_press_event',kevent.press)
 
-            errorbar(param, kappa, yerr=kappaErr, color=colors[0],marker=markers[0],\
-                    markeredgecolor=colors[0], markersize=8,linestyle='None',capsize=6)
-    
-            tight_layout()
-            xlabel('%s'%options.reduce)
-            ylabel(r'$\rho^2 \kappa$')
+                #errorbar(param, kappa, yerr=kappaErr, color=colors[0],marker=markers[0],\
+                #        markeredgecolor=colors[0], markersize=8,linestyle='None',capsize=6)
+        
+                #tight_layout()
+                #xlabel('%s'%options.reduce)
+                #ylabel(r'$\rho^2 \kappa$')
     
         # ============================================================================
         # Figure -- The radial density

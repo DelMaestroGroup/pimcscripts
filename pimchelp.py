@@ -222,10 +222,16 @@ def getFileString(options,reduce=True):
     else:
         flagL = "*"
 
-    if options.canonical:
-        dataName = '%s-%s-%s-%s-*.dat' % (flagT,flagN,flagn,flagtau)
+    if options.pimcid is not None:
+        flagpimcid = options.pimcid
+        out += '-id-%s' % flagpimcid
     else:
-        dataName = '%s-%s-%s-%s-*.dat' % (flagT,flagL,flagmu,flagtau)
+        flagpimcid = "*"
+
+    if options.canonical:
+        dataName = '%s-%s-%s-%s-%s.dat' % (flagT,flagN,flagn,flagtau,flagpimcid)
+    else:
+        dataName = '%s-%s-%s-%s-%s.dat' % (flagT,flagL,flagmu,flagtau,flagpimcid)
 
     if reduce:
         outName = '%s-reduce%s' % (options.reduce,out)

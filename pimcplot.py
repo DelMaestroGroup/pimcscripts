@@ -17,6 +17,7 @@ Options:
   --legend=<label>, -l <label>  A legend label
   --error=<units>, -d           Size of the error bars
   --bin                         Use the binned errorbars
+  --ttest                       Perform a ttest
 """
 
 # pimcplot.py
@@ -137,6 +138,17 @@ def main():
     except:
         yShort = estimator
 
+    # First we load and store all the data 
+    data = []
+    for fileName in fileNames:
+
+        dataFile = open(fileName,'r');
+        dataLines = dataFile.readlines();
+        dataFile.close()
+
+        if len(dataLines) > 2:
+            data.append(loadtxt(fileName,usecols=col,unpack=True))
+
     # ============================================================================
     # Figure 1 : column vs. MC Steps
     # ============================================================================
@@ -145,23 +157,9 @@ def main():
 
     colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
 
-    n = 0
-    for fileName in fileNames:
-
-        dataFile = open(fileName,'r');
-        dataLines = dataFile.readlines();
-        dataFile.close()
-
-        if len(dataLines) > 2:
-            data = loadtxt(fileName,usecols=col)
-            
-            if not pyutils.isList(data):
-               data = list([data])
-
-            plot(data[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
-                        markersize=4,linestyle='-',linewidth=1.0)
-    
-            n += 1
+    for n,cdata in enumerate(data):
+        plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
+             markersize=4,linestyle='-',linewidth=1.0)
 
     ylabel(yLong)
     xlabel("MC Bin Number")
@@ -173,40 +171,77 @@ def main():
     connect('key_press_event',kevent.press)
 
     n = 0
-    for fileName in fileNames:
+    for n,cdata in enumerate(data):
+        if size(cdata) > 1:
+            
+            # Get the cumulative moving average
+            if args['--error']:
+                cma = cumulativeMovingAverage(cdata[skip:])
+                sem = error*ones_like(cma)
+            elif args['--bin']:
+                cma = cumulativeMovingAverage(cdata[skip:])
+                ave,err = getStats(cdata[skip:])
+                sem = err*ones_like(cma)
+                print '%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err) 
+            else:
+                cma,sem = cumulativeMovingAverageWithError(cdata[skip:])
 
-        dataFile = open(fileName,'r');
-        dataLines = dataFile.readlines();
-
-        if len(dataLines) > 2:
-
-            data = loadtxt(fileName,usecols=col)
-            if size(data) > 1:
-                
-                # Get the cumulative moving average
-                if args['--error']:
-                    cma = cumulativeMovingAverage(data[skip:])
-                    sem = error*ones_like(cma)
-                elif args['--bin']:
-                    cma = cumulativeMovingAverage(data[skip:])
-                    ave,err = getStats(data[skip:])
-                    sem = err*ones_like(cma)
-                    print '%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err) 
-                else:
-                    cma,sem = cumulativeMovingAverageWithError(data[skip:])
-
-                sma = simpleMovingAverage(50,data[skip:])
-                x = range(int(0.10*len(cma)),len(cma))
-                plot(x,cma[x],color=colors[n],linewidth=1.0,marker='None',linestyle='-',
-                    label=leglabel[n])
-                fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
-                n += 1
+            sma = simpleMovingAverage(50,cdata[skip:])
+            x = range(int(0.10*len(cma)),len(cma))
+            plot(x,cma[x],color=colors[n],linewidth=1.0,marker='None',linestyle='-',
+                label=leglabel[n])
+            fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
+            n += 1
 
     ylabel(yLong)
     xlabel("MC Bin Number")
     tight_layout()
     legend(loc='best', frameon=False, prop={'size':16},ncol=2)
 
+    # Perform a Welch's t-test
+    if args['--ttest']:
+        # We only perform the Welch's t test if we have multiple samples we are
+        # comparing
+        N = len(data)
+        if N > 1:
+            tval = zeros([N,N])
+            p = zeros([N,N])
+
+            for i in range(N):
+                for j in range(i+1,N):
+                    tval[i,j],p[i,j] = stats.ttest_ind(data[i][skip:], data[j][skip:], 
+                                               equal_var=False)
+
+        # ============================================================================
+        # Figure 3 : plot the estimator histogram along with t-test values
+        # ============================================================================
+        fig = figure(3)
+        connect('key_press_event',kevent.press)
+        for i in range(N):
+            n, bins, patches = hist(data[i], 100, normed=1, facecolor=colors[i], 
+                                    alpha=0.75, label=leglabel[i],
+                                    edgecolor='w')
+
+        # Add the p-values from the t-test
+        y = 0.92
+        if N > 1:
+            figtext(0.78, y, 't-test p values', horizontalalignment='center', 
+                 verticalalignment='top', fontsize=15, backgroundcolor='white')
+
+            for i in range(N):
+                for j in range(i+1,N):
+                    y -= 0.03
+                    lab = 'p(' + leglabel[i] + ' - ' + leglabel[j] + ') = ' + '%4.2f'%p[i,j]
+                    figtext(0.78, y, lab, horizontalalignment='center', 
+                         verticalalignment='top', fontsize=12,
+                       backgroundcolor='white')
+
+        legend(loc='upper left', fontsize=15, frameon=False)
+        xlabel(yLong)
+        ylabel(r'$P($' + estimator + r'$)$')
+ 
+
+            
     show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
