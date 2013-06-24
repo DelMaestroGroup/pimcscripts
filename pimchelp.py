@@ -221,12 +221,12 @@ def getFileString(options,reduce=True):
         out += '-L-%s' % flagL
     else:
         flagL = "*"
-
-    if options.pimcid is not None:
-        flagpimcid = options.pimcid
-        out += '-id-%s' % flagpimcid
-    else:
-        flagpimcid = "*"
+#
+#    if options.pimcid is not None:
+#        flagpimcid = options.pimcid
+#        out += '-id-%s' % flagpimcid
+#    else:
+    flagpimcid = "*"
 
     if options.canonical:
         dataName = '%s-%s-%s-%s-%s.dat' % (flagT,flagN,flagn,flagtau,flagpimcid)
@@ -296,12 +296,12 @@ class PimcHelp:
         return paramsMap
 
     # -----------------------------------------------------------------------------
-    def getSimulationParameters(self): 
+    def getSimulationParameters(self,idList=None): 
         '''Get the full list of parameter maps for each input file and a list of
            ID numbers. '''
 
         # Get the list of log files
-        fileNames = self.getFileList("log")
+        fileNames = self.getFileList("log",idList=idList)
 
         self.params = {}
         self.id = []
@@ -349,7 +349,7 @@ class PimcHelp:
         # Otherwise we just go through and get the ID's we need
         else:
             for id in idList: 
-                fileLoc = '%s%s-log-*%s.dat' % (self.baseDir,self.prefix,id)
+                fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,type,id)
                 fileNames.extend(glob.glob(fileLoc))
 
         return fileNames

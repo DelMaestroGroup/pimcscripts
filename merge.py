@@ -12,10 +12,10 @@ from optparse import OptionParser
 import numpy
 
 # -----------------------------------------------------------------------------
-def mergeData(pimc,type,newID,skip,baseDir):
+def mergeData(pimc,type,newID,skip,baseDir,idList=None):
     ''' Merge the results of the PIMC data files to a single file. '''
 
-    fileNames = pimc.getFileList(type)
+    fileNames = pimc.getFileList(type,idList=idList)
 
     numLines = 0
     fileExist = False
@@ -126,7 +126,7 @@ def mergeData(pimc,type,newID,skip,baseDir):
             print '%10d' %numLines
 
 # -----------------------------------------------------------------------------
-def mergeCumulativeData(pimc,type,newID,baseDir):
+def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
     '''Perform a cumulative average of estimators written to disk as running
     averages.  
     
@@ -134,7 +134,7 @@ def mergeCumulativeData(pimc,type,newID,baseDir):
     identical in each cumulative average but is good enough for a qualitative
     estimator.'''
 
-    fileNames = pimc.getFileList(type)
+    fileNames = pimc.getFileList(type,idList=idList)
 
     numLines = 0
     fileExist = False
@@ -207,6 +207,8 @@ def main():
                       help="how many input lines should we skip?")
     parser.add_option("--cumulative", action="store_true", dest="cumulative",
                       help="Merge cumulative estimators?")
+    parser.add_option("-i", "--id", action="append", dest="pimcID", type="int",\
+            help="a list of PIMC ID numbers to include")
     parser.set_defaults(skip=0)
 
     parser.set_defaults(canonical=False)
@@ -237,7 +239,7 @@ def main():
 
     # Create the PIMC analysis helper and fill up the simulation parameters maps
     pimc = pimchelp.PimcHelp(dataName,options.canonical,baseDir=baseDir)
-    pimc.getSimulationParameters()
+    pimc.getSimulationParameters(idList=options.pimcID)
 
     # We try to find a new PIMCID which is the average of the ones to merge, and
     # make sure it doesn't already exist
@@ -254,15 +256,15 @@ def main():
     # Merge all the output files
     print 'Merged data files:'
     for type in pimc.dataType:
-        mergeData(pimc,type,newID,options.skip,baseDir)
+        mergeData(pimc,type,newID,options.skip,baseDir,idList=options.pimcID)
 
     # Now perform the merge for possible cumulative average files
     if options.cumulative:
         for type in ['position','locsuper']:
-            mergeCumulativeData(pimc,type,newID,baseDir)
+            mergeCumulativeData(pimc,type,newID,baseDir,idList=options.pimcID)
 
     # copy over the log file
-    oldLogName = pimc.getFileList('log')[0]
+    oldLogName = pimc.getFileList('log',idList=options.pimcID)[0]
     newLogName = os.path.basename(oldLogName).replace(str(pimc.id[0]),str(newID))
     os.system('cp %s %s' % (oldLogName,baseDir+'MERGED/'+newLogName))
 

@@ -155,7 +155,10 @@ def main():
     figure(1)
     connect('key_press_event',kevent.press)
 
-    colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
+    #colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
+    #colors  = loadgmt.getColorList('cw/1','cw1-013',max(numFiles,2))
+    colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
+#    oc/rainbow
 
     for n,cdata in enumerate(data):
         plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
@@ -196,7 +199,9 @@ def main():
     ylabel(yLong)
     xlabel("MC Bin Number")
     tight_layout()
-    legend(loc='best', frameon=False, prop={'size':16},ncol=2)
+    leg = legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+    for l in leg.get_lines():
+        l.set_linewidth(4.0)
 
     # Perform a Welch's t-test
     if args['--ttest']:
@@ -221,7 +226,6 @@ def main():
             n, bins, patches = hist(data[i], 100, normed=1, facecolor=colors[i], 
                                     alpha=0.75, label=leglabel[i],
                                     edgecolor='w')
-
         # Add the p-values from the t-test
         y = 0.92
         if N > 1:
