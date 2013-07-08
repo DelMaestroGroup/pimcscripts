@@ -223,7 +223,7 @@ def main():
         fig = figure(3)
         connect('key_press_event',kevent.press)
         for i in range(N):
-            n, bins, patches = hist(data[i], 100, normed=1, facecolor=colors[i], 
+            n, bins, patches = hist(data[i], 100, normed=True, facecolor=colors[i], 
                                     alpha=0.75, label=leglabel[i],
                                     edgecolor='w')
         # Add the p-values from the t-test
