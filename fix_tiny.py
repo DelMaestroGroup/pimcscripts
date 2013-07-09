@@ -6,12 +6,13 @@ Description:
   Fix an overflow for extremly small (<10-100) numbers in estimator files.
   
 Usage:
-  fix_tiny.py <estimator-file>...
+  fix_tiny.py [--commit] <estimator-file>...
 
   fix_tiny.py -h | --help 
 
 Options:
-  -h --help                 Show this screen.
+  --commit      Commit the changes to disk by replacing the file
+  -h --help     Show this screen.
 """
 
 from docopt import docopt
@@ -35,6 +36,8 @@ def main():
 
     for fileName in fileNames:
         oldEstFile = file(fileName,'r')
+        oldEstText = oldEstFile.read()
+        oldEstFile.close()
 
         # now we test for any possible numbers in scientific notation jammed up
         # against each other
@@ -46,15 +49,20 @@ def main():
                 firstNum = firstNum[:-1]
             return  firstNum + ' ' + secondNum
 
-        oldEstText = oldEstFile.read()
         correctedEstText = re.sub('(?P<firstNum>[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9][0-9])?)(?P<secondNum>[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9][0-9])?)',splitScientificNumber,oldEstText)
         correctedEstText = re.sub('(?P<firstNum>[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9][0-9])?)(?P<secondNum>[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9][0-9])?)',splitScientificNumber,correctedEstText)
 
         newEst = correctedEstText.rstrip()
 
-        # output the new state
-        print newEst
-        oldEstFile.close()
+        
+        # save the new estimator
+        if args['--commit']:
+            oldEstFile = file(fileName,'w')
+            oldEstFile.write(newEst)
+            oldEstFile.close()
+        else:
+            # output the new estimator
+            print newEst
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
