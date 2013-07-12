@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # pimcplot.py
 # Adrian Del Maestro
 # 07.20.2009
@@ -21,7 +23,7 @@ def parseCMD():
     
     desc = "Performs a cumulative average plot of raw Monte Carlo data"
     parser = argparse.ArgumentParser(description=desc) 
-    parser.add_argument("file", help='data file')
+    parser.add_argument("file", help='data file', nargs='+')
     parser.add_argument('-e', '--estimator', type=str,
             help="The estimator to be plotted.")
     parser.add_argument('-s', '--skip', type=int, default=0,
@@ -101,9 +103,8 @@ def main():
 
     # parse the command line options
     args = parseCMD()
-    #args = docopt(__doc__)
 
-    fileNames = [args.file]
+    fileNames = args.file
     skip = args.skip
     period = args.period
     estimator = args.estimator
@@ -162,7 +163,7 @@ def main():
 
     #colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
     #colors  = loadgmt.getColorList('cw/1','cw1-013',max(numFiles,2))
-    colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
+    colors  = loadgmt.getColorList('oc', 'rainbow', max(numFiles,2))
 #    oc/rainbow
 
     for n,cdata in enumerate(data):
@@ -206,9 +207,12 @@ def main():
     ylabel(yLong)
     xlabel("MC Bin Number")
     tight_layout()
-    leg = legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
-    for l in leg.get_lines():
-        l.set_linewidth(4.0)
+    try:
+        leg = legend(loc='best', frameon=False, prop={'size':16}, markerscale=2, ncol=2)
+        for l in leg.get_lines():
+            l.set_linewidth(4.0)
+    except:
+        pass
 
     # Perform a Welch's t-test
     if args.ttest:
