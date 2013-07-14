@@ -103,14 +103,14 @@ def main():
 
     # parse the command line options
     args = parseCMD()
-
-    fileNames = args.file
+    
     skip = args.skip
     period = args.period
     estimator = args.estimator
     leglabel = [args.legend]
     error = args.error
-
+    fileNames = args.file
+        
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
         leglabel = []
