@@ -2,10 +2,8 @@
 # Script for plotting specific heat over a range of temperatures from
 # a set of gce-virial estimator files.
 #
-# THIS IS QUITE FRAGILE, NEEDS TO BE MADE MORE ROBUST! 
-#
 # Author:           Max Graves
-# Last Revised:     14-JUL-2013
+# Last Revised:     16-JUL-2013
 # =============================================================================
 
 import pylab as pl
@@ -45,6 +43,7 @@ def main():
         os.chdir('./film'+str(num)+'angs/OUTPUT/')
         alll = glob.glob("*virial*")
         E, E2, dEdB = pl.array([]), pl.array([]), pl.array([])
+        CvMax = Tmax = 0.0
         for a in alll:
             print a
             temps = pl.append(temps,float(a[11:17]))
@@ -56,21 +55,37 @@ def main():
                 dEdBavg = pl.average(dEdB)
                 Eavg2 = Eavg*Eavg
                 Cv = Eavg2 - E2avg -dEdBavg
-                print Cv
                 Cvs = pl.append(Cvs, Cv)
             except:
-                print 'passed'
+                print 'passed, there may be a problem'
                 pass
 
+            if Cv > CvMax:
+                CvMax = Cv
+                Tmax = float(a[11:17])
+            print 'Tmax: ',Tmax
+
+        reducedT = abs(1.0- temps/Tmax)
+
+        # Plot specific heat vs temp
         pl.figure(n)
         pl.plot(temps, Cvs, marker='o', linewidth=0,
-                color='Violet', label='film: '+str(num)+' '+r'$\AA$')
+                color='Indigo', label='film: '+str(num)+' '+r'$\AA$')
         pl.ylabel(r'$C_v / k_B \beta^2$', fontsize=20)
-        pl.xlabel(r'$\mu\ [K]$', fontsize=20)
+        pl.xlabel(r'$T\ [K]$', fontsize=20)
+        pl.legend(loc=2)
+        n += 1
+
+        # Plot specific heat vs reduced temp
+        pl.figure(n)
+        pl.plot(reducedT, Cvs, marker='o', linewidth=0,
+                color='Lime', label='film: '+str(num)+' '+r'$\AA$')
+        pl.ylabel(r'$C_v / k_B \beta^2$', fontsize=20)
+        pl.xlabel(r'$t = 1 - T/T_{\lambda}$', fontsize=20)
         pl.legend(loc=2)
         os.chdir('../../')
         n += 1
-    
+ 
     pl.show()
 
 # =============================================================================
