@@ -48,8 +48,8 @@ def main():
             print a
             temps = pl.append(temps,float(a[11:17]))
             try:
-                #E, E2, dEdB = pl.loadtxt(a, usecols=(0,4,5))
-                E, E2, dEdB = pl.loadtxt(a, unpack=True, usecols=(3,7,8))
+                E, E2, dEdB = pl.loadtxt(a, unpack=True, usecols=(0,4,5))
+                #E, E2, dEdB = pl.loadtxt(a, unpack=True, usecols=(3,7,8))
                 Eavg = pl.average(E)
                 E2avg = pl.average(E2)
                 dEdBavg = pl.average(dEdB)
@@ -59,6 +59,7 @@ def main():
             except:
                 print 'passed, there may be a problem'
                 pass
+            print 'Cv: ',Cv
 
             if Cv > CvMax:
                 CvMax = Cv

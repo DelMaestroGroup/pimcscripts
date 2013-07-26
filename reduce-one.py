@@ -65,6 +65,7 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
 
     # the data
     for i,f in enumerate(fileNames):
+        print pimc.id
         outFile.write('%16.8E' % float(pimc.params[pimc.id[i]][reduceFlag[1]]))
         for j,h in enumerate(headers):
             outFile.write('%16.8E%16.8E' % (ave[i,j],err[i,j]))
@@ -199,7 +200,11 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
 # -----------------------------------------------------------------------------
 # Begin Main Program 
 # -----------------------------------------------------------------------------
-def main(): 
+def main():
+
+    # (g)ce-log files must be present in cwd for this script to work
+    if glob.glob("*log*") == []:
+        sys.exit('\n(g)ce-log files need to accompany data.\n')
 
     # define the mapping between short names and label names 
     shortFlags = ['n','T','N','t','u','V','L']
