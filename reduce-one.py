@@ -54,6 +54,25 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
         data = loadtxt(fname,ndmin=2)[skip:,:]
         ave[i,:],err[i,:] = getStats(data)
     
+    # compute single centroid virial specific heat if possible
+    if 'dEdB' in headers:
+        Cv = ave[:,headers.index('EEcv')] - ave[:,headers.index('Ecv')]**2 - ave[:,headers.index('dEdB')]
+        aveNew = zeros([len(fileNames),len(headers)+1],float)
+        errNew = zeros([len(fileNames),len(headers)+1],float)
+        for i,a in enumerate(ave):
+            a = append(a, ave[:,headers.index('EEcv')][i] \
+                    - ave[:,headers.index('Ecv')][i]**2 \
+                    - ave[:,headers.index('dEdB')][i])
+            aveNew[i] = a
+        for i, e in enumerate(err):
+            e = append(e, err[:,headers.index('EEcv')][i] \
+                    - err[:,headers.index('Ecv')][i]**2 \
+                    - err[:,headers.index('dEdB')][i])
+            errNew[i] = e 
+        headers.append('Cv')
+        ave = aveNew
+        err = errNew
+
     # output the estimator data to disk
     outFile = open('%s-%s' % (type,outName),'w');
 

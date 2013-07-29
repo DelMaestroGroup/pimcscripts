@@ -710,6 +710,7 @@ class Description:
                                   'K/N':'Kinetic Energy per Particle [K]',
                                   'V/N':'Potential Energy per Particle [K]',
                                   'E/N':'Energy per Particle [K]',
+                                  'Cv':'Specific Heat [K]',
                                   'N':'Number of Particles',
                                   'N^2':r'(Number of Particles)$^2$',
                                   'density':r'%s Density  $[\mathrm{\AA}^{-%d}]$' % (densityName[NDIM-1],NDIM),
