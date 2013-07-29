@@ -202,10 +202,6 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
 # -----------------------------------------------------------------------------
 def main():
 
-    # (g)ce-log files must be present in cwd for this script to work
-    if glob.glob("*log*") == []:
-        sys.exit('\n(g)ce-log files need to accompany data.\n')
-
     # define the mapping between short names and label names 
     shortFlags = ['n','T','N','t','u','V','L']
     parMap = {'n':'Initial Density', 'T':'Temperature', 'N':'Initial Number Particles',
