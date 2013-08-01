@@ -110,14 +110,15 @@ def main():
                     cap.set_mew(2.0)
 
         #pl.tight_layout()
-        pl.xlabel(descrip.paramLongName[reduce.reduceLabel])
-        pl.ylabel(descrip.estimatorLongName[est])
+        pl.xlabel(descrip.paramLongName[reduce.reduceLabel], fontsize=18)
+        pl.ylabel(descrip.estimatorLongName[est],fontsize=18)
         leg = pl.legend(frameon=False, loc='best', prop={'size':18})
         if xLim != None:
             pl.xlim(xLim[0],xLim[1])
 
         if yLim != None:
             pl.ylim(yLim[0],yLim[1])
+        pl.grid(True)
 
     pl.show()
 
