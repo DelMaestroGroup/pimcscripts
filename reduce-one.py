@@ -56,17 +56,17 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
     
     # compute single centroid virial specific heat if possible
     if 'dEdB' in headers:
-        Cv = ave[:,headers.index('EEcv')] - ave[:,headers.index('Ecv')]**2 - ave[:,headers.index('dEdB')]
+        Cv = ave[:,headers.index('EEcv*Beta^2')] - ave[:,headers.index('Ecv*Beta')]**2 - ave[:,headers.index('dEdB')]
         aveNew = zeros([len(fileNames),len(headers)+1],float)
         errNew = zeros([len(fileNames),len(headers)+1],float)
         for i,a in enumerate(ave):
-            a = append(a, ave[:,headers.index('EEcv')][i] \
-                    - ave[:,headers.index('Ecv')][i]**2 \
+            a = append(a, ave[:,headers.index('EEcv*Beta^2')][i] \
+                    - ave[:,headers.index('Ecv*Beta')][i]**2 \
                     - ave[:,headers.index('dEdB')][i])
             aveNew[i] = a
         for i, e in enumerate(err):
-            e = append(e, err[:,headers.index('EEcv')][i] \
-                    - err[:,headers.index('Ecv')][i]**2 \
+            e = append(e, err[:,headers.index('EEcv*Beta^2')][i] \
+                    - err[:,headers.index('Ecv*Beta')][i]**2 \
                     - err[:,headers.index('dEdB')][i])
             errNew[i] = e 
         headers.append('Cv')
@@ -84,7 +84,7 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
 
     # the data
     for i,f in enumerate(fileNames):
-        print pimc.id
+        #print pimc.id
         outFile.write('%16.8E' % float(pimc.params[pimc.id[i]][reduceFlag[1]]))
         for j,h in enumerate(headers):
             outFile.write('%16.8E%16.8E' % (ave[i,j],err[i,j]))
@@ -222,10 +222,10 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
 def main():
 
     # define the mapping between short names and label names 
-    shortFlags = ['n','T','N','t','u','V','L']
+    shortFlags = ['n','T','N','t','u','V','L','W']
     parMap = {'n':'Initial Density', 'T':'Temperature', 'N':'Initial Number Particles',
               't':'Imaginary Time Step', 'u':'Chemical Potential', 'V':'Container Volume',
-              'L':'Container Length'}
+              'L':'Container Length', 'W':'Virial Window'}
 
     # setup the command line parser options 
     parser = OptionParser() 
@@ -244,8 +244,8 @@ def main():
     parser.add_option("-V", "--volume", dest="V", type="float",
                       help="volume in Angstroms^d") 
     parser.add_option("-r", "--reduce", dest="reduce",
-                      choices=['T','N','n','u','t','L','V'], 
-                      help="variable name for reduction [T,N,n,u,M,L,V]") 
+                      choices=['T','N','n','u','t','L','V','W'], 
+                      help="variable name for reduction [T,N,n,u,M,L,V,W]") 
     parser.add_option("--canonical", action="store_true", dest="canonical",
                       help="are we in the canonical ensemble?")
     parser.add_option("-p", "--plot", action="store_true", dest="plot",
@@ -276,7 +276,7 @@ def main():
     skip = options.skip
     
     if (not options.reduce):
-        parser.error("need a correct reduce flag (-r,--reduce): [T,N,n,u,t,L,V]")
+        parser.error("need a correct reduce flag (-r,--reduce): [T,N,n,u,t,L,V,W]")
 
     # Check that we are in the correct ensemble
     pimchelp.checkEnsemble(options.canonical)

@@ -351,8 +351,11 @@ class PimcHelp:
             for id in idList: 
                 fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,type,id)
                 fileNames.extend(glob.glob(fileLoc))
+        for f in sorted(fileNames):
+            print f
 
-        return fileNames
+        #return fileNames
+        return sorted(fileNames)
 
     # -----------------------------------------------------------------------------
     # def getFileList(self,type,idList=None):
@@ -700,7 +703,8 @@ class Description:
                               'N':'Number of Particles',
                               'n':r'%s Density  $[\mathrm{\AA}^{-%d}]$' % (densityName[NDIM-1],NDIM),
                               'R':'Pore Radius  %s ' % lengthTUnit,
-                              'L':'Length %s' % lengthTUnit}
+                              'L':'Length %s' % lengthTUnit,
+                              'W':'Virial Window [1/K]'}
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
                                   'V':'Potential Energy [K]',
@@ -710,6 +714,7 @@ class Description:
                                   'K/N':'Kinetic Energy per Particle [K]',
                                   'V/N':'Potential Energy per Particle [K]',
                                   'E/N':'Energy per Particle [K]',
+                                  'Ecv/N':'Energy per Particle [K]',
                                   'Cv':'Specific Heat [K]',
                                   'N':'Number of Particles',
                                   'N^2':r'(Number of Particles)$^2$',

@@ -187,7 +187,7 @@ case ${PBS_ARRAYID} in\n''')
                 command += '-%s %s ' % (flag,val[n]) 
             command += staticPIMCOps
             
-            pbsFile.write('%d)\nsleep %d\n' % (n,2*n))
+            pbsFile.write('%d)\nsleep %d\n' % (n,10*n))
             pbsFile.write('echo "Starting run %s to output file at:  `date` " >> %s/pimcCP%s.out\n'% (n+1,curDir,n+1))
             pbsFile.write(r'echo "Sleeping 29 hours to allow code to run, then checkpointing... \n\n"')       
             pbsFile.write('\n\ncd $PBS_O_WORKDIR\n\n')
@@ -207,7 +207,7 @@ case ${PBS_ARRAYID} in\n''')
     elif restartJob:
         curDir = '$PBS_O_WORKDIR/checkPt'
         for n in range(numOptions):
-            pbsFile.write('%d)\nsleep %d\n' % (n,2*n))
+            pbsFile.write('%d)\nsleep %d\n' % (n,10*n))
             pbsFile.write('echo "restarting run %s to output file at:  `date` " >> %s/pimcCP%s.out\n' % (n+1,curDir,n+1))
             pbsFile.write(r'echo "Sleeping 29 hours to allow code to run, then checkpointing... \n\n"')       
             pbsFile.write('\n\ncd $PBS_O_WORKDIR\n\n')
@@ -235,7 +235,7 @@ case ${PBS_ARRAYID} in\n''')
             for flag,val in optionValue.iteritems():
                 command += '-%s %s ' % (flag,val[n])
             command += staticPIMCOps
-            pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
+            pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,10*n,command))
         
         pbsFile.write('esac\necho \"Finished run at: `date`\"')
         pbsFile.close();

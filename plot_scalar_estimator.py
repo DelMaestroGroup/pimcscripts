@@ -74,15 +74,17 @@ def main():
                 pl.plot(reduce.param(), reduce.estimator(est,i),
                         label=lab,**pOptions)
             elif 'e' in plotType:
+                print reduce.param(),'  ',len(reduce.param())
+                print reduce.estimator(est,i),'   ',len(reduce.estimator(est,i))
+                print reduce.estimatorError(est,i),'   ',len(reduce.estimatorError(est,i))
                 eb = pl.errorbar(reduce.param(), reduce.estimator(est,i),
-                                 yerr=reduce.estimatorError(est,i), 
-                                 markerfacecolor=colors[i], ecolor=colors[i],
-                                 label=lab, **pOptions)
-                
+                        yerr=reduce.estimatorError(est,i), 
+                        markerfacecolor=colors[i], ecolor=colors[i],
+                        label=lab, **pOptions)
                 # Set the width of the cap lines
                 for cap in eb[1]:
                     cap.set_mew(2.0)
-
+            
         #pl.tight_layout()
         pl.xlabel(descrip.paramLongName[reduce.reduceLabel])
         pl.ylabel(descrip.estimatorLongName[est])
