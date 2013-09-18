@@ -16,7 +16,7 @@ Options:
   --period=<m>, -p <m>          The period of the average window [default: 50].
   --legend=<label>, -l <label>  A legend label
   --error=<units>, -d           Size of the error bars
-  --bin                         Use the binned errorbars
+  --nobin                       Don't use the binned errorbars
   --ttest                       Perform a ttest
 """
 
@@ -155,10 +155,24 @@ def main():
     figure(1)
     connect('key_press_event',kevent.press)
 
-    #colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
+    colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
     #colors  = loadgmt.getColorList('cw/1','cw1-013',max(numFiles,2))
-    colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
-#    oc/rainbow
+    #colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
+    #colors  = loadgmt.getColorList('grass','bgyr',max(numFiles,2))
+    colors = ["#70D44A", "#BE5AD4", "#D04537", "#81D0D5", "#393A2E", "#C49ECA", 
+              "#C5CB7A", "#523767", "#D39139", "#C8488C", "#CB817A", "#73D999", 
+              "#6F2836", "#6978CF", "#588569", "#CDC3AD", "#5C7890", "#7F5327", 
+              "#D0D33D", "#5B7D2E"]
+    colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A", 
+              "#CE4379", "#D2912E", "#7970D2", "#749AC9", "#7D5121", "#5EAC72", 
+              "#CB85AA", "#853B46", "#396465", "#A5A33E", "#D47F5B", "#BA4EA5", 
+              "#C93F44", "#5D9937"]
+    colors =["#CAC5E8", "#E1D273", "#82DFCE", "#F1AF92", "#E1E7CF", "#92C798", "#CDF197", "#DDD199", "#ECB1D1", "#91C7DE", "#E3AF6E", "#ECAAAC", "#CEB29C", "#B2BCA9", "#B0C778", "#DBCDD7", "#B5DEE0", "#A5ECB4", "#C5E6C0", "#E5CCC0"] 
+    colors = ["#688EAF", "#FC991D", "#7DEB74", "#FA6781", "#8B981D", "#BB7548", "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", "#688ECE", "#749DB7"]
+    colors += colors
+    colors += colors
+    colors += colors
+    print len(colors)
 
     for n,cdata in enumerate(data):
         plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
@@ -181,13 +195,13 @@ def main():
             if args['--error']:
                 cma = cumulativeMovingAverage(cdata[skip:])
                 sem = error*ones_like(cma)
-            elif args['--bin']:
+            elif args['--nobin']:
+                cma,sem = cumulativeMovingAverageWithError(cdata[skip:])
+            else:
                 cma = cumulativeMovingAverage(cdata[skip:])
                 ave,err = getStats(cdata[skip:])
                 sem = err*ones_like(cma)
                 print '%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err) 
-            else:
-                cma,sem = cumulativeMovingAverageWithError(cdata[skip:])
 
             sma = simpleMovingAverage(50,cdata[skip:])
             x = range(int(0.10*len(cma)),len(cma))

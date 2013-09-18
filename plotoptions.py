@@ -40,7 +40,7 @@ def plotOptions(plotType):
         pOps.pop('color')
 
     if 'e' in plotType:
-        pOps['capsize'] = 7
+        pOps['capsize'] = 5
         pOps['elinewidth'] = 1.0
         
     return pOps

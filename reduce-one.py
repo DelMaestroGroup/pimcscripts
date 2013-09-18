@@ -24,9 +24,9 @@ def getStats(data,dim=0):
         dataErr = amax(bins,axis=0)
         dataErr2 = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
 
-        for n,d in enumerate(dataErr):
-            if d > 2.0*dataErr2[n]:
-                dataErr[n] = 2.0*dataErr2[n]
+#        for n,d in enumerate(dataErr):
+#            if d > 2.0*dataErr2[n]:
+#                dataErr[n] = 2.0*dataErr2[n]
 
 #        try:
 #            bins = MCstat.bin(data) 
@@ -335,6 +335,7 @@ def main():
     # the grand canonical ensemble
     if estDo['number']:
         x4,ave4,err4 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
+
 # I don't know why this isn't working, MCStat is giving me an error, will
     # return to this later. AGD 
         #kappa,kappaErr = getKappa(pimc,outName,reduceFlag)

@@ -89,6 +89,7 @@ def main():
             if n == 0:
                 delta_ar = np.zeros((numFiles,delta.shape[0]))
             delta_ar[n,:] = delta.T
+            #delta_ar[n,:len(delta)] = delta.T
             n += 1
     
     if n > 1:

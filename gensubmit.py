@@ -174,7 +174,7 @@ def main():
             optionValue[flag] = option
             numOptions.append(len(option))
     
-    # We try to extract the temperature and volume to make an output string
+    # We try to extract the temperature, volume and timestep to make an output string
     outName = ''
     findInput = staticPIMCOps.split();
     n = 0
@@ -187,6 +187,12 @@ def main():
     for input in findInput:
         if input == '-L':
             outName += '-%07.3f' % float(findInput[n+1])
+            break
+        n += 1
+    n = 0
+    for input in findInput:
+        if input == '-t':
+            outName += '-%07.5f' % float(findInput[n+1])
             break
         n += 1
 
