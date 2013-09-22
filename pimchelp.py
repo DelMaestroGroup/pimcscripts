@@ -704,7 +704,8 @@ class Description:
                               'n':r'%s Density  $[\mathrm{\AA}^{-%d}]$' % (densityName[NDIM-1],NDIM),
                               'R':'Pore Radius  %s ' % lengthTUnit,
                               'L':'Length %s' % lengthTUnit,
-                              'W':'Virial Window [1/K]'}
+                              'W':'Virial Window [1/K]',
+                              'D':'CoM Delta'}
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
                                   'V':'Potential Energy [K]',

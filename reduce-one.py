@@ -222,10 +222,10 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
 def main():
 
     # define the mapping between short names and label names 
-    shortFlags = ['n','T','N','t','u','V','L','W']
+    shortFlags = ['n','T','N','t','u','V','L','W','D']
     parMap = {'n':'Initial Density', 'T':'Temperature', 'N':'Initial Number Particles',
               't':'Imaginary Time Step', 'u':'Chemical Potential', 'V':'Container Volume',
-              'L':'Container Length', 'W':'Virial Window'}
+              'L':'Container Length', 'W':'Virial Window', 'D':'CoM Delta'}
 
     # setup the command line parser options 
     parser = OptionParser() 
@@ -244,8 +244,8 @@ def main():
     parser.add_option("-V", "--volume", dest="V", type="float",
                       help="volume in Angstroms^d") 
     parser.add_option("-r", "--reduce", dest="reduce",
-                      choices=['T','N','n','u','t','L','V','W'], 
-                      help="variable name for reduction [T,N,n,u,M,L,V,W]") 
+                      choices=['T','N','n','u','t','L','V','W','D'], 
+                      help="variable name for reduction [T,N,n,u,M,L,V,W,D]") 
     parser.add_option("--canonical", action="store_true", dest="canonical",
                       help="are we in the canonical ensemble?")
     parser.add_option("-p", "--plot", action="store_true", dest="plot",
@@ -276,7 +276,7 @@ def main():
     skip = options.skip
     
     if (not options.reduce):
-        parser.error("need a correct reduce flag (-r,--reduce): [T,N,n,u,t,L,V,W]")
+        parser.error("need a correct reduce flag (-r,--reduce): [T,N,n,u,t,L,V,W,D]")
 
     # Check that we are in the correct ensemble
     pimchelp.checkEnsemble(options.canonical)
