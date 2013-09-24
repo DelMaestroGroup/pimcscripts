@@ -705,7 +705,7 @@ class Description:
                               'R':'Pore Radius  %s ' % lengthTUnit,
                               'L':'Length %s' % lengthTUnit,
                               'W':'Virial Window [1/K]',
-                              'D':'CoM Delta'}
+                              'D':r'CoM Delta [$\AA$]'}
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
                                   'V':'Potential Energy [K]',
@@ -730,7 +730,8 @@ class Description:
                                   'Area_rho_s':'Area Superfluid Fraction',
                                   'rho_s/rho|Z':r'$\rho_s/\rho_0$',
                                   'radwind':r'Radial Winding Superfliud Density $[\mathrm{\AA}^{-3}]$',
-                                  'radarea':r'Radial Area Superfliud Density $[\mathrm{\AA}^{-3}]$'
+                                  'radarea':r'Radial Area Superfliud Density $[\mathrm{\AA}^{-3}]$',
+                                  'x^2':r'$ \langle x^2 \rangle [\AA^2]$'
                                  }
 
         self.estimatorShortName = {'K':'K [K]',

@@ -75,6 +75,7 @@ def main():
         pl.figure(1)
         pl.plot(timeSteps,0.5/pl.tanh(1.0/(2.0*(temps))), label='Exact')
         pl.errorbar(timeSteps,Es,EsErr, label='PIMC virial',color='Lime',fmt='o')
+        pl.errorbar(timeSteps,ET,ETerr, label='PIMC therm.',color='Navy',fmt='o')
         pl.xlabel('Time Step [1/K]')
         pl.ylabel('Energy [K]')
         pl.title('1D QHO -- 1 boson -- T=%s' % temps[0])
