@@ -38,13 +38,16 @@ def main():
         sftp.mkdir(seedDirName)
         sftp.chdir('./'+seedDirName)
 
-        # create case structure inside of each seedXXX direc.
+        # create directory structure inside of each seedXXX direc.
         sftp.mkdir('out')
         sftp.mkdir('OUTPUT')
 
         # path to gensubmit and submit file (must be named 'submit')
         genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
-        subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
+        if args.N52BulkHe:
+            subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/N52BulkHeSubmit'
+        else:
+            subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
 
         # change random number seed in submit file
         with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
@@ -52,7 +55,7 @@ def main():
                 outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line) )
 
         # run gensubmit
-        command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster bluemoon')
+        command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster=bluemoon')
         subprocess.check_call(command, shell=True)
 
         # copy submit file over to bluemoon

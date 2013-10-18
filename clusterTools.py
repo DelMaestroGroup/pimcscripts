@@ -3,31 +3,49 @@
 # random number seeds.
 # =============================================================================
 
-import os,argparse,re,sys,glob,shutil
+import os,argparse,re,sys,glob,shutil,subprocess
 import paramiko
 import getpass
+import pylab as pl
+import numpy as np
 
 def parseCMD():
     ''' parse the command line. '''
-    parser = argparse.ArgumentParser(description='pulls down lots of files.')
+    # set up parser/ subparsers
+    parser = argparse.ArgumentParser(description='Cluster Management Tools 1.2')
+    subparsers = parser.add_subparsers(help='enter one of these before --help')
+    pullParse = subparsers.add_parser('pull', help='Pull Options')
+    pushParse = subparsers.add_parser('push', help='Push Options')
+    
+    # common options
     parser.add_argument('-U', '--UserName', type=str,
             default='mtgraves',
             help='Username for your VACC account.')
-    parser.add_argument('-d', '--deleteDirs', action='store_true', 
-            dest='delDir',default=True,
-            help='Do you want to delete the individual seed direcs?')
-    parser.add_argument('-s', '--submitJobs', action='store_true', 
+    parser.add_argument('-t', '--targetDir', type=str,
+            help='Push (Pull) directories to (from) ~/(--targetDir)')
+
+    # push options
+    pushParse.add_argument('-s', '--submitJobs', action='store_true', 
             dest='submitJobs',default=False,
             help='Do you want to automatically submit the jobs?')
-    parser.add_argument('-t', '--targetDir', type=str,
-            help='Enter directory to build structures in: ~/(--targetDir)')
-    parser.add_argument('-L', '--lowSeed', type=int,
+    pushParse.add_argument('-L', '--lowSeed', type=int,
             default=0,
             help='Low seed.')
-    parser.add_argument('-H', '--highSeed', type=int,
+    pushParse.add_argument('-H', '--highSeed', type=int,
             default=0,
             help='High seed. (highSeed-lowSeed = numSeeds)')
-
+    pushParse.add_argument('-B', '--N52BulkHe', action='store_true', 
+            dest='N52BulkHe',default=False,
+            help='Access the submit script for N=52, 3D Bulk He-4')   
+    
+    # pull options
+    pullParse.add_argument('-d', '--deleteDirs', action='store_true', 
+            dest='delDir',default=True,
+            help='Do you want to delete the individual seed direcs?')
+    pullParse.add_argument('-c', '--crunch', action='store_true',
+            dest='Crunch',default=False,
+            help='Combine all arrays of same temperature after pulling files.')
+    
     return parser.parse_args()
 
 def Credentials(userN):
@@ -69,19 +87,102 @@ def repeatCheck():
 
 def renameFilesInDirecs(delDir):
     '''
-    rename all files within their directories and
+    Rename all files within their directories and
     optionally delete all directories pulled from cluster.
+    Unzip all files that are in .tar.gz format.
     '''
     dirNames = glob.glob('*seed*')
     for dirName in dirNames:
         os.chdir('./'+dirName)
         filesIn = glob.glob('*.dat*')
         for zebra in filesIn:
-            shutil.copy2(zebra, '../'+zebra[:-13]+dirName[-3:]+zebra[-10:])
+            if zebra[-3:]=='.gz':
+                comm = ("gunzip", str(zebra))
+                subprocess.check_call(comm)
+                shutil.copy2(zebra[:-3], '../'+zebra[:-16]+dirName[-3:]+zebra[-13:-3])
+                print zebra[:-16]+dirName[-3:]+zebra[-13:-3]
+                print zebra[:-3]
+            else:
+                shutil.copy2(zebra, '../'+zebra[:-13]+dirName[-3:]+zebra[-10:])
         os.chdir('..')
         if delDir:
             shutil.rmtree('./'+dirName)
     if delDir:
-        print 'Chose to delete original direcs'
+        print 'Chose to delete original direcs and rename files with seed num.'
+
+def crunchData():
+    '''
+    This function will grab all (g)ce-estimator files in a directory and
+    if there are multiple data files for the same temperature it will write
+    all of the data into a new file categorized by the temperatures.
+    The actual data stored will be in columns of the three terms (in order)
+    needed to compute C_v. ( E, EEcv*beta^2, Ecv*beta, dEdB*beta^2 ).
+    '''
+    # grab all files
+    estimFiles = glob.glob('*estimator*')
+    # make list of all temperatures, in order
+    tempList = pl.array([])
+    for f in estimFiles:
+        if f[13:19] not in tempList:
+            tempList = pl.append(tempList, f[13:19])
+    tempList = pl.sort(tempList)
+
+    allTempsE = []
+    allTemps1 = []
+    allTemps2 = []
+    allTemps3 = []
+    for numTemp,temp in enumerate(tempList):
+        # only grab estimator files of correct temperature
+        tempFiles = glob.glob('*estimator-%s*' % temp)
+        E       = pl.array([])
+        EEcv    = pl.array([])
+        Ecv     = pl.array([])
+        dEdB    = pl.array([])
+        for tFile in tempFiles:
+            #print tFile
+            ET, EEcvT, EcvT, dEdBT = pl.loadtxt(tFile, unpack=True, \
+                    usecols=(4,11,12,13))
+            E       = pl.append(E, ET)
+            EEcv    = pl.append(EEcv, EEcvT)
+            Ecv     = pl.append(Ecv, EcvT)
+            dEdB    = pl.append(dEdB, dEdBT)
+        print 'T=',temp,', bins=',len(E)
+        allTempsE += [[E]]
+        allTemps1 += [[EEcv]]
+        allTemps2 += [[Ecv]]
+        allTemps3 += [[dEdB]]
+
+    # USAGE KEY:
+    # len(allTemps1) gives number of temperatures
+    # allTemps[i][0] gives the array for the i^th temperature
+    # allTemps[i][0][j] gives the jth element of the ith temperature array
+
+    # create new file of all data and write the header
+    fout = open('ReducedEstimatorData.dat', 'w')
+    fout.write('#%15s\t%16s\t%16s\t%16s\t'% (tempList[0], '','',''))
+    for temp in tempList[1:]:
+        fout.write('%16s\t%16s\t%16s\t%16s\t'% (temp,'','',''))
+    fout.write('\n')
+
+    # determine length of maximum sized array
+    for arr in range(len(allTemps1)):
+        maxLen = int(len(allTemps1[arr][0]))
+
+    # write all combined arrays to disk
+    for line in range(maxLen):
+        for numT in range(len(allTemps1)):
+            if int(len(allTemps1[numT][0])) <= line:
+                #fout.write('%10s\t' % None)
+                fout.write('%16s\t%16s\t%16s\t%16s\t' % ('','','',''))
+            else:
+                #fout.write('%10s\t%10s\t%10s\t'% (
+                fout.write('%16.8E,\t%16.8E,\t%16.8E,\t%16.8E,\t'% (
+                    float(allTempsE[numT][0][line]),
+                    float(allTemps1[numT][0][line]),
+                    float(allTemps2[numT][0][line]),
+                    float(allTemps3[numT][0][line]) ))
+        fout.write('\n')
+
+    fout.close()
 
 # =============================================================================

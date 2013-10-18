@@ -25,6 +25,7 @@ Options:
 import pylab as pl
 import argparse
 from docopt import docopt
+import sys
 
 # ===================================================================
 def main():
@@ -36,7 +37,17 @@ def main():
     # Open up the tensor file, and determine the number of grid boxes in each
     # dimension
     inFile = open(fileName,'r')
-    N = int(inFile.readline().split()[1])
+    oldFile=True
+    # get size of 
+    if oldFile:
+        print 'Chose to work on an older position file'
+        for i, line in enumerate(inFile):
+            if i==1:
+                N = int(line.split()[-1])+1
+                break
+    else:
+        print 'Chose to work on a newer position file'
+        N = int(inFile.readline().split()[1])
     inFile.close()
 
     # Assuming a 3d data set, load the data
@@ -49,6 +60,9 @@ def main():
     pl.ylabel(r'$x\  [\AA]$')
     pl.title('Particle Density Projection (X-Y)')
     pl.colorbar(shrink=0.4)
+
+    pl.savefig('xy_densityHistogram.pdf', format='pdf',
+            bbox_inches='tight')
     
     pl.figure(2)
     pl.imshow(pl.sum(data,axis=1))
@@ -56,7 +70,10 @@ def main():
     pl.ylabel(r'$x\  [\AA]$')
     pl.title('Particle Density Projection (X-Z)')
     pl.colorbar(shrink=0.4)
-   
+ 
+    pl.savefig('zx_densityHistogram.pdf', format='pdf',
+            bbox_inches='tight')  
+    
     pl.figure(3)
     pl.imshow(pl.sum(data,axis=0))
     pl.xlabel(r'$z\  [\AA]$')
@@ -64,6 +81,8 @@ def main():
     pl.title('Particle Density Projection (Y-Z)')
     pl.colorbar(shrink=0.4)
 
+    pl.savefig('zy_densityHistogram.pdf', format='pdf',
+            bbox_inches='tight')
    
     pl.show()
           

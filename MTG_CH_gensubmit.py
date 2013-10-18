@@ -387,7 +387,7 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
         
         pbsFile.write('echo "%s" \n' % command )
         pbsFile.write('%s \n\n' % command )
-        # was commented here down
+        '''# was commented here down
         if (n == numOptions -1):
             pbsFile.write('resubmit=0\n')
             pbsFile.write('for i in {0..%s}\n' % (numOptions-1) )
@@ -408,7 +408,7 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
             pbsFile.write('else\n')
             pbsFile.write('\techo "All jobs in %s have completed!"\n' % jobBase)
             pbsFile.write('fi\n')
-        # end 'was' comment
+        # end 'was' comment'''
         pbsFile.write(';;\n##=============================================='
                       '===================================================='
                       '===============================================\n')
@@ -417,6 +417,7 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
     pbsFile.write(  'gzip OUTPUT/*\n'                       +\
                     'cp OUTPUT/* ${PBS_O_WORKDIR}/OUTPUT\n' +\
                     'cd ${PBS_O_WORKDIR}\n'                 +\
+                    'gunzip ${PBS_O_WORKDIR}/OUTPUT*\n'     +\
                     'rm -r /tmp/${PBS_JOBID}_${PBS_ARRAYID}\n\n')
     pbsFile.close();
     print '\nSubmit jobs with: qsub %s\n' % fileName
