@@ -15,7 +15,7 @@ def main():
     
     passwd = cT.Credentials(args.UserName)
     
-    fileTypes = ['log','estimator']
+    fileTypes = ['log','estimator','super']
     #fileTypes = ['log']
    
     # create ssh and sftp instances

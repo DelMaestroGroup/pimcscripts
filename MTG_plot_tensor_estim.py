@@ -2,6 +2,8 @@
 
 Description:
   Performs a density plot of a tensor estimator.  Currently defaults to 3d
+  Currently the extents of the simulation cell are hard coded to
+  8x8x24 Angstroms.
   
 Usage:
   plot_tensor_estimator.py <input-file>
@@ -11,8 +13,6 @@ Usage:
 Options:
   -h --help                                 Show this screen.
 """
-
-
 
 # ===================================================================
 # Plot the density of particles in a simulation cell.
@@ -37,17 +37,7 @@ def main():
     # Open up the tensor file, and determine the number of grid boxes in each
     # dimension
     inFile = open(fileName,'r')
-    oldFile=True
-    # get size of 
-    if oldFile:
-        print 'Chose to work on an older position file'
-        for i, line in enumerate(inFile):
-            if i==1:
-                N = int(line.split()[-1])+1
-                break
-    else:
-        print 'Chose to work on a newer position file'
-        N = int(inFile.readline().split()[1])
+    N = int(inFile.readline().split()[1])
     inFile.close()
 
     # Assuming a 3d data set, load the data
@@ -55,30 +45,30 @@ def main():
         
     # plot histograms in all three projections
     pl.figure(1)
-    pl.imshow(pl.sum(data,axis=2))
-    pl.xlabel(r'$y\  [\AA]$')
-    pl.ylabel(r'$x\  [\AA]$')
-    pl.title('Particle Density Projection (X-Y)')
+    pl.imshow(pl.sum(data,axis=2)/N, extent=[-4,4,-4,4])
+    pl.xlabel(r'$y\  [\AA]$', fontsize=20)
+    pl.ylabel(r'$x\  [\AA]$', fontsize=20)
+    #pl.title('Particle Density Projection (X-Y)')
     pl.colorbar(shrink=0.4)
 
     pl.savefig('xy_densityHistogram.pdf', format='pdf',
             bbox_inches='tight')
     
     pl.figure(2)
-    pl.imshow(pl.sum(data,axis=1))
-    pl.xlabel(r'$z\  [\AA]$')
-    pl.ylabel(r'$x\  [\AA]$')
-    pl.title('Particle Density Projection (X-Z)')
+    pl.imshow(pl.sum(data,axis=1)/N, extent=[-12,12,-4,4])
+    pl.xlabel(r'$z\  [\AA]$', fontsize=20)
+    pl.ylabel(r'$x\  [\AA]$', fontsize=20)
+    #pl.title('Particle Density Projection (X-Z)')
     pl.colorbar(shrink=0.4)
  
     pl.savefig('zx_densityHistogram.pdf', format='pdf',
             bbox_inches='tight')  
     
     pl.figure(3)
-    pl.imshow(pl.sum(data,axis=0))
-    pl.xlabel(r'$z\  [\AA]$')
-    pl.ylabel(r'$y\  [\AA]$')
-    pl.title('Particle Density Projection (Y-Z)')
+    pl.imshow(pl.sum(data,axis=0)/N, extent=[-12,12,-4,4])
+    pl.xlabel(r'$z\  [\AA]$', fontsize=20)
+    pl.ylabel(r'$y\  [\AA]$', fontsize=20)
+    #pl.title('Particle Density Projection (Y-Z)')
     pl.colorbar(shrink=0.4)
 
     pl.savefig('zy_densityHistogram.pdf', format='pdf',

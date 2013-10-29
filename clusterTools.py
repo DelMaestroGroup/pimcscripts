@@ -1,6 +1,11 @@
 # =============================================================================
+# Functions used in pull/push seedDirs script.
+#
 # This script assumes you will not have more than 1000 different
 # random number seeds.
+#
+# Author:           Max Graves
+# Last Revised:     24-OCT-2013
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil,subprocess
@@ -118,27 +123,66 @@ def crunchData():
     The actual data stored will be in columns of the three terms (in order)
     needed to compute C_v. ( E, EEcv*beta^2, Ecv*beta, dEdB*beta^2 ).
     '''
-    # grab all files
-    estimFiles = glob.glob('*estimator*')
-    # make list of all temperatures, in order
+    # glob for files
+    estimFiles  = glob.glob('*estimator*')
+    biPartFiles = glob.glob('*bipart_dens*')
+    superFiles  = glob.glob('*super*')
+    
+    # check for bipartition files
+    if biPartFiles == []:
+        biPart = False
+    else:
+        biPart = True
+
+    # check which ensemble
+    canonical = True
+    if estimFiles[0][0] == 'g':
+        canonical = False
+
+    # make list of all temperatures, in order, based on ensemble
     tempList = pl.array([])
     for f in estimFiles:
-        if f[13:19] not in tempList:
-            tempList = pl.append(tempList, f[13:19])
+        if canonical: 
+            temptemp = f[13:19]
+        else:
+            temptemp = f[14:20]
+        
+        if temptemp not in tempList:
+            tempList = pl.append(tempList, temptemp)
     tempList = pl.sort(tempList)
 
-    allTempsE = []
-    allTemps1 = []
-    allTemps2 = []
-    allTemps3 = []
+    # lists to hold all data
+    allTempsE   = []
+    allTemps1   = []
+    allTemps2   = []
+    allTemps3   = []
+    if biPart:
+        allTempsfD = []
+        allTempsbD = []
+    allTempsSuper = []
+
     for numTemp,temp in enumerate(tempList):
         # only grab estimator files of correct temperature
-        tempFiles = glob.glob('*estimator-%s*' % temp)
+        estFiles = glob.glob('*estimator-%s*' % temp)
+        superFiles = glob.glob('*super-%s*' % temp)
+        if biPart:
+            bipFiles = glob.glob('*bipart_dens-%s*' % temp)
+            bulkDens = pl.array([])
+            filmDens = pl.array([])
+            for bFile in bipFiles:
+                fD, bD = pl.loadtxt(bFile,unpack=True, \
+                        usecols=(0,1))
+                bulkDens = pl.append(bulkDens, bD)
+                filmDens = pl.append(filmDens, fD)
+            allTempsfD += [[filmDens]]
+            allTempsbD += [[bulkDens]]
         E       = pl.array([])
         EEcv    = pl.array([])
         Ecv     = pl.array([])
         dEdB    = pl.array([])
-        for tFile in tempFiles:
+        Super   = pl.array([])
+
+        for tFile in estFiles:
             #print tFile
             ET, EEcvT, EcvT, dEdBT = pl.loadtxt(tFile, unpack=True, \
                     usecols=(4,11,12,13))
@@ -147,35 +191,42 @@ def crunchData():
             Ecv     = pl.append(Ecv, EcvT)
             dEdB    = pl.append(dEdB, dEdBT)
         print 'T=',temp,', bins=',len(E)
+
+        for sFile in superFiles:
+            rhos_rho = pl.loadtxt(sFile, unpack=True, usecols=(0,))
+            Super = pl.append(Super, rhos_rho)
+
         allTempsE += [[E]]
         allTemps1 += [[EEcv]]
         allTemps2 += [[Ecv]]
         allTemps3 += [[dEdB]]
+
+        allTempsSuper += [[Super]]
+
+    # determine length of maximum sized array
+    maxLen = 0
+    for arr in range(len(allTemps1)):
+        if int(len(allTemps1[arr][0])) > maxLen:
+            maxLen = int(len(allTemps1[arr][0]))
 
     # USAGE KEY:
     # len(allTemps1) gives number of temperatures
     # allTemps[i][0] gives the array for the i^th temperature
     # allTemps[i][0][j] gives the jth element of the ith temperature array
 
-    # create new file of all data and write the header
+    # create energy/ specific heat file and write the header
     fout = open('ReducedEstimatorData.dat', 'w')
     fout.write('#%15s\t%16s\t%16s\t%16s\t'% (tempList[0], '','',''))
     for temp in tempList[1:]:
         fout.write('%16s\t%16s\t%16s\t%16s\t'% (temp,'','',''))
     fout.write('\n')
 
-    # determine length of maximum sized array
-    for arr in range(len(allTemps1)):
-        maxLen = int(len(allTemps1[arr][0]))
-
-    # write all combined arrays to disk
+    # write energy and specific heat arrays to disk
     for line in range(maxLen):
         for numT in range(len(allTemps1)):
             if int(len(allTemps1[numT][0])) <= line:
-                #fout.write('%10s\t' % None)
                 fout.write('%16s\t%16s\t%16s\t%16s\t' % ('','','',''))
             else:
-                #fout.write('%10s\t%10s\t%10s\t'% (
                 fout.write('%16.8E,\t%16.8E,\t%16.8E,\t%16.8E,\t'% (
                     float(allTempsE[numT][0][line]),
                     float(allTemps1[numT][0][line]),
@@ -184,5 +235,47 @@ def crunchData():
         fout.write('\n')
 
     fout.close()
+
+    # create superfluid file and write the header
+    fout = open('ReducedSuperData.dat', 'w')
+    fout.write('#%15s\t'% ( tempList[0] ))
+    for temp in tempList[1:]:
+        fout.write('%16s\t' % ( temp ))
+    fout.write('\n')
+
+    # write superfluid stiffness arrays to disk
+    for line in range(maxLen):
+        for numT in range(len(allTemps1)):
+            if int(len(allTempsSuper[numT][0])) <= line:
+                fout.write('%16s\t' % (''))
+            else:
+                fout.write('%16.8E,\t'% (
+                    float(allTempsSuper[numT][0][line])))
+        fout.write('\n')
+
+    fout.close()
+
+
+    if biPart:
+        # create file for bipartition density
+        fout = open('ReducedBiPartData.dat', 'w')
+        fout.write('#%15s\t%16s\t'% (tempList[0], ''))
+        for temp in tempList[1:]:
+            fout.write('%16s\t%16s\t'% (temp,''))
+        fout.write('\n')
+
+        # write bipartition density arrays to disk
+        for line in range(maxLen):
+            for numT in range(len(allTempsfD)):
+                if int(len(allTempsfD[numT][0])) <= line:
+                    fout.write('%16s\t%16s\t' % ('',''))
+                else:
+                    fout.write('%16.8E,\t%16.8E,\t'% (
+                        float(allTempsfD[numT][0][line]),
+                        float(allTempsbD[numT][0][line]) ))
+            fout.write('\n')
+
+        fout.close()
+
 
 # =============================================================================

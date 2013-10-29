@@ -59,7 +59,7 @@ def main():
         subprocess.check_call(command, shell=True)
 
         # copy submit file over to bluemoon
-        subFile = glob.glob('*submit-pimc*')
+        subFile = glob.glob('*submit-pimc.*')
         if len(subFile) != 1:
             sys.exit('you have more than one submit file here')
         sftp.put('./'+subFile[0], './'+subFile[0])
