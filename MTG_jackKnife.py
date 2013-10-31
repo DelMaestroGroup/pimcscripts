@@ -22,8 +22,11 @@ def main():
     if check == []:
         
         temps,Cvs,CvsErr = pl.array([]),pl.array([]),pl.array([])
-        Es, EsErr = pl.array([]), pl.array([])
-        rhos_rhos, rhos_rhoErr = pl.array([]), pl.array([])
+        Es, EsErr   = pl.array([]), pl.array([])
+        rhos_rhos, rhos_rhoErr  = pl.array([]), pl.array([])
+
+        filmDenses, bulkDenses      = pl.array([]), pl.array([])
+        filmDensErrs, bulkDensErrs    = pl.array([]), pl.array([])
    
         # open energy/ specific heat data file, write headers
         fout = open('JackKnifeData_Cv.dat', 'w')
@@ -34,13 +37,18 @@ def main():
         foutSup = open('JackKnifeData_super.dat','w')
         foutSup.write('#%15s\t%16s\t%16s\n'%(
             'T', 'rho_s/rho', 'rho_s/rhoErr'))
+         
+        # open superfluid stiffness data file, write headers
+        foutDens = open('JackKnifeData_bipart.dat','w')
+        foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
+            'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
         
         # perform jackknife analysis of data, writing to disk
         if args.Crunched:   # check if we have combined data
             tempList = aTools.getHeadersFromFile(fileNames[0])
             for temp in tempList:
                 temps = pl.append(temps,float(temp))
-            n,n2 = 0,0
+            n,n2,n3 = 0,0,0
             for fileName in fileNames:
                 print '\n\n---',fileName,'---\n'
                 for temp in tempList:
@@ -61,6 +69,7 @@ def main():
                         fout.write('%16.8E\t%16.8E\t%16.8E\t%16.8E\t%16.8E\n' %(
                             float(temp), EAve, Eerr, jkAve, jkErr)) 
                         n += 4
+
                     elif 'Super' in fileName:
                         rhos_rho = pl.loadtxt(fileName, \
                                 unpack=True, usecols=(n2,), delimiter=',')
@@ -72,8 +81,24 @@ def main():
                             float(temp), superAve, superErr))
                         n2 += 1
 
+                    elif 'BiPart' in fileName:
+                        filmDens, bulkDens  = pl.loadtxt(fileName, \
+                                unpack=True, usecols=(n3,n3+1), delimiter=',')
+                        filmDensAve, filmDensErr = aTools.jackknife(filmDens[skip:])
+                        bulkDensAve, bulkDensErr = aTools.jackknife(bulkDens[skip:])
+                        print 'filmDens = ', filmDensAve,' +/- ',filmDensErr
+                        print 'bulkDens = ', bulkDensAve,' +/- ',bulkDensErr
+                        filmDenses      = pl.append(filmDenses, filmDensAve)
+                        filmDensErrs    = pl.append(filmDensErrs, filmDensErr)
+                        bulkDenses  = pl.append(bulkDenses, bulkDensAve)
+                        bulkDensErrs    = pl.append(bulkDensErrs, bulkDensErr)
+                        foutDens.write('%16.8E\t%16.8E\t%16.8E\t%16.8E\t%16.8E\n' %(
+                            float(temp), filmDensAve, filmDensErr, 
+                            bulkDensAve, bulkDensErr))
+                        n3 += 2
 
         else:       # otherwise just read in individual (g)ce-estimator files
+            # THIS IS LAGGING BEHIND THE CRUNCHED SECTION
             for fileName in fileNames:
                 if canonical: 
                     temp = float(fileName[13:19])
@@ -96,12 +121,19 @@ def main():
                     float(temp), EAve, Eerr, jkAve, jkErr)) 
         
         fout.close()
+        foutSup.close()
+        foutDens.close()
 
     else:
         print 'Found existing data file in CWD.'
-        temps, Es, EsErr, Cvs, CvsErr = pl.loadtxt('JackKnifeData_Cv.dat', 
+        temps, Es, EsErr, Cvs, CvsErr = pl.loadtxt(
+                'JackKnifeData_Cv.dat', 
                 unpack=True)
-        temps, rhos_rhos, rhos_rhoErr = pl.loadtxt('JackKnifeData_super.dat', 
+        temps, rhos_rhos, rhos_rhoErr = pl.loadtxt(
+                'JackKnifeData_super.dat', 
+                unpack=True)
+        temps, filmDenses, filmDensErrs, bulkDenses, bulkDensErrs = pl.loadtxt(
+                'JackKnifeData_bipart.dat',
                 unpack=True)
    
 
@@ -170,6 +202,17 @@ def main():
     pl.ylabel('Superfluid Stiffness', fontsize=20)
     pl.grid(True)
 
+    if ShareAxis:
+        pl.figure(3)
+    else:
+        pl.figure(4)
+    pl.errorbar(temps, filmDenses, filmDensErrs, label='film')
+    pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk')
+    pl.xlabel('Temperature [K]', fontsize=20)
+    pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
+    pl.legend()
+    pl.grid(True)
+    
     pl.show()
 
 # =============================================================================

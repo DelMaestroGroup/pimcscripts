@@ -115,6 +115,23 @@ def renameFilesInDirecs(delDir):
     if delDir:
         print 'Chose to delete original direcs and rename files with seed num.'
 
+def checkIfEmpty(fName,n):
+    '''
+    takes the first non-header line number and returns true or false
+    depending upon whether that line is blank or not.
+    '''
+    Empty = False
+    fp = open(fName)
+    numLines = 0
+    for line in fp:
+        numLines += 1
+    fp.close()
+
+    if numLines == n:
+        Empty=True
+    
+    return Empty
+
 def crunchData():
     '''
     This function will grab all (g)ce-estimator files in a directory and
@@ -165,36 +182,48 @@ def crunchData():
         # only grab estimator files of correct temperature
         estFiles = glob.glob('*estimator-%s*' % temp)
         superFiles = glob.glob('*super-%s*' % temp)
-        if biPart:
-            bipFiles = glob.glob('*bipart_dens-%s*' % temp)
-            bulkDens = pl.array([])
-            filmDens = pl.array([])
-            for bFile in bipFiles:
-                fD, bD = pl.loadtxt(bFile,unpack=True, \
-                        usecols=(0,1))
-                bulkDens = pl.append(bulkDens, bD)
-                filmDens = pl.append(filmDens, fD)
-            allTempsfD += [[filmDens]]
-            allTempsbD += [[bulkDens]]
+        
         E       = pl.array([])
         EEcv    = pl.array([])
         Ecv     = pl.array([])
         dEdB    = pl.array([])
         Super   = pl.array([])
 
+
+        if biPart:
+            bipFiles = glob.glob('*bipart_dens-%s*' % temp)
+            bulkDens = pl.array([])
+            filmDens = pl.array([])
+            for bFile in bipFiles:
+                if checkIfEmpty(bFile,2):
+                    pass
+                else:
+                    fD, bD = pl.genfromtxt(bFile,unpack=True, \
+                            usecols=(0,1))
+                    bulkDens = pl.append(bulkDens, bD)
+                    filmDens = pl.append(filmDens, fD)
+            allTempsfD += [[filmDens]]
+            allTempsbD += [[bulkDens]]
+        
         for tFile in estFiles:
             #print tFile
-            ET, EEcvT, EcvT, dEdBT = pl.loadtxt(tFile, unpack=True, \
-                    usecols=(4,11,12,13))
-            E       = pl.append(E, ET)
-            EEcv    = pl.append(EEcv, EEcvT)
-            Ecv     = pl.append(Ecv, EcvT)
-            dEdB    = pl.append(dEdB, dEdBT)
+            if checkIfEmpty(tFile,2):    # check for empty file
+                pass
+            else:
+                ET, EEcvT, EcvT, dEdBT = pl.genfromtxt(tFile, unpack=True, \
+                        usecols=(4,11,12,13))
+                E       = pl.append(E, ET)
+                EEcv    = pl.append(EEcv, EEcvT)
+                Ecv     = pl.append(Ecv, EcvT)
+                dEdB    = pl.append(dEdB, dEdBT)
         print 'T=',temp,', bins=',len(E)
 
         for sFile in superFiles:
-            rhos_rho = pl.loadtxt(sFile, unpack=True, usecols=(0,))
-            Super = pl.append(Super, rhos_rho)
+            if checkIfEmpty(sFile,2):
+                pass
+            else:
+                rhos_rho = pl.genfromtxt(sFile, unpack=True, usecols=(0,))
+                Super = pl.append(Super, rhos_rho)
 
         allTempsE += [[E]]
         allTemps1 += [[EEcv]]
