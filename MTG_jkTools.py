@@ -14,7 +14,10 @@ def parseCMD():
     parser.add_argument('-c', '--crunched', action='store_true', 
             dest='Crunched', default=False,
             help='Is Cv data already crunched from multiple seeds?')
-
+    parser.add_argument('-r', '--reduceType', type=str,
+            default='T',
+            help='What are we reducing over? [T,u]')
+    
     return parser.parse_args()
 
 def getHeadersFromFile(fileName, skipLines=0):

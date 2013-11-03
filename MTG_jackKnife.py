@@ -12,6 +12,8 @@ def main():
     fileNames = args.fileNames
     skip = args.skip
 
+    reduceType = args.reduceType
+
     # check which ensemble
     canonical=True
     if fileNames[0][0]=='g':
@@ -30,19 +32,32 @@ def main():
    
         # open energy/ specific heat data file, write headers
         fout = open('JackKnifeData_Cv.dat', 'w')
-        fout.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'% (
-            'T', 'E', 'Eerr', 'Cv', 'CvErr'))
+        if reduceType=='T':
+            fout.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'% (
+                'T', 'E', 'Eerr', 'Cv', 'CvErr'))
+        elif reduceType=='u':
+            fout.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'% (
+                'mu', 'E', 'Eerr', 'Cv', 'CvErr'))
         
         # open superfluid stiffness data file, write headers
         foutSup = open('JackKnifeData_super.dat','w')
-        foutSup.write('#%15s\t%16s\t%16s\n'%(
-            'T', 'rho_s/rho', 'rho_s/rhoErr'))
+        if reduceType == 'T':
+            foutSup.write('#%15s\t%16s\t%16s\n'%(
+                'T', 'rho_s/rho', 'rho_s/rhoErr'))
+        elif reduceType == 'u':
+            foutSup.write('#%15s\t%16s\t%16s\n'%(
+                'mu', 'rho_s/rho', 'rho_s/rhoErr'))
+        
          
         # open superfluid stiffness data file, write headers
         foutDens = open('JackKnifeData_bipart.dat','w')
-        foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
-            'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
-        
+        if reduceType == 'T':
+            foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
+                'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+        elif reduceType == 'u':
+            foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
+                'mu', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+
         # perform jackknife analysis of data, writing to disk
         if args.Crunched:   # check if we have combined data
             tempList = aTools.getHeadersFromFile(fileNames[0])
@@ -59,7 +74,10 @@ def main():
                         EAve, Eerr = aTools.jackknife(E[skip:])
                         jkAve, jkErr = aTools.jackknife(
                                 EEcv[skip:],Ecv[skip:],dEdB[skip:])
-                        print 'T = ',float(temp),':'
+                        if reduceType == 'T':
+                            print 'T = ',float(temp),' :'
+                        elif reduceType == 'u':
+                            print 'mu = ',float(temp),' :'
                         print '<E>  = ',EAve,' +/- ',Eerr
                         print '<Cv> = ',jkAve,' +/- ',jkErr
                         Es      = pl.append(Es, EAve)
@@ -161,7 +179,13 @@ def main():
         Eanalytic = 0.5/pl.tanh(1.0/(2.0*tempRange))
         CvAnalytic = 1.0/(4.0*(tempRange*pl.sinh(1.0/(2.0*tempRange)))**2)
 
+    # some Plotting options
     ShareAxis=True      # shared x-axis for Cv and Energy
+    if reduceType == 'T':
+        xLab = 'Temperature [K]'
+    elif reduceType == 'u':
+        xLab = 'Chemical Potential [K]'
+
     # plot the specific heat vs. temperature
     if ShareAxis:
         ax1 = pl.subplot(211)
@@ -171,7 +195,7 @@ def main():
         pl.plot(tempRange,CvAnalytic, label='Exact')
     pl.errorbar(temps,Cvs,CvsErr, label='PIMC',color='Violet',fmt='o')
     if not ShareAxis:
-        pl.xlabel('Temperature [K]')
+        pl.xlabel(xLab, fontsize=20)
     pl.ylabel('Specific Heat', fontsize=20)
     pl.grid(True)
     pl.legend(loc=2)
@@ -185,7 +209,7 @@ def main():
     if QHO: # plot analytic result
         pl.plot(tempRange,Eanalytic, label='Exact')
     pl.errorbar(temps,Es,EsErr, label='PIMC virial',color='Lime',fmt='o')
-    pl.xlabel('Temperature [K]', fontsize=20)
+    pl.xlabel(xLab, fontsize=20)
     pl.ylabel('Energy [K]', fontsize=20)
     pl.grid(True)
     pl.legend(loc=2)
@@ -197,8 +221,8 @@ def main():
         pl.figure(2)
     else:
         pl.figure(3)
-    pl.errorbar(temps, rhos_rhos, rhos_rhoErr)
-    pl.xlabel('Temperature [K]', fontsize=20)
+    pl.errorbar(temps, rhos_rhos, rhos_rhoErr, fmt='o')
+    pl.xlabel(xLab, fontsize=20)
     pl.ylabel('Superfluid Stiffness', fontsize=20)
     pl.grid(True)
 
@@ -206,9 +230,9 @@ def main():
         pl.figure(3)
     else:
         pl.figure(4)
-    pl.errorbar(temps, filmDenses, filmDensErrs, label='film')
-    pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk')
-    pl.xlabel('Temperature [K]', fontsize=20)
+    pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
+    pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
+    pl.xlabel(xLab, fontsize=20)
     pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
     pl.legend()
     pl.grid(True)

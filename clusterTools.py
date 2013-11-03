@@ -50,7 +50,10 @@ def parseCMD():
     pullParse.add_argument('-c', '--crunch', action='store_true',
             dest='Crunch',default=False,
             help='Combine all arrays of same temperature after pulling files.')
-    
+    pullParse.add_argument('-r', '--reduceType', type=str,
+            default='T',
+            help='Variable to reduce over [T,u]')
+
     return parser.parse_args()
 
 def Credentials(userN):
@@ -132,6 +135,34 @@ def checkIfEmpty(fName,n):
     
     return Empty
 
+def makeTempList(estimFiles, canonical):
+    ''' make list of all temperatures, in order, based on ensemble '''
+    tempList = pl.array([])
+    for f in estimFiles:
+        if canonical: 
+            temptemp = f[13:19]
+        else:
+            temptemp = f[14:20]
+        
+        if temptemp not in tempList:
+            tempList = pl.append(tempList, temptemp)
+    
+    return pl.sort(tempList)
+
+def makeMuList(estimFiles, canonical):
+    ''' make list of all temperatures, in order, based on ensemble '''
+    muList = pl.array([])
+    for f in estimFiles:
+        if canonical: 
+            tempMu = f[28:35]
+        else:
+            tempMu = f[29:36]
+        
+        if tempMu not in muList:
+            muList = pl.append(muList, tempMu)
+    
+    return pl.sort(muList)
+
 def crunchData():
     '''
     This function will grab all (g)ce-estimator files in a directory and
@@ -140,6 +171,16 @@ def crunchData():
     The actual data stored will be in columns of the three terms (in order)
     needed to compute C_v. ( E, EEcv*beta^2, Ecv*beta, dEdB*beta^2 ).
     '''
+
+    args = parseCMD()
+    reduceType = args.reduceType
+    # are we reducing over Temps or Mus?
+    TempRed, MuRed = False, False
+    if reduceType == 'T':
+        TempRed = True
+    elif reduceType == 'u':
+        MuRed   = True
+
     # glob for files
     estimFiles  = glob.glob('*estimator*')
     biPartFiles = glob.glob('*bipart_dens*')
@@ -156,17 +197,11 @@ def crunchData():
     if estimFiles[0][0] == 'g':
         canonical = False
 
-    # make list of all temperatures, in order, based on ensemble
-    tempList = pl.array([])
-    for f in estimFiles:
-        if canonical: 
-            temptemp = f[13:19]
-        else:
-            temptemp = f[14:20]
-        
-        if temptemp not in tempList:
-            tempList = pl.append(tempList, temptemp)
-    tempList = pl.sort(tempList)
+    # make list of all reduced variable, in order, based on ensemble
+    if TempRed:
+        tempList = makeTempList(estimFiles, canonical)
+    elif MuRed:
+        tempList = makeMuList(estimFiles, canonical)
 
     # lists to hold all data
     allTempsE   = []
@@ -180,8 +215,12 @@ def crunchData():
 
     for numTemp,temp in enumerate(tempList):
         # only grab estimator files of correct temperature
-        estFiles = glob.glob('*estimator-%s*' % temp)
-        superFiles = glob.glob('*super-%s*' % temp)
+        if TempRed:
+            estFiles = glob.glob('*estimator-%s*' % temp)
+            superFiles = glob.glob('*super-%s*' % temp)
+        elif MuRed:
+            estFiles = glob.glob('*estimator*%s*' % temp)
+            superFiles = glob.glob('*super*%s*' % temp)
         
         E       = pl.array([])
         EEcv    = pl.array([])
@@ -189,9 +228,11 @@ def crunchData():
         dEdB    = pl.array([])
         Super   = pl.array([])
 
-
         if biPart:
-            bipFiles = glob.glob('*bipart_dens-%s*' % temp)
+            if TempRed:
+                bipFiles = glob.glob('*bipart_dens-%s*' % temp)
+            elif MuRed:
+                bipFiles = glob.glob('*bipart_dens*%s*' % temp)
             bulkDens = pl.array([])
             filmDens = pl.array([])
             for bFile in bipFiles:
@@ -216,7 +257,11 @@ def crunchData():
                 EEcv    = pl.append(EEcv, EEcvT)
                 Ecv     = pl.append(Ecv, EcvT)
                 dEdB    = pl.append(dEdB, dEdBT)
-        print 'T=',temp,', bins=',len(E)
+        
+        if TempRed:
+            print 'T=',temp,', bins=',len(E)
+        elif MuRed:
+            print 'mu=',temp,', bins=',len(E)
 
         for sFile in superFiles:
             if checkIfEmpty(sFile,2):
