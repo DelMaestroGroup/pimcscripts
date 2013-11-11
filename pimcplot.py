@@ -167,8 +167,14 @@ def main():
               "#CE4379", "#D2912E", "#7970D2", "#749AC9", "#7D5121", "#5EAC72", 
               "#CB85AA", "#853B46", "#396465", "#A5A33E", "#D47F5B", "#BA4EA5", 
               "#C93F44", "#5D9937"]
-    colors =["#CAC5E8", "#E1D273", "#82DFCE", "#F1AF92", "#E1E7CF", "#92C798", "#CDF197", "#DDD199", "#ECB1D1", "#91C7DE", "#E3AF6E", "#ECAAAC", "#CEB29C", "#B2BCA9", "#B0C778", "#DBCDD7", "#B5DEE0", "#A5ECB4", "#C5E6C0", "#E5CCC0"] 
-    colors = ["#688EAF", "#FC991D", "#7DEB74", "#FA6781", "#8B981D", "#BB7548", "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", "#688ECE", "#749DB7"]
+    colors =["#CAC5E8", "#E1D273", "#82DFCE", "#F1AF92", "#E1E7CF", "#92C798", 
+            "#CDF197", "#DDD199", "#ECB1D1", "#91C7DE", "#E3AF6E", "#ECAAAC", 
+            "#CEB29C", "#B2BCA9", "#B0C778", "#DBCDD7", "#B5DEE0", "#A5ECB4", 
+            "#C5E6C0", "#E5CCC0"] 
+    colors = ["#688EAF", "#FC991D", "#7DEB74", "#FA6781", "#8B981D", "#BB7548", 
+            "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", 
+            "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", 
+            "#688ECE", "#749DB7"]
     colors += colors
     colors += colors
     colors += colors
