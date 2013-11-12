@@ -18,6 +18,7 @@ Options:
   --error=<units>, -d           Size of the error bars
   --bin                         Use the binned errorbars
   --ttest                       Perform a ttest
+  --pdf                         Save PDF file of each plot
 """
 
 # pimcplot.py
@@ -181,7 +182,11 @@ def main():
         xlabel("MC Bin Number")
         if numEst == 0:
             legend(loc='upper left', frameon=False)
-            
+
+        if args['--pdf']:
+            savefig('col_vs_MCSteps.pdf', format='pdf',
+                    bbox_inches='tight')
+
         # ============================================================================
         # Figure 2 : running average of column vs. MC Bins
         # ============================================================================
@@ -219,6 +224,10 @@ def main():
             leg = legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
+
+        if args['--pdf']:
+            savefig('runAve_vs_MCSteps.pdf', format='pdf',
+                    bbox_inches='tight')
 
         # Perform a Welch's t-test
         if args['--ttest']:
@@ -262,7 +271,11 @@ def main():
                 legend(loc='upper left', frameon=False)
             xlabel(yLong)
             ylabel(r'$P($' + estimators[numEst] + r'$)$')
-                
+
+
+            if args['--pdf']:
+                savefig('ttest_histogram.pdf', format='pdf',
+                        bbox_inches='tight')
     show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
