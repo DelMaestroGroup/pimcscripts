@@ -53,6 +53,9 @@ def parseCMD():
     pullParse.add_argument('-r', '--reduceType', type=str,
             default='T',
             help='Variable to reduce over [T,u]')
+    pullParse.add_argument('-T', '--trim', action='store_true',
+            dest='trimData', default=True,
+            help='Create new reduced (equal length column) data files.')
 
     return parser.parse_args()
 
@@ -61,6 +64,32 @@ def Credentials(userN):
     print 'username:',userN
     passwd = getpass.getpass(prompt='password: ')
     return passwd
+
+def trimData(fileNames):
+    '''
+    Trims data files so that the length of each column is equal
+    to that of the shortest column.  This is so that loadtxt will
+    work properly.  Note that this is rather naughty.
+    '''
+    for fileName in fileNames:
+        minLen = 100000000
+        numChanged = 0
+        lineStop = 0
+        # count number of lines that have full data 
+        with open(fileName) as inFile:
+            for nLine, line in enumerate(inFile):
+                if line[0] != '#':
+                    if int(len(line)) < minLen:
+                        minLen = int(len(line))
+                        numChanged += 1
+                        if numChanged == 2:
+                            lineStop = nLine
+
+        with open(fileName) as inFile, open('trimmed'+fileName[7:], 'w') as outFile:
+            print 'Only writing ',lineStop, ' lines.'
+            for n, line in enumerate(inFile):
+                if n < lineStop:
+                    outFile.write( line )
 
 def returnSeedDirName(s):
     '''
@@ -108,8 +137,8 @@ def renameFilesInDirecs(delDir):
                 comm = ("gunzip", str(zebra))
                 subprocess.check_call(comm)
                 shutil.copy2(zebra[:-3], '../'+zebra[:-16]+dirName[-3:]+zebra[-13:-3])
-                print zebra[:-16]+dirName[-3:]+zebra[-13:-3]
-                print zebra[:-3]
+                #print zebra[:-16]+dirName[-3:]+zebra[-13:-3]
+                #print zebra[:-3]
             else:
                 shutil.copy2(zebra, '../'+zebra[:-13]+dirName[-3:]+zebra[-10:])
         os.chdir('..')

@@ -69,6 +69,14 @@ def main():
     # much larger array.
     if args.Crunch:
         cT.crunchData()
+
+    # optionally make a trimmed version of the data files that
+    # makes all arrays the length of the shortest array.
+    if args.trimData:
+        print 'Decided to make trimmed data files'
+        fileNames = ['ReducedEstimatorData.dat', 'ReducedBiPartData.dat',
+                'ReducedSuperData.dat']
+        cT.trimData(fileNames)
         
 # =============================================================================
 if __name__=='__main__':

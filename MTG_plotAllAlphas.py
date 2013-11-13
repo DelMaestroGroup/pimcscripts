@@ -34,7 +34,7 @@ def main():
               "#C5CB7A", "#523767", "#D39139", "#C8488C", "#CB817A", "#73D999",
               "#6F2836", "#6978CF", "#588569", "#CDC3AD", "#5C7890", "#7F5327",
               "#D0D33D", "#5B7D2E"]
-    colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A",
+    '''colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A",
               "#CE4379", "#D2912E", "#7970D2", "#749AC9", "#7D5121", "#5EAC72",
               "#CB85AA", "#853B46", "#396465", "#A5A33E", "#D47F5B", "#BA4EA5",
               "#C93F44", "#5D9937"]
@@ -46,7 +46,7 @@ def main():
             "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", 
             "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", 
             "#688ECE", "#749DB7"]
-    
+    '''
 
     n = 0
     for alpha in sorted(alphas):
@@ -55,12 +55,12 @@ def main():
         mus, fDens, fErr, bDens, bErr = pl.loadtxt(
                 'JackKnifeData_bipart.dat', unpack=True)
 
-        pl.errorbar(mus, fDens, fErr, fmt='o', 
+        pl.errorbar(mus, fDens, fErr, fmt='^', 
                 label=('Film: '+r'$\alpha = $'+'%s' % a),
                 color = colors[n])
         pl.errorbar(mus, bDens, bErr, fmt='o',
                 label=('Bulk: '+r'$\alpha = $'+'%s' % a),
-                color = colors[n+1])
+                color = colors[n])
 
         # determine max and min values of mu
         if pl.amax(mus) > maxMus:
