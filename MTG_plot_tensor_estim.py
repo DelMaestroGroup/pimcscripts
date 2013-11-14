@@ -26,6 +26,11 @@ import pylab as pl
 import argparse
 from docopt import docopt
 import sys
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
 
 # ===================================================================
 def main():
@@ -46,8 +51,8 @@ def main():
     # plot histograms in all three projections
     pl.figure(1)
     pl.imshow(pl.sum(data,axis=2)/N, extent=[-4,4,-4,4])
-    pl.xlabel(r'$y\  [\AA]$', fontsize=20)
-    pl.ylabel(r'$x\  [\AA]$', fontsize=20)
+    pl.xlabel(r'$y\  [\AA]$')
+    pl.ylabel(r'$x\  [\AA]$')
     #pl.title('Particle Density Projection (X-Y)')
     pl.colorbar(shrink=0.4)
 
@@ -56,8 +61,8 @@ def main():
     
     pl.figure(2)
     pl.imshow(pl.sum(data,axis=1)/N, extent=[-12,12,-4,4])
-    pl.xlabel(r'$z\  [\AA]$', fontsize=20)
-    pl.ylabel(r'$x\  [\AA]$', fontsize=20)
+    pl.xlabel(r'$z\  [\AA]$')
+    pl.ylabel(r'$x\  [\AA]$')
     #pl.title('Particle Density Projection (X-Z)')
     pl.colorbar(shrink=0.4)
  
@@ -66,8 +71,8 @@ def main():
     
     pl.figure(3)
     pl.imshow(pl.sum(data,axis=0)/N, extent=[-12,12,-4,4])
-    pl.xlabel(r'$z\  [\AA]$', fontsize=20)
-    pl.ylabel(r'$y\  [\AA]$', fontsize=20)
+    pl.xlabel(r'$z\  [\AA]$')
+    pl.ylabel(r'$y\  [\AA]$')
     #pl.title('Particle Density Projection (Y-Z)')
     pl.colorbar(shrink=0.4)
 

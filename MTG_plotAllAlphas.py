@@ -1,5 +1,10 @@
 import pylab as pl
 import os, glob, sys, argparse
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
 
 def parseCMD():
     ''' Parse the command line. '''
@@ -30,11 +35,11 @@ def main():
 
     minMus, maxMus = 5000, -5000
 
-    colors = ["#70D44A", "#BE5AD4", "#D04537", "#81D0D5", "#393A2E", "#C49ECA",
+    '''colors = ["#70D44A", "#BE5AD4", "#D04537", "#81D0D5", "#393A2E", "#C49ECA",
               "#C5CB7A", "#523767", "#D39139", "#C8488C", "#CB817A", "#73D999",
               "#6F2836", "#6978CF", "#588569", "#CDC3AD", "#5C7890", "#7F5327",
               "#D0D33D", "#5B7D2E"]
-    '''colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A",
+    colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A",
               "#CE4379", "#D2912E", "#7970D2", "#749AC9", "#7D5121", "#5EAC72",
               "#CB85AA", "#853B46", "#396465", "#A5A33E", "#D47F5B", "#BA4EA5",
               "#C93F44", "#5D9937"]
@@ -47,6 +52,10 @@ def main():
             "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", 
             "#688ECE", "#749DB7"]
     '''
+    colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
+            'Yellow','Maroon']
+    
+    fig,ax = pl.subplots(1, figsize=(12,8.5))
 
     n = 0
     for alpha in sorted(alphas):
@@ -57,10 +66,12 @@ def main():
 
         pl.errorbar(mus, fDens, fErr, fmt='^', 
                 label=('Film: '+r'$\alpha = $'+'%s' % a),
-                color = colors[n])
+                color = colors[n], markeredgecolor='DarkSlateGray',
+                markersize=8)
         pl.errorbar(mus, bDens, bErr, fmt='o',
                 label=('Bulk: '+r'$\alpha = $'+'%s' % a),
-                color = colors[n])
+                color = colors[n], markeredgecolor='DarkSlateGray',
+                markersize=8)
 
         # determine max and min values of mu
         if pl.amax(mus) > maxMus:
@@ -69,9 +80,7 @@ def main():
             minMus = pl.amin(mus)
 
         os.chdir('..')
-        n += 2
-
-    print pl.amax(mus)
+        n += 1
 
     # set up bulk SVP densities for plot
     pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
@@ -91,10 +100,14 @@ def main():
             )
 
 
-    pl.xlabel('Chemical Potential [K]', fontsize=20)
-    pl.ylabel('Spatial Density '+r'$[\AA^{-d}]$', fontsize=20)
+    pl.xlabel('Chemical Potential [K]', fontsize=16)
+    pl.ylabel('Spatial Density '+r'$[\AA^{-d}]$', fontsize=16)
     pl.title('T = %s K' % Temp) 
     pl.legend(loc=2)
+    
+    pl.savefig('density_vs_mu_allAlphas.pdf', format='pdf',
+            bbox_inches='tight')
+
     pl.show()
 
 
