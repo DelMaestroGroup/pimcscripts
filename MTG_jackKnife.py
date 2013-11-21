@@ -25,7 +25,11 @@ def main():
         
         temps,Cvs,CvsErr = pl.array([]),pl.array([]),pl.array([])
         Es, EsErr   = pl.array([]), pl.array([])
+        
         rhos_rhos, rhos_rhoErr  = pl.array([]), pl.array([])
+        Wx2s, Wx2Err = pl.array([]), pl.array([])
+        Wy2s, Wy2Err = pl.array([]), pl.array([])
+        Wz2s, Wz2Err = pl.array([]), pl.array([])
 
         filmDenses, bulkDenses      = pl.array([]), pl.array([])
         filmDensErrs, bulkDensErrs    = pl.array([]), pl.array([])
@@ -42,14 +46,16 @@ def main():
         # open superfluid stiffness data file, write headers
         foutSup = open('JackKnifeData_super.dat','w')
         if reduceType == 'T':
-            foutSup.write('#%15s\t%16s\t%16s\n'%(
-                'T', 'rho_s/rho', 'rho_s/rhoErr'))
+            foutSup.write('#%15s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\n'%(
+                'T', 'rho_s/rho', 'rho_s/rhoErr', 'Wx^2', 'Wx2_err', 
+                'Wy^2', 'Wy2_err', 'Wz^2', 'Wz2_err'))
         elif reduceType == 'u':
-            foutSup.write('#%15s\t%16s\t%16s\n'%(
-                'mu', 'rho_s/rho', 'rho_s/rhoErr'))
+            foutSup.write('#%15s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\t%16s\n'%(
+                'mu', 'rho_s/rho', 'rho_s/rhoErr', 'Wx^2', 'Wx2_err', 
+                'Wy^2', 'Wy2_err', 'Wz^2', 'Wz2_err'))
         
          
-        # open superfluid stiffness data file, write headers
+        # open bipartition density data file, write headers
         foutDens = open('JackKnifeData_bipart.dat','w')
         if reduceType == 'T':
             foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
@@ -67,7 +73,6 @@ def main():
             for fileName in fileNames:
                 print '\n\n---',fileName,'---\n'
                 for temp in tempList:
-                    print n
                     if 'Estimator' in fileName:
                         E, EEcv, Ecv, dEdB = pl.loadtxt(fileName,\
                                 unpack=True, usecols=(n,n+1,n+2,n+3), delimiter=',')
@@ -86,18 +91,31 @@ def main():
                         CvsErr  = pl.append(CvsErr, jkErr)
                         fout.write('%16.8E\t%16.8E\t%16.8E\t%16.8E\t%16.8E\n' %(
                             float(temp), EAve, Eerr, jkAve, jkErr)) 
+                        print n
                         n += 4
 
                     elif 'Super' in fileName:
-                        rhos_rho = pl.loadtxt(fileName, \
-                                unpack=True, usecols=(n2,), delimiter=',')
+                        rhos_rho, wx2, wy2, wz2 = pl.loadtxt(fileName, \
+                                unpack=True, usecols=(n2,n2+1, n2+2, n2+3), delimiter=',')
                         superAve, superErr = aTools.jackknife(rhos_rho[skip:])
+                        wx2Ave, wx2Err = aTools.jackknife(wx2[skip:])
+                        wy2Ave, wy2Err = aTools.jackknife(wy2[skip:])
+                        wz2Ave, wz2Err = aTools.jackknife(wz2[skip:])
                         print 'rho_s/rho = ', superAve,' +/- ',superErr
                         rhos_rhos   = pl.append(rhos_rhos, superAve)
                         rhos_rhoErr = pl.append(rhos_rhoErr, superErr)
-                        foutSup.write('%16.8E\t%16.8E\t%16.8E\n' %(
-                            float(temp), superAve, superErr))
-                        n2 += 1
+                        Wx2s        = pl.append(Wx2s, wx2Ave)
+                        Wx2Err      = pl.append(Wx2Err, wx2Err)
+                        Wy2s        = pl.append(Wy2s, wy2Ave)
+                        Wy2Err      = pl.append(Wy2Err, wy2Err)
+                        Wz2s        = pl.append(Wz2s, wz2Ave)
+                        Wz2Err      = pl.append(Wz2Err, wz2Err)
+                        foutSup.write('%16.8E\t%16.8E\t%16.8E\t%16.8E\t\
+                                %16.8E\t%16.8E\t%16.8E\t%16.8E\t%16.8E\n' %(
+                            float(temp), superAve, superErr, wx2Ave, wx2Err,
+                            wy2Ave, wy2Err, wz2Ave, wz2Err))
+                        print n2
+                        n2 += 4
 
                     elif 'BiPart' in fileName:
                         filmDens, bulkDens  = pl.loadtxt(fileName, \
@@ -113,6 +131,7 @@ def main():
                         foutDens.write('%16.8E\t%16.8E\t%16.8E\t%16.8E\t%16.8E\n' %(
                             float(temp), filmDensAve, filmDensErr, 
                             bulkDensAve, bulkDensErr))
+                        print n3
                         n3 += 2
 
         else:       # otherwise just read in individual (g)ce-estimator files
@@ -147,7 +166,7 @@ def main():
         temps, Es, EsErr, Cvs, CvsErr = pl.loadtxt(
                 'JackKnifeData_Cv.dat', 
                 unpack=True)
-        temps, rhos_rhos, rhos_rhoErr = pl.loadtxt(
+        temps, rhos_rhos, rhos_rhoErr, Wx2s, Wx2Err, Wy2s, Wy2Err, Wz2s, Wz2Err = pl.loadtxt(
                 'JackKnifeData_super.dat', 
                 unpack=True)
         temps, filmDenses, filmDensErrs, bulkDenses, bulkDensErrs = pl.loadtxt(
@@ -230,6 +249,18 @@ def main():
         pl.figure(3)
     else:
         pl.figure(4)
+    pl.errorbar(temps, Wx2s, Wx2Err, fmt='o', label=r'$\langle W_x^2 \rangle$')
+    pl.errorbar(temps, Wy2s, Wy2Err, fmt='o', label=r'$\langle W_y^2 \rangle$')
+    pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
+    pl.xlabel(xLab, fontsize=20)
+    pl.ylabel(r'$\langle W_i^2 \rangle$', fontsize=20)
+    pl.legend()
+    pl.grid(True)
+ 
+    if ShareAxis:
+        pl.figure(4)
+    else:
+        pl.figure(5)
     pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
     pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
     pl.xlabel(xLab, fontsize=20)

@@ -241,6 +241,9 @@ def crunchData():
         allTempsfD = []
         allTempsbD = []
     allTempsSuper = []
+    allTempsWx2 = []
+    allTempsWy2 = []
+    allTempsWz2 = []
 
     for numTemp,temp in enumerate(tempList):
         # only grab estimator files of correct temperature
@@ -256,6 +259,9 @@ def crunchData():
         Ecv     = pl.array([])
         dEdB    = pl.array([])
         Super   = pl.array([])
+        Wx2     = pl.array([])
+        Wy2     = pl.array([])
+        Wz2     = pl.array([])
 
         if biPart:
             if TempRed:
@@ -296,8 +302,11 @@ def crunchData():
             if checkIfEmpty(sFile,2):
                 pass
             else:
-                rhos_rho = pl.genfromtxt(sFile, unpack=True, usecols=(0,))
+                rhos_rho, wx2, wy2, wz2 = pl.genfromtxt(sFile, unpack=True, usecols=(0,1,2,3))
                 Super = pl.append(Super, rhos_rho)
+                Wx2 = pl.append(Wx2, wx2)
+                Wy2 = pl.append(Wy2, wy2)
+                Wz2 = pl.append(Wz2, wz2)
 
         allTempsE += [[E]]
         allTemps1 += [[EEcv]]
@@ -305,6 +314,9 @@ def crunchData():
         allTemps3 += [[dEdB]]
 
         allTempsSuper += [[Super]]
+        allTempsWx2 += [[Wx2]]
+        allTempsWy2 += [[Wy2]]
+        allTempsWz2 += [[Wz2]]
 
     # determine length of maximum sized array
     maxLen = 0
@@ -341,19 +353,22 @@ def crunchData():
 
     # create superfluid file and write the header
     fout = open('ReducedSuperData.dat', 'w')
-    fout.write('#%15s\t'% ( tempList[0] ))
+    fout.write('#%15s\t%16s\t%16s\t%16s\t'% ( tempList[0],'','','' ))
     for temp in tempList[1:]:
-        fout.write('%16s\t' % ( temp ))
+        fout.write('%16s\t%16s\t%16s\t%16s\t' % ( temp,'','','' ))
     fout.write('\n')
 
     # write superfluid stiffness arrays to disk
     for line in range(maxLen):
         for numT in range(len(allTemps1)):
             if int(len(allTempsSuper[numT][0])) <= line:
-                fout.write('%16s\t' % (''))
+                fout.write('%16s\t%16s\t%16s\t%16s\t' % ('','','',''))
             else:
-                fout.write('%16.8E,\t'% (
-                    float(allTempsSuper[numT][0][line])))
+                fout.write('%16.8E,\t%16.8E,\t%16.8E,\t%16.8E,\t'% (
+                    float(allTempsSuper[numT][0][line]),
+                    float(allTempsWx2[numT][0][line]),
+                    float(allTempsWy2[numT][0][line]),
+                    float(allTempsWz2[numT][0][line]) ))
         fout.write('\n')
 
     fout.close()
