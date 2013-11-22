@@ -4,6 +4,7 @@ import MTG_jkTools as aTools
 
 def main():
 
+    excVol = False 
     args = aTools.parseCMD()
    
     # Check if our data file exists, if not: write one.
@@ -54,15 +55,15 @@ def main():
                 'mu', 'rho_s/rho', 'rho_s/rhoErr', 'Wx^2', 'Wx2_err', 
                 'Wy^2', 'Wy2_err', 'Wz^2', 'Wz2_err'))
         
-         
-        # open bipartition density data file, write headers
-        foutDens = open('JackKnifeData_bipart.dat','w')
-        if reduceType == 'T':
-            foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
-                'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
-        elif reduceType == 'u':
-            foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
-                'mu', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+        if excVol:
+            # open bipartition density data file, write headers
+            foutDens = open('JackKnifeData_bipart.dat','w')
+            if reduceType == 'T':
+                foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
+                    'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+            elif reduceType == 'u':
+                foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
+                    'mu', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
 
         # perform jackknife analysis of data, writing to disk
         if args.Crunched:   # check if we have combined data
@@ -159,7 +160,8 @@ def main():
         
         fout.close()
         foutSup.close()
-        foutDens.close()
+        if excVol:
+            foutDens.close()
 
     else:
         print 'Found existing data file in CWD.'
@@ -169,9 +171,10 @@ def main():
         temps, rhos_rhos, rhos_rhoErr, Wx2s, Wx2Err, Wy2s, Wy2Err, Wz2s, Wz2Err = pl.loadtxt(
                 'JackKnifeData_super.dat', 
                 unpack=True)
-        temps, filmDenses, filmDensErrs, bulkDenses, bulkDensErrs = pl.loadtxt(
-                'JackKnifeData_bipart.dat',
-                unpack=True)
+        if excVol:
+            temps, filmDenses, filmDensErrs, bulkDenses, bulkDensErrs = pl.loadtxt(
+                    'JackKnifeData_bipart.dat',
+                    unpack=True)
    
 
     errCheck = False
@@ -256,17 +259,18 @@ def main():
     pl.ylabel(r'$\langle W_i^2 \rangle$', fontsize=20)
     pl.legend()
     pl.grid(True)
- 
-    if ShareAxis:
-        pl.figure(4)
-    else:
-        pl.figure(5)
-    pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
-    pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
-    pl.xlabel(xLab, fontsize=20)
-    pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
-    pl.legend()
-    pl.grid(True)
+
+    if excVol:
+        if ShareAxis:
+            pl.figure(4)
+        else:
+            pl.figure(5)
+        pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
+        pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
+        pl.legend()
+        pl.grid(True)
     
     pl.show()
 
