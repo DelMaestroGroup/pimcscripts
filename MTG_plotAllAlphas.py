@@ -113,7 +113,8 @@ def main():
         os.chdir(alpha)
         a = alpha[-1]
         mus, stiff, stiffErr = pl.loadtxt(
-                'JackKnifeData_super.dat', unpack=True)
+                'JackKnifeData_super.dat', unpack=True,
+                usecols=(0,1,2))
 
         pl.errorbar(mus, stiff, stiffErr, fmt='o', 
                 label=(r'$\alpha = $'+'%s' % a),
@@ -141,6 +142,55 @@ def main():
     pl.legend()
     
     pl.savefig('superFrac_vs_mu_allAlphas.pdf', format='pdf',
+            bbox_inches='tight')
+ 
+    # WINDING NUMBER COMPONENTS
+    fig3,ax3 = pl.subplots(1, figsize=(12,8.5))
+
+    n = 0
+    for alpha in sorted(alphas):
+        os.chdir(alpha)
+        a = alpha[-1]
+        mus, Wx2, Wx2Err, Wy2, Wy2Err, Wz2, Wz2Err = pl.loadtxt(
+                'JackKnifeData_super.dat', unpack=True,
+                usecols=(0,3,4,5,6,7,8))
+
+        pl.errorbar(mus, Wx2, Wx2Err, fmt='o', 
+                label=(r'$\alpha = $'+'%s: '%a+r'$\langle W_x^2 \rangle$'),
+                color = colors[n], markeredgecolor='DarkSlateGray',
+                markersize=8)
+
+        pl.errorbar(mus, Wy2, Wy2Err, fmt='v', 
+                label=(r'$\alpha = $'+'%s: '%a +r'$\langle W_y^2 \rangle$'),
+                color = colors[n], markeredgecolor='DarkSlateGray',
+                markersize=8)
+
+        pl.errorbar(mus, Wz2, Wz2Err, fmt='s', 
+                label=(r'$\alpha = $'+'%s: '%a+r'$\langle W_z^2 \rangle$' ),
+                color = colors[n], markeredgecolor='DarkSlateGray',
+                markersize=8)
+
+        # determine max and min values of mu
+        if pl.amax(mus) > maxMus:
+            maxMus = pl.amax(mus)
+        if pl.amin(mus) < minMus:
+            minMus = pl.amin(mus)
+
+        os.chdir('..')
+        n += 1
+
+    if Temp == 'T':
+        pl.xlabel('Temperature [K]', fontsize=16)
+    else:
+        pl.xlabel('Chemical Potential [K]', fontsize=16)
+    pl.ylabel(r'$\langle W_i^2 \rangle$', fontsize=16)
+    if Temp != 'T':
+        pl.title('T = %s K' % Temp)
+    else:
+        pl.title(r'$\mu\ =\ $'+ChemPot+' K')
+    pl.legend()
+    
+    pl.savefig('windingNumbers_vs_mu_allAlphas.pdf', format='pdf',
             bbox_inches='tight')
 
     pl.show()
