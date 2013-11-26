@@ -260,11 +260,22 @@ def main():
     pl.legend()
     pl.grid(True)
 
+    if ShareAxis:
+        pl.figure(4)
+    else:
+        pl.figure(5)
+    pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
+    pl.xlabel(xLab, fontsize=20)
+    pl.ylabel(r'$\langle W_z^2 \rangle$', fontsize=20)
+    pl.legend()
+    pl.grid(True)
+
+
     if excVol:
         if ShareAxis:
-            pl.figure(4)
-        else:
             pl.figure(5)
+        else:
+            pl.figure(6)
         pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
         pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
         pl.xlabel(xLab, fontsize=20)
