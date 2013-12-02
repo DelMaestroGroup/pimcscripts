@@ -39,6 +39,12 @@ from docopt import docopt
 from scipy import stats
 import MCstat
 
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
+
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
     ''' Get the average and error of all columns in the data matrix. '''
@@ -164,7 +170,7 @@ def main():
         # ============================================================================
         # Figure 1 : column vs. MC Steps
         # ============================================================================
-        figure(1)
+        figure(1, dpi=40, figsize=(6,3.8))
         connect('key_press_event',kevent.press)
 
         #colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
@@ -181,16 +187,18 @@ def main():
         ylabel(yLong)
         xlabel("MC Bin Number")
         if numEst == 0:
-            legend(loc='upper left', frameon=False)
+            legend(loc='best', frameon=False, ncol=2)
 
         if args['--pdf']:
             savefig('col_vs_MCSteps.pdf', format='pdf',
                     bbox_inches='tight')
+            savefig('col_vs_MCSteps_trans.pdf', format='pdf',
+                    bbox_inches='tight', transparent=True)
 
         # ============================================================================
         # Figure 2 : running average of column vs. MC Bins
         # ============================================================================
-        figure(2)
+        figure(2, dpi=40, figsize=(6,3.8))
         connect('key_press_event',kevent.press)
 
         n = 0
@@ -228,6 +236,9 @@ def main():
         if args['--pdf']:
             savefig('runAve_vs_MCSteps.pdf', format='pdf',
                     bbox_inches='tight')
+            savefig('runAve_vs_MCSteps_trans.pdf', format='pdf',
+                    bbox_inches='tight',transparent=True)
+            
 
         # Perform a Welch's t-test
         if args['--ttest']:
@@ -246,13 +257,13 @@ def main():
             # ============================================================================
             # Figure 3 : plot the estimator histogram along with t-test values
             # ============================================================================
-            fig = figure(3)
+            fig = figure(3, dpi=40, figsize=(6,3.8))
             connect('key_press_event',kevent.press)
             for i in range(N):
                 n, bins, patches = hist(data[i], 100, normed=True, facecolor=colors[i], 
                         alpha=0.75, label=leglabel[i],
                         edgecolor='w')
-            # Add the p-values from the t-test
+            '''# Add the p-values from the t-test
             y = 0.92
             if N > 1:
                 figtext(0.78, y, 't-test p values', horizontalalignment='center', 
@@ -264,7 +275,7 @@ def main():
                         lab = 'p(' + leglabel[i] + ' - ' + leglabel[j] + ') = ' + '%4.2f'%p[i,j]
                         figtext(0.78, y, lab, horizontalalignment='center', 
                              verticalalignment='top', fontsize=12,
-                           backgroundcolor='white')
+                           backgroundcolor='white')'''
 
             #legend(loc='upper left', fontsize=15, frameon=False)
             if numEst == 0:
@@ -276,6 +287,8 @@ def main():
             if args['--pdf']:
                 savefig('ttest_histogram.pdf', format='pdf',
                         bbox_inches='tight')
+                savefig('ttest_histogram_trans.pdf', format='pdf',
+                        bbox_inches='tight', transparent=True)
     show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

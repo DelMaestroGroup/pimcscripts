@@ -710,6 +710,7 @@ class Description:
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
                                   'V':'Potential Energy [K]',
                                   'E':'Energy [K]',
+                                  'Ecv':'Energy [K]',
                                   'E_th':'Energy [K]',
                                   'E_mu':r'$E - \mu N$',
                                   'K/N':'Kinetic Energy per Particle [K]',

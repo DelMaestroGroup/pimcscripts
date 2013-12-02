@@ -214,6 +214,7 @@ def crunchData():
     estimFiles  = glob.glob('*estimator*')
     biPartFiles = glob.glob('*bipart_dens*')
     superFiles  = glob.glob('*super*')
+    ntWindFiles = glob.glob('*ntWind*')
     
     # check for bipartition files
     if biPartFiles == []:
@@ -245,6 +246,8 @@ def crunchData():
     allTempsWy2 = []
     allTempsWz2 = []
 
+    allTempsNTW = []
+
     for numTemp,temp in enumerate(tempList):
         # only grab estimator files of correct temperature
         if TempRed:
@@ -262,6 +265,8 @@ def crunchData():
         Wx2     = pl.array([])
         Wy2     = pl.array([])
         Wz2     = pl.array([])
+
+        NTW     = pl.array([])
 
         if biPart:
             if TempRed:
@@ -308,6 +313,13 @@ def crunchData():
                 Wy2 = pl.append(Wy2, wy2)
                 Wz2 = pl.append(Wz2, wz2)
 
+        for ntFile in ntWindFiles:
+            if checkIfEmpty(ntFile,2):
+                pass
+            else:
+                ntWsq = pl.genfromtxt(ntFile, unpack=True, usecols=(0,))
+                NTW = pl.append(NTW, ntWsq)
+
         allTempsE += [[E]]
         allTemps1 += [[EEcv]]
         allTemps2 += [[Ecv]]
@@ -317,6 +329,8 @@ def crunchData():
         allTempsWx2 += [[Wx2]]
         allTempsWy2 += [[Wy2]]
         allTempsWz2 += [[Wz2]]
+
+        allTempsNTW += [[NTW]]
 
     # determine length of maximum sized array
     maxLen = 0
@@ -394,6 +408,26 @@ def crunchData():
             fout.write('\n')
 
         fout.close()
+
+    # create ntWind file and write the header
+    fout = open('nonTrivWindData.dat', 'w')
+    fout.write('#%15s\t'%  tempList[0] )
+    for temp in tempList[1:]:
+        fout.write('%16s\t' %  temp )
+    fout.write('\n')
+
+    # write superfluid stiffness arrays to disk
+    for line in range(maxLen):
+        for numT in range(len(allTempsNTW)):
+            if int(len(allTempsNTW[numT][0])) <= line:
+                fout.write('%16s\t' % '')
+            else:
+                fout.write('%16.8E,\t'% (
+                    float(allTempsNTW[numT][0][line]) ))
+        fout.write('\n')
+
+    fout.close()
+
 
 
 # =============================================================================
