@@ -36,9 +36,12 @@ rcParams['text.usetex'] = True
 # ===================================================================
 def main():
 
-    Lx  = 8.0
+    '''Lx  = 8.0
     Ly  = 8.0
-    Lz  = 24.0
+    Lz  = 24.0'''
+    Lx  = 12.0
+    Ly  = 12.0
+    Lz  = 40.44
 
     # Read in the command line arguments
     args = docopt(__doc__)
@@ -55,7 +58,7 @@ def main():
         
     # plot histograms in all three projections
     pl.figure(1)
-    pl.imshow(pl.sum(data,axis=2)/N, extent=[-4,4,-4,4])
+    pl.imshow(pl.sum(data,axis=2)/N, extent=[-(Lx/2.0),(Lx/2.0),-(Ly/2.0),(Ly/2.0)] )
     pl.xlabel(r'$y\  [\AA]$')
     pl.ylabel(r'$x\  [\AA]$')
     #pl.title('Particle Density Projection (X-Y)')
@@ -65,7 +68,7 @@ def main():
             bbox_inches='tight', transparent=True)
     
     pl.figure(2)
-    pl.imshow(pl.sum(data,axis=1)/N, extent=[-12,12,-4,4])
+    pl.imshow(pl.sum(data,axis=1)/N, extent=[-(Lz/2.0),(Lz/2.0),-(Lx/2.0),(Lx/2.0)])
     pl.xlabel(r'$z\  [\AA]$')
     pl.ylabel(r'$x\  [\AA]$')
     #pl.title('Particle Density Projection (X-Z)')
@@ -75,7 +78,7 @@ def main():
             bbox_inches='tight', transparent=True)  
     
     pl.figure(3)
-    pl.imshow(pl.sum(data,axis=0)/N, extent=[-12,12,-4,4])
+    pl.imshow(pl.sum(data,axis=0)/N, extent=[-(Lz/2.0),(Lz/2.0),-(Ly/2.0),(Ly/2.0)])
     pl.xlabel(r'$z\  [\AA]$')
     pl.ylabel(r'$y\  [\AA]$')
     #pl.title('Particle Density Projection (Y-Z)')
