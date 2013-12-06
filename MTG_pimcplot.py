@@ -184,6 +184,7 @@ def main():
         for n,cdata in enumerate(data):
         #for cdata in data:
             #print n
+            print colors[n]
             plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
                  markersize=4,linestyle='-',linewidth=1.0, label=leglabel[n])
 
@@ -196,7 +197,7 @@ def main():
             savefig('col_vs_MCSteps.pdf', format='pdf',
                     bbox_inches='tight')
             savefig('col_vs_MCSteps_trans.pdf', format='pdf',
-                    bbox_inches='tight', transparent=True)
+                    bbox_inches='tight', transparent=True, dpi=40)
         else:
             savefig('col_vs_MCSteps_trans.png', format='png',
                     bbox_inches='tight', transparent=True)
@@ -247,7 +248,7 @@ def main():
             savefig('runAve_vs_MCSteps.pdf', format='pdf',
                     bbox_inches='tight')
             savefig('runAve_vs_MCSteps_trans.pdf', format='pdf',
-                    bbox_inches='tight',transparent=True)
+                    bbox_inches='tight',transparent=True, dpi=40)
         else:
             savefig('runAve_vs_MCSteps_trans.png', format='png',
                     bbox_inches='tight',transparent=True)
@@ -306,7 +307,7 @@ def main():
                 savefig('ttest_histogram.pdf', format='pdf',
                         bbox_inches='tight')
                 savefig('ttest_histogram_trans.pdf', format='pdf',
-                        bbox_inches='tight', transparent=True)
+                        bbox_inches='tight', transparent=True, dpi=40)
             else:
                 savefig('ttest_histogram_trans.png', format='png',
                         bbox_inches='tight', transparent=True)

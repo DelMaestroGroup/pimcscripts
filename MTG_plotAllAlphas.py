@@ -49,7 +49,7 @@ def main():
             'Yellow','Maroon']
     
     if excVol:
-        fig,ax = pl.subplots(1, figsize=(12,8.5))
+        fig,ax = pl.subplots(1, figsize=(8,6.5))
         n = 0
         for alpha in sorted(alphas):
             os.chdir(alpha)
@@ -110,9 +110,11 @@ def main():
         
         pl.savefig('density_vs_mu_allAlphas.pdf', format='pdf',
                 bbox_inches='tight')
+        pl.savefig('density_vs_mu_allAlphas_trans.pdf', format='pdf',
+                bbox_inches='tight', transparent=True)
     
     # SUPERFLUID STIFFNESS
-    fig2,ax2 = pl.subplots(1, figsize=(12,8.5))
+    fig2,ax2 = pl.subplots(1, figsize=(8,6.5))
 
     n = 0
     for alpha in sorted(alphas):
@@ -154,9 +156,13 @@ def main():
     
     pl.savefig('superFrac_vs_mu_allAlphas.pdf', format='pdf',
             bbox_inches='tight')
+  
+    pl.savefig('superFrac_vs_mu_allAlphas_trans.pdf', format='pdf',
+            bbox_inches='tight', transparent=True)
  
+
     # WINDING NUMBER COMPONENTS
-    fig3,ax3 = pl.subplots(1, figsize=(12,8.5))
+    fig3,ax3 = pl.subplots(1, figsize=(8,6.5))
 
     n = 0
     for alpha in sorted(alphas):
@@ -208,9 +214,12 @@ def main():
     
     pl.savefig('windingNumbers_vs_mu_allAlphas.pdf', format='pdf',
             bbox_inches='tight')
+     
+    pl.savefig('windingNumbers_vs_mu_allAlphas_trans.pdf', format='pdf',
+            bbox_inches='tight', transparent=True)
     
     # W_z^2
-    fig4,ax4 = pl.subplots(1, figsize=(12,8.5))
+    fig4,ax4 = pl.subplots(1, figsize=(8,6.5))
 
     n = 0
     for alpha in sorted(alphas):
@@ -253,6 +262,10 @@ def main():
     
     pl.savefig('windingZ_vs_mu_allAlphas.pdf', format='pdf',
             bbox_inches='tight')
+ 
+    pl.savefig('windingZ_vs_mu_allAlphas_trans.pdf', format='pdf',
+            bbox_inches='tight', transparent=True)
+
 
     pl.show()
 

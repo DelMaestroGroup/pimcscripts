@@ -1,9 +1,15 @@
 import pylab as pl
 import glob,argparse,sys
 import MTG_jkTools as aTools
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
 
 def main():
 
+    QHO = True
     excVol = False 
     args = aTools.parseCMD()
    
@@ -168,9 +174,10 @@ def main():
         temps, Es, EsErr, Cvs, CvsErr = pl.loadtxt(
                 'JackKnifeData_Cv.dat', 
                 unpack=True)
-        temps, rhos_rhos, rhos_rhoErr, Wx2s, Wx2Err, Wy2s, Wy2Err, Wz2s, Wz2Err = pl.loadtxt(
-                'JackKnifeData_super.dat', 
-                unpack=True)
+        if not QHO:
+            temps, rhos_rhos, rhos_rhoErr, Wx2s, Wx2Err, Wy2s, Wy2Err, Wz2s, Wz2Err = pl.loadtxt(
+                    'JackKnifeData_super.dat', 
+                    unpack=True)
         if excVol:
             temps, filmDenses, filmDensErrs, bulkDenses, bulkDensErrs = pl.loadtxt(
                     'JackKnifeData_bipart.dat',
@@ -194,7 +201,7 @@ def main():
         pl.legend()
         pl.show()
 
-    QHO = False
+    ShareAxis=True      # shared x-axis for Cv and Energy
     if QHO:
         # analytical solutions for 1D QHO with one particle
         tempRange = pl.arange(0.01,1.0,0.01)
@@ -202,7 +209,6 @@ def main():
         CvAnalytic = 1.0/(4.0*(tempRange*pl.sinh(1.0/(2.0*tempRange)))**2)
 
     # some Plotting options
-    ShareAxis=True      # shared x-axis for Cv and Energy
     if reduceType == 'T':
         xLab = 'Temperature [K]'
     elif reduceType == 'u':
@@ -236,52 +242,53 @@ def main():
     pl.grid(True)
     pl.legend(loc=2)
 
-    pl.savefig('Helium_critical_CVest.pdf', format='pdf',
-            bbox_inches='tight')
+    pl.savefig('Helium_critical_CVest_trans.pdf', format='pdf',
+            bbox_inches='tight', transparent=True)
 
-    if ShareAxis:
-        pl.figure(2)
-    else:
-        pl.figure(3)
-    pl.errorbar(temps, rhos_rhos, rhos_rhoErr, fmt='o')
-    pl.xlabel(xLab, fontsize=20)
-    pl.ylabel('Superfluid Stiffness', fontsize=20)
-    pl.grid(True)
-
-    if ShareAxis:
-        pl.figure(3)
-    else:
-        pl.figure(4)
-    pl.errorbar(temps, Wx2s, Wx2Err, fmt='o', label=r'$\langle W_x^2 \rangle$')
-    pl.errorbar(temps, Wy2s, Wy2Err, fmt='o', label=r'$\langle W_y^2 \rangle$')
-    pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
-    pl.xlabel(xLab, fontsize=20)
-    pl.ylabel(r'$\langle W_i^2 \rangle$', fontsize=20)
-    pl.legend()
-    pl.grid(True)
-
-    if ShareAxis:
-        pl.figure(4)
-    else:
-        pl.figure(5)
-    pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
-    pl.xlabel(xLab, fontsize=20)
-    pl.ylabel(r'$\langle W_z^2 \rangle$', fontsize=20)
-    pl.legend()
-    pl.grid(True)
-
-
-    if excVol:
+    if not QHO:
         if ShareAxis:
-            pl.figure(5)
+            pl.figure(2)
         else:
-            pl.figure(6)
-        pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
-        pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
+            pl.figure(3)
+        pl.errorbar(temps, rhos_rhos, rhos_rhoErr, fmt='o')
         pl.xlabel(xLab, fontsize=20)
-        pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
+        pl.ylabel('Superfluid Stiffness', fontsize=20)
+        pl.grid(True)
+
+        if ShareAxis:
+            pl.figure(3)
+        else:
+            pl.figure(4)
+        pl.errorbar(temps, Wx2s, Wx2Err, fmt='o', label=r'$\langle W_x^2 \rangle$')
+        pl.errorbar(temps, Wy2s, Wy2Err, fmt='o', label=r'$\langle W_y^2 \rangle$')
+        pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\langle W_i^2 \rangle$', fontsize=20)
         pl.legend()
         pl.grid(True)
+
+        if ShareAxis:
+            pl.figure(4)
+        else:
+            pl.figure(5)
+        pl.errorbar(temps, Wz2s, Wz2Err, fmt='o', label=r'$\langle W_z^2 \rangle$')
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\langle W_z^2 \rangle$', fontsize=20)
+        pl.legend()
+        pl.grid(True)
+
+
+        if excVol:
+            if ShareAxis:
+                pl.figure(5)
+            else:
+                pl.figure(6)
+            pl.errorbar(temps, filmDenses, filmDensErrs, label='film', fmt='o')
+            pl.errorbar(temps, bulkDenses, bulkDensErrs, label='bulk', fmt='o')
+            pl.xlabel(xLab, fontsize=20)
+            pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
+            pl.legend()
+            pl.grid(True)
     
     pl.show()
 
