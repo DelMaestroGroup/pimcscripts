@@ -215,12 +215,18 @@ def crunchData():
     biPartFiles = glob.glob('*bipart_dens*')
     superFiles  = glob.glob('*super*')
     ntWindFiles = glob.glob('*ntWind*')
-    
+
     # check for bipartition files
     if biPartFiles == []:
         biPart = False
     else:
         biPart = True
+
+    # check for ntWind files
+    if ntWindFiles == []:
+        ntwFiles = False
+    else:
+        ntwFiles = True
 
     # check which ensemble
     canonical = True
@@ -313,12 +319,19 @@ def crunchData():
                 Wy2 = pl.append(Wy2, wy2)
                 Wz2 = pl.append(Wz2, wz2)
 
-        for ntFile in ntWindFiles:
-            if checkIfEmpty(ntFile,2):
-                pass
-            else:
-                ntWsq = pl.genfromtxt(ntFile, unpack=True, usecols=(0,))
-                NTW = pl.append(NTW, ntWsq)
+        if ntwFiles:
+            if TempRed:
+                ntWindFiles = glob.glob('*ntWind-%s*' % temp)
+            elif MuRed:
+                ntWindFiles = glob.glob('*ntWind*%s*' % temp)
+            
+            for ntFile in ntWindFiles:
+                if checkIfEmpty(ntFile,2):
+                    pass
+                else:
+                    ntWsq = pl.genfromtxt(ntFile, unpack=True, usecols=(0,))
+                    NTW = pl.append(NTW, ntWsq)
+            allTempsNTW += [[NTW]]
 
         allTempsE += [[E]]
         allTemps1 += [[EEcv]]
@@ -329,8 +342,6 @@ def crunchData():
         allTempsWx2 += [[Wx2]]
         allTempsWy2 += [[Wy2]]
         allTempsWz2 += [[Wz2]]
-
-        allTempsNTW += [[NTW]]
 
     # determine length of maximum sized array
     maxLen = 0
@@ -410,13 +421,13 @@ def crunchData():
         fout.close()
 
     # create ntWind file and write the header
-    fout = open('nonTrivWindData.dat', 'w')
+    fout = open('ReducedNTWindData.dat', 'w')
     fout.write('#%15s\t'%  tempList[0] )
     for temp in tempList[1:]:
         fout.write('%16s\t' %  temp )
     fout.write('\n')
 
-    # write superfluid stiffness arrays to disk
+    # write ntWind arrays to disk
     for line in range(maxLen):
         for numT in range(len(allTempsNTW)):
             if int(len(allTempsNTW[numT][0])) <= line:

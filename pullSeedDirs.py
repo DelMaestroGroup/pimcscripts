@@ -75,7 +75,7 @@ def main():
     if args.trimData:
         print 'Decided to make trimmed data files'
         fileNames = ['ReducedEstimatorData.dat', 'ReducedBiPartData.dat',
-                'ReducedSuperData.dat']
+                'ReducedSuperData.dat','ReducedNTWindData.dat']
         cT.trimData(fileNames)
         
 # =============================================================================

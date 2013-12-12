@@ -9,8 +9,8 @@ rcParams['text.usetex'] = True
 
 def main():
 
-    QHO = True
-    excVol = False 
+    QHO = False
+    excVol = True 
     args = aTools.parseCMD()
    
     # Check if our data file exists, if not: write one.
@@ -26,8 +26,6 @@ def main():
     if fileNames[0][0]=='g':
         canonical=False
 
-    print fileNames
-    
     if check == []:
         
         temps,Cvs,CvsErr = pl.array([]),pl.array([]),pl.array([])
@@ -40,6 +38,8 @@ def main():
 
         filmDenses, bulkDenses      = pl.array([]), pl.array([])
         filmDensErrs, bulkDensErrs    = pl.array([]), pl.array([])
+
+        ntWinds, ntWindErrs     = pl.array([]), pl.array([])
    
         # open energy/ specific heat data file, write headers
         fout = open('JackKnifeData_Cv.dat', 'w')
@@ -64,19 +64,24 @@ def main():
         if excVol:
             # open bipartition density data file, write headers
             foutDens = open('JackKnifeData_bipart.dat','w')
+            foutNTW  = open('JackKnifeData_ntWind.dat','w')
             if reduceType == 'T':
                 foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
                     'T', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+                foutNTW.write('#%15s\t%16s\n'%('T', '<W^2>'))
             elif reduceType == 'u':
                 foutDens.write('#%15s\t%16s\t%16s\t%16s\t%16s\n'%(
                     'mu', 'filmDens', 'filmDensErr', 'bulkDens', 'bulkDensErr'))
+                foutNTW.write('#%15s\t%16s\n'%('mu', '<W^2>'))
+
+
 
         # perform jackknife analysis of data, writing to disk
         if args.Crunched:   # check if we have combined data
             tempList = aTools.getHeadersFromFile(fileNames[0])
             for temp in tempList:
                 temps = pl.append(temps,float(temp))
-            n,n2,n3 = 0,0,0
+            n,n2,n3,n4 = 0,0,0,0
             for fileName in fileNames:
                 print '\n\n---',fileName,'---\n'
                 for temp in tempList:
@@ -140,6 +145,18 @@ def main():
                             bulkDensAve, bulkDensErr))
                         print n3
                         n3 += 2
+                    
+                    elif 'NTWind' in fileName:
+                        ntWind  = pl.loadtxt(fileName, \
+                                unpack=True, usecols=(n4,), delimiter=',')
+                        ntWindAve, ntWindErr = aTools.jackknife(ntWind[skip:])
+                        print '<W^2> = ', ntWindAve,' +/- ',ntWindErr
+                        ntWinds      = pl.append(ntWinds, ntWindAve)
+                        ntWindErrs    = pl.append(ntWindErrs, ntWindErr)
+                        foutNTW.write('%16.8E\t%16.8E\t%16.8E\n' %(
+                            float(temp), ntWindAve, ntWindErr ))
+                        print n4
+                        n4 += 1
 
         else:       # otherwise just read in individual (g)ce-estimator files
             # THIS IS LAGGING BEHIND THE CRUNCHED SECTION
@@ -289,7 +306,19 @@ def main():
             pl.ylabel(r'$\mathrm{Density}\ [\AA^{-d}]$', fontsize=20) 
             pl.legend()
             pl.grid(True)
-    
+
+        # plot nontrivial winding number squared
+        if ShareAxis:
+            pl.figure(6)
+        else:
+            pl.figure(7)
+            pl.errorbar(temps, ntWinds, ntWindErrs, fmt='o')
+            pl.xlabel(xLab, fontsize=20)
+            pl.ylabel(r'$\langle W^2 \rangle$', fontsize=20) 
+            pl.legend()
+            pl.grid(True)
+
+
     pl.show()
 
 # =============================================================================
