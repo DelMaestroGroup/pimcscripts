@@ -164,6 +164,9 @@ def checkIfEmpty(fName,n):
     
     return Empty
 
+# COMBINE THESE TWO, CALL IT independentVarList(estimFiles, canonical, reduceVar):
+# THEY HAVE SAME INTERFACE!
+# TAKE IN WHETHER MU OR T!!
 def makeTempList(estimFiles, canonical):
     ''' make list of all temperatures, in order, based on ensemble '''
     tempList = pl.array([])
@@ -179,7 +182,7 @@ def makeTempList(estimFiles, canonical):
     return pl.sort(tempList)
 
 def makeMuList(estimFiles, canonical):
-    ''' make list of all temperatures, in order, based on ensemble '''
+    ''' make list of all chemical potentials, in order, based on ensemble '''
     muList = pl.array([])
     for f in estimFiles:
         if canonical: 
@@ -203,6 +206,7 @@ def crunchData():
 
     args = parseCMD()
     reduceType = args.reduceType
+
     # are we reducing over Temps or Mus?
     TempRed, MuRed = False, False
     if reduceType == 'T':
@@ -210,12 +214,14 @@ def crunchData():
     elif reduceType == 'u':
         MuRed   = True
 
+    # PASS THESE NAMES THROUGH INTERFACE?
     # glob for files
     estimFiles  = glob.glob('*estimator*')
     biPartFiles = glob.glob('*bipart_dens*')
     superFiles  = glob.glob('*super*')
     ntWindFiles = glob.glob('*ntWind*')
-
+    
+    # GET RID OF THESE CHECKS
     # check for bipartition files
     if biPartFiles == []:
         biPart = False
@@ -234,24 +240,29 @@ def crunchData():
         canonical = False
 
     # make list of all reduced variable, in order, based on ensemble
+    # CALL THIS independentVarList
     if TempRed:
         tempList = makeTempList(estimFiles, canonical)
     elif MuRed:
         tempList = makeMuList(estimFiles, canonical)
 
+    # DO THIS INSIDE OF A LOOP
     # lists to hold all data
+    # first iter
     allTempsE   = []
     allTemps1   = []
     allTemps2   = []
     allTemps3   = []
+    # second iter
     if biPart:
         allTempsfD = []
         allTempsbD = []
+    # third iter
     allTempsSuper = []
     allTempsWx2 = []
     allTempsWy2 = []
     allTempsWz2 = []
-
+    # fourth iter
     allTempsNTW = []
 
     for numTemp,temp in enumerate(tempList):
