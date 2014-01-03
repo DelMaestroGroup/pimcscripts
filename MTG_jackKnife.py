@@ -312,11 +312,11 @@ def main():
             pl.figure(6)
         else:
             pl.figure(7)
-            pl.errorbar(temps, ntWinds, ntWindErrs, fmt='o')
-            pl.xlabel(xLab, fontsize=20)
-            pl.ylabel(r'$\langle W^2 \rangle$', fontsize=20) 
-            pl.legend()
-            pl.grid(True)
+        pl.errorbar(temps, ntWinds, ntWindErrs, fmt='o')
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\langle W^2 \rangle$', fontsize=20) 
+        pl.legend()
+        pl.grid(True)
 
 
     pl.show()
