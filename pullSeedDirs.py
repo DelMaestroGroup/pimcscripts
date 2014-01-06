@@ -15,9 +15,19 @@ def main():
     
     passwd = cT.Credentials(args.UserName)
     
+    # define all data you want to pull from pimc data files
     fileTypes = ['log','estimator','super','bipart','ntWind']
-    #fileTypes = ['log']
-   
+    
+    estimTypes = list(fileTypes)
+    if 'log' in estimTypes:
+        estimTypes.pop(estimTypes.index('log'))
+    
+    colNums = [[4,11,12,13], [0,1], [0,1,2,3], [0,]]
+    
+    fileNames = []
+    for f in estimTypes:
+        fileNames.append(str('Reduced'+str(f.capitalize())+'Data.dat'))
+
     # create ssh and sftp instances
     ssh = paramiko.SSHClient() 
     ssh.load_host_keys(os.path.expanduser(
@@ -58,7 +68,7 @@ def main():
     # Optionally delete all seed directories that were pulled from cluster.
     cT.renameFilesInDirecs(args.delDir)
   
-    # check for repeated pimcIDs
+    # check for repeated pimcIDs -- broken.
     #cT.repeatCheck()
 
     # close instances of sftp and ssh
@@ -68,14 +78,12 @@ def main():
     # optionally combine all data of the same temperature into one
     # much larger array.
     if args.Crunch:
-        cT.crunchData()
+        cT.crunchData(estimTypes,colNums)
 
     # optionally make a trimmed version of the data files that
     # makes all arrays the length of the shortest array.
     if args.trimData:
         print 'Decided to make trimmed data files'
-        fileNames = ['ReducedEstimatorData.dat', 'ReducedBiPartData.dat',
-                'ReducedSuperData.dat','ReducedNTWindData.dat']
         cT.trimData(fileNames)
         
 # =============================================================================
