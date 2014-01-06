@@ -229,7 +229,7 @@ def ensembleCheck(firstLetter):
     return canonical
 
 
-def crunchData():
+def crunchData(estimTypes, colNums):
     '''
     Takes a list of pimc file types ['estimator', 'super', etc..]
     and a list of list of column numbers (in order of file types) as
@@ -241,12 +241,6 @@ def crunchData():
     args = parseCMD()
     reduceType = args.reduceType
 
-    # these should be passed to this function!!
-    #estimTypes = ['estimator', 'bipart_dens', 'super', 'ntWind']
-    estimTypes = ['estimator','ntWind']
-    #colNums = [[4,11,12,13], [0,1], [0,1,2,3], [0,]]
-    colNums = [[4,11,12,13], [0]]
-    
     # make list of data file names
     estimFiles  = glob.glob('*%s*' % estimTypes[0])
     
