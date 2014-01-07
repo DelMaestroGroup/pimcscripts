@@ -297,7 +297,7 @@ def crunchData(estimTypes, colNums):
                     maxLen = arrayLen
      
         # open new file
-        newName = 'NewReduced'+str(estType.capitalize())+'Data.dat'
+        newName = 'Reduced'+str(estType.capitalize())+'Data.dat'
         fout = open(newName, 'w')
 
         # write headers
