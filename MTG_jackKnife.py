@@ -129,7 +129,7 @@ def main():
                         print n2
                         n2 += 4
 
-                    elif 'BiPart' in fileName:
+                    elif 'Bipart' in fileName:
                         filmDens, bulkDens  = pl.loadtxt(fileName, \
                                 unpack=True, usecols=(n3,n3+1), delimiter=',')
                         filmDensAve, filmDensErr = aTools.jackknife(filmDens[skip:])
@@ -146,7 +146,7 @@ def main():
                         print n3
                         n3 += 2
                     
-                    elif 'NTWind' in fileName:
+                    elif 'Ntwind' in fileName:
                         ntWind  = pl.loadtxt(fileName, \
                                 unpack=True, usecols=(n4,), delimiter=',')
                         ntWindAve, ntWindErr = aTools.jackknife(ntWind[skip:])
