@@ -16,22 +16,123 @@ from optparse import OptionParser
 from visual import *
 import commands
 
-#colors1 = [(85,98,112),(78,205,196),(199,244,100),(255,107,107)]
-#colors = []
-#for color in colors1:
-#    c = (1.0*color[0]/255.0,1.0*color[1]/255.0,1.0*color[2]/255.0)
-#    colors.append(c)
+
+# some global variables that we need to get rid of
+colors1 = [(85,98,112),(78,205,196),(199,244,100),(255,107,107)]
+colors = []
+for color in colors1:
+    c = (1.0*color[0]/255.0,1.0*color[1]/255.0,1.0*color[2]/255.0)
+    colors.append(c)
 
 
-# -------------------------------------------------------------------------------
+XXX = -999
+scale = 1.0
+
+# =============================================================================
+# Some useful functions
+# =============================================================================
+def sep(p1,p2):
+    ''' 
+    Get the scalar separation between two points.
+    THIS IS NOT BEING USED ANYMORE.  
+    '''
+
+    d = 0.0
+    for i in range(3):
+        d += (p1[i]-p2[i])**2
+
+    return sqrt(d)
+
+
+def getCellDimensions(fileName):
+    ''' Get the cell dimensions. '''
+    cellDims = []
+    excDims = []
+    with open(fileName) as inFile:
+        lineCount = 0
+        for line in inFile:
+            lineCount += 1
+            if lineCount == 3:
+                cellDims = line.split()
+            if (lineCount == 4 and line[0] == '#'):
+                excDims = line.split()
+            if (lineCount > 4):
+                break
+    
+    cellDims.pop(0)
+    excDims.pop(0)
+
+    return cellDims, excDims
+
+
+def getScreenShot(frameNum):
+    ''' 
+    Take a screenshot and save it to disk.
+    '''
+    fname = 'OUTPUT/POREMOVIE/He1d-%04d.tiff' % frameNum
+    commands.getoutput('/usr/sbin/screencapture -x -t tiff %s' % fname)
+    crop = '/opt/local/bin/convert ' + fname + ' -crop 800x800+0+44 ' + fname
+    commands.getoutput(crop)
+    print "Snap %d" % frameNum
+
+
+def loadPIMCPaths(fileName):
+    '''
+    Given a pimc worldline file, parse and extract a list, where each element 
+    contains lines corresponding to a given MC step worldline configuration.
+    '''
+
+    # Open the file
+    wlFile = open(fileName,'r')
+    lines = wlFile.readlines()
+
+    n = 0
+    wl = []
+    for line in lines:
+
+        # Every time we hit a new configuration, reset the data array and increment
+        # a counter
+        if line.find('START_CONFIG') != -1:
+            n += 1
+            data = []
+        # If we encounter an end config, append to the wl list
+        elif line.find('END_CONFIG') != -1: 
+            wl.append(data)
+        # Otherwise, append to the data array
+        elif line[0] == '#':
+            a = 0
+        else:
+            data.append(line.split())
+
+    return n,wl
+
+
+# =============================================================================
+# WLFrame class - holds all display information.
+# =============================================================================
 class WLFrame:
     ''' 
     Holds all the display information including beads and links.
     '''
-
-    def __init__(self,path,L):
-
+    def __init__(self, path, L, Ly=None, Lz=None):
+        '''
+        Parent class contains arrays for beads and links as well as
+        some of the aesthetics for visual python.
+        This can be passed either one, two, or three cell lengths, and
+        the number passed is assumed to be the spatial dimensionality 
+        of the system.
+        '''
         self.L = L
+        self.Ly = Ly
+        self.Lz = Lz
+
+        self.dim = 3
+        # determine spatial dimension from number of arguments passed
+        if (Lz == None and Ly == None):
+            self.dim = 1
+        elif (Lz == None and Ly != None):
+            self.dim = 2
+
         self.dM = 1.0*self.L/(1.0*(path.numTimeSlices-1))
         self.maxNumParticles = path.numParticles + 20
 
@@ -40,9 +141,11 @@ class WLFrame:
         self.disNextBead = []
         self.disPrevLink = []
         self.disNextLink = []
-        beadRad = 0.25
+        beadRad = 0.08
+        #beadRad = 0.25
         #beadRad = 1.80
-        linkRad = 0.08
+        linkRad = 0.03
+
         # We first do the beads
         for m in range(path.numTimeSlices):
             bList = []
@@ -51,14 +154,15 @@ class WLFrame:
             nList = []
             pList = []
 
+            # Initialize arrays for beads and links
             for n in range(self.maxNumParticles):
 
-                # Initialize the bead array
+                # Initialize bead array
                 b = sphere(pos=(0.0,0.0,0.0),radius=beadRad,color=(0.0,0.0,0.0))
                 b.visible = False
                 bList.append(b)
 
-                # Initialize the pbc bead arrays
+                # Initialize pbc bead arrays (next and prev beads)
                 bp = sphere(pos=(0.0,0.0,0.0),radius=beadRad,color=(0.0,0.0,0.0))
                 bp.visible = False
                 bn = sphere(pos=(0.0,0.0,0.0),radius=beadRad,color=(0.0,0.0,0.0))
@@ -66,7 +170,7 @@ class WLFrame:
                 bpList.append(bp)
                 bnList.append(bn)
 
-                # Initialize the prev and next curves
+                # Initialize links (prev and next curves)
                 cp = curve(pos=(0.0,0.0,0.0),radius=linkRad,color=(0.0,0.0,0.0))
                 cn = curve(pos=(0.0,0.0,0.0),radius=linkRad,color=(0.0,0.0,0.0))
                 cp.visible = False
@@ -117,9 +221,20 @@ class WLFrame:
                     else:
                         col = colors[1]
 
-                    x = path.bead[m,n,0]
-                    y = -0.5*self.L + m*self.dM
-                    z = 0.0
+                    # update position based on dimension
+                    if self.dim == 1:
+                        x = path.bead[m,n,0]
+                        y = -0.5*self.L + m*self.dM
+                        z = 0.0
+                    elif self.dim == 2:
+                        x = path.bead[m,n,0]
+                        y = path.bead[m,n,1]
+                        z = -0.5*self.L + m*self.dM
+                    else:
+                        x = path.bead[m,n,0]
+                        y = path.bead[m,n,1]
+                        z = path.bead[m,n,2]
+
                     p0 = (x,y,z)
                     self.disBead[m][n].pos = p0
                     self.disBead[m][n].color = col
@@ -149,13 +264,41 @@ class WLFrame:
                         if path.active[ms][ns]:
                             p1 = copy(self.disBead[m][n].pos)
                             p2 = copy(self.disBead[ms][ns].pos)
+                            
+                            #if sep(p1,p2) > 0.5*self.L:
+                            #    if p2[0] < 0:
+                            #        p2[0] += self.L
+                            #    else:
+                            #        p2[0] -= self.L
 
-                            if sep(p1,p2) > 0.5*self.L:
+                            windBack = False
+                            # enforce PBC in x-direction
+                            if abs(p1[0]-p2[0]) > 0.5*self.L:
+                                windBack = True
                                 if p2[0] < 0:
                                     p2[0] += self.L
                                 else:
                                     p2[0] -= self.L
 
+                            # enforce PBC in y-direction
+                            if (self.dim==2 or self.dim==3):
+                                if abs(p1[1]-p2[1]) > 0.5*self.Ly:
+                                    windBack = True
+                                    if p2[1] < 0:
+                                        p2[1] += self.Ly
+                                    else:
+                                        p2[1] -= self.Ly
+
+                            # enforce PBC in z-direction
+                            if (self.dim==3):
+                                if abs(p1[2]-p2[2]) > 0.5*self.Lz:
+                                    windBack = True
+                                    if p2[2] < 0:
+                                        p2[2] += self.Lz
+                                    else:
+                                        p2[2] -= self.Lz
+                            
+                            if windBack:
                                 shiftBead[m][n].pos = p2
                                 shiftBead[m][n].visible = True
                                 shiftBead[m][n].color = bcol
@@ -167,45 +310,25 @@ class WLFrame:
                             link[m][n].visible = False
 
 
-def sep(p1,p2):
-    ''' 
-    Get the scalar separation between two points. 
-    '''
-
-    d = 0.0
-    for i in range(3):
-        d += (p1[i]-p2[i])**2
-
-    return sqrt(d)
-
-
-def getScreenShot(frameNum):
-    ''' 
-    Take a screenshot and save it to disk.
-    '''
-    fname = 'OUTPUT/POREMOVIE/He1d-%04d.tiff' % frameNum
-    commands.getoutput('/usr/sbin/screencapture -x -t tiff %s' % fname)
-    crop = '/opt/local/bin/convert ' + fname + ' -crop 800x800+0+44 ' + fname
-    commands.getoutput(crop)
-    print "Snap %d" % frameNum
-
-
-# -------------------------------------------------------------------------------
+# =============================================================================
+# Path class - holds all information about system at given MC step.
+# =============================================================================
 class Path:
-    ''' Holds all the information about the worldline configuration at a given
+    ''' 
+    Holds all the information about the worldline configuration at a given
     MC step.
     '''
 
-    # ----------------------------------------------------------------------
     def __init__(self,wlData,num_particles=None):
-        ''' Given a single worldine configuration, we populate the data arrays.
-        
-            We expect data as a list containing lines of a worline file that
-            have already been split.'''
+        ''' 
+        Given a single worldine configuration, we populate the data arrays.
+        We expect data as a list containing lines of a worldine file that
+        have already been split.
+        '''
 
         # First we determine how many particles there are in this config
-        self.numParticles = -999
-        self.numTimeSlices = -999
+        self.numParticles = XXX
+        self.numTimeSlices = XXX
         for line in wlData:
             if int(line[0]) > self.numTimeSlices:
                 self.numTimeSlices= int(line[0])
@@ -228,15 +351,14 @@ class Path:
                 m = int(line[0])
                 n = int(line[1])
                 self.wlIndex[m,n] = int(line[2])
-                self.bead[m,n,0] = float(line[3])
-                self.bead[m,n,1] = float(line[4])
-                self.bead[m,n,2] = float(line[5])
+                self.bead[m,n,0] = float(line[3])   # current x position
+                self.bead[m,n,1] = float(line[4])   # current y position
+                self.bead[m,n,2] = float(line[5])   # current z position
                 self.prev[m,n,0] = int(line[6])
                 self.prev[m,n,1] = int(line[7])
                 self.next[m,n,0] = int(line[8])
                 self.next[m,n,1] = int(line[9])
                 self.active[m,n] = 1
-
 
             # Finally store the wlData itself
             # if any(self.wlIndex==-999):
@@ -247,31 +369,3 @@ class Path:
         else:
             self.wlData = None
 
-# -------------------------------------------------------------------------------
-def loadPIMCPaths(fileName):
-    '''Given a pimc worldline file, parse and extract a list, where each element contains lines
-    corresponding to a given MC step worldline configuration.'''
-
-    # Open the file
-    wlFile = open(fileName,'r')
-    lines = wlFile.readlines()
-
-    n = 0
-    wl = []
-    for line in lines:
-
-        # Every time we hit a new configuration, reset the data array and increment
-        # a counter
-        if line.find('START_CONFIG') != -1:
-            n += 1
-            data = []
-        # If we encounter an end config, append to the wl list
-        elif line.find('END_CONFIG') != -1: 
-            wl.append(data)
-        # Otherwise, append to the data array
-        elif line[0] == '#':
-            a = 0
-        else:
-            data.append(line.split())
-
-    return n,wl

@@ -1,35 +1,33 @@
-'''
-visPath.py
-
-Visualize a 3D configuration from PIMC data with excluded volume
-'''
+# =============================================================================
+# visPath.py
+#
+# Main driver for visualizing worldlines from (g)ce-wl- files.
+#
+# Author:           Adrian Del Maestro
+#                   Max Graves
+# Last Revision:    14-JAN-2013  -- MTG
+# =============================================================================
 
 import os,sys
-#import loadgmt,kevent
-import pimchelp
 from optparse import OptionParser
-from visual import *
-#from pylab import *
-import commands
+import visual as vis
 import MTG_visTools as vt
 
-colors1 = [(85,98,112),(78,205,196),(199,244,100),(255,107,107)]
-colors = []
-for color in colors1:
-	c = (1.0*color[0]/255.0,1.0*color[1]/255.0,1.0*color[2]/255.0)
-	colors.append(c)
-
-XXX = -999
-scale = 1.0
 def main():
-    parser = OptionParser()
 
     # parse the command line options
+    parser = OptionParser()
     (options, args) = parser.parse_args()
     fileName = args[0]
 
-    # Get the parameter map
-    L = 40
+    # get cell lengths
+    cellDims, excDims = vt.getCellDimensions(fileName)
+    L = float(cellDims[0])
+    Ly = float(cellDims[1])
+    Lz = float(cellDims[2])
+    ay = float(excDims[0])
+    az = float(excDims[1])
+    # CHECK HOW THE OUTPUT LOOKS FROM THE CODE FOR D<3 !!!!!!
 
     # Load the configurations from disk	
     numFrames,wl = vt.loadPIMCPaths(fileName)
@@ -38,35 +36,41 @@ def main():
     for t in range(numFrames):
         paths.append(vt.Path(wl[t]))
 
-    # The system size and number of imaginary time steps
-    #L = parMap['V']
+    # choose frame number
+    numFrame = 2
 
-    M = paths[0].numTimeSlices
+    # time slice data
+    M = paths[numFrame].numTimeSlices
     dM = 1.0*L/(1.0*(M-1))
 
-    #wl = WLFrame(paths[0],L)
-
-
-    scene = display(title='1D Bose Gas',x=0, y=0, width=800, height=844,\
-            center=(0,0,0), background=(0.0,0.0,0.0),range=0.6*L)
+    # set up background
+    scene = vis.display(title='World Lines!!',x=0, y=0, width=800, height=844,\
+            center=(0,0,0), background=(0.0,0.0,0.0))
     scene.autoscale = 0
 
+    # Set up excluded volume
+    excVol = vis.box(pos=(0,0,0), length=L, height=ay, width=az, opacity=0.5)
 
-    # The boundary of the simulation box in space-time
-    ymax = -0.5*L + (M-1)*dM
-    line = [(-0.5*L,-0.5*L,0),(0.5*L,-0.5*L,0),(0.5*L,ymax,0),(-0.5*L,ymax,0),(-0.5*L,-0.5*L,0)]
-    #curve(pos=line,radius=0.20,color=(0.5,0.5,0.5))
-    print 'got'
+    # Set up cell walls
+    excVol = vis.box(pos=(0,0,0), length=L, height=Ly, width=Lz, opacity=0.2)
 
-    wl = vt.WLFrame(paths[0],L)
-    getScreenShot(0)
+    # The boundary of the simulation box in space-time -- 1D
+    #ymax = -0.5*L + (M-1)*dM
+    #line = [(-0.5*L,-0.5*L,0),(0.5*L,-0.5*L,0),(0.5*L,ymax,0),(-0.5*L,ymax,0),(-0.5*L,-0.5*L,0)]
+    #vis.curve(pos=line,radius=0.20,color=(0.5,0.5,0.5))
 
+    wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
+    vt.getScreenShot(0)
+
+
+    '''
     n = 1
     for p in paths[1:]:
         #		visual.rate(1)
         wl.update(p)
-        getScreenShot(n)
+        vt.getScreenShot(n)
         n += 1
+    '''
 
 
 # ----------------------------------------------------------------------
