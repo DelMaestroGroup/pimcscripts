@@ -1,16 +1,22 @@
-'''
-pathconfig.py
-
-Adrian Del Maestro
-12.15.2009
-
-Includes classes that store all information about world line trajectories of
-particles computed from path integral monte carlo calculations.
-'''
+# =============================================================================
+#   visTools.py
+#
+# Author:           Adrian Del Maestro
+#                   Max Graves
+# Date Created:     12.15.2009  (pathconfig.py)
+# Last Revised:     15-JAN-2014
+#
+# Includes classes that store:
+#       - All information about world line trajectories of particles computed 
+#       from path integral monte carlo calculations.
+#       - All visual data for use with vPython.
+#       - Some functions used by the main driver 
+#
+# This was adapted from pathconfig.py and vis1D.py
+# =============================================================================
 
 from numpy import *
 import os,sys
-#import loadgmt,kevent
 import pimchelp
 from optparse import OptionParser
 from visual import *
@@ -31,18 +37,6 @@ scale = 1.0
 # =============================================================================
 # Some useful functions
 # =============================================================================
-def sep(p1,p2):
-    ''' 
-    Get the scalar separation between two points.
-    THIS IS NOT BEING USED ANYMORE.  
-    '''
-
-    d = 0.0
-    for i in range(3):
-        d += (p1[i]-p2[i])**2
-
-    return sqrt(d)
-
 
 def getCellDimensions(fileName):
     ''' Get the cell dimensions. '''
@@ -60,7 +54,8 @@ def getCellDimensions(fileName):
                 break
     
     cellDims.pop(0)
-    excDims.pop(0)
+    if len(excDims)>0:
+        excDims.pop(0)
 
     return cellDims, excDims
 
@@ -105,6 +100,19 @@ def loadPIMCPaths(fileName):
             data.append(line.split())
 
     return n,wl
+
+
+def sep(p1,p2):
+    ''' 
+    Get the scalar separation between two points.
+    THIS IS NOT BEING USED ANYMORE.  
+    '''
+
+    d = 0.0
+    for i in range(3):
+        d += (p1[i]-p2[i])**2
+
+    return sqrt(d)
 
 
 # =============================================================================
