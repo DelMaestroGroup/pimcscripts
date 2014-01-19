@@ -139,11 +139,6 @@ def crunchData(estimTypes, colNums):
         
         fout.close()
         
-        #if reduceVar == 'T':
-        #    print 'T=',temp,', bins=',len(E)
-        #elif MuRed:
-        #    print 'mu=',temp,', bins=',len(E)
-
 
 def ensembleCheck(firstLetter):
     '''

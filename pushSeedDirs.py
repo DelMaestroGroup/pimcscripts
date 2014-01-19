@@ -49,11 +49,14 @@ def main():
         else:
             subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
 
-        # change random number seed in submit file
+        # change random number seed in submit file -- this defines hacky.
         with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
-            for line in inFile:
-                outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line) )
-
+            for n, line in enumerate(inFile):
+                if n==0:
+                    if '-p 000' not in line:
+                        sys.exit('Include -p 000 in submit script!')
+                outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
+        
         # run gensubmit
         command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster=bluemoon')
         subprocess.check_call(command, shell=True)

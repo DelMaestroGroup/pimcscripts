@@ -17,18 +17,17 @@ def main():
     
     # define all data you want to pull from pimc data files
     fileTypes = ['log','estimator','super','bipart_dens','ntWind']
+    colNums = [[4,11,12,13], [0,1,2,3], [0,1], [0,]]
     
     estimTypes = list(fileTypes)
     if 'log' in estimTypes:
         estimTypes.pop(estimTypes.index('log'))
     
-    colNums = [[4,11,12,13], [0,1,2,3], [0,1], [0,]]
-    
     fileNames = []
     for f in estimTypes:
         fileNames.append(str('Reduced'+str(f.capitalize())+'Data.dat'))
 
-    print fileNames
+    print '\nCreating: ',fileNames,'\n'
 
     # create ssh and sftp instances
     ssh = paramiko.SSHClient() 
