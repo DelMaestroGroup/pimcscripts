@@ -1,24 +1,12 @@
+# =============================================================================
+# Functions used in jackknife data analysis scripts.
+#
+# Author:           Max Graves
+# Last Revised:     18-JAN-2014
+# =============================================================================
 import numpy as np
 import glob,argparse
 
-def parseCMD():
-    ''' Parse the command line. '''
-    parser = argparse.ArgumentParser(description='pulls down lots of files.')
-    parser.add_argument('fileNames', help='Data File Name.', nargs='+')
-    parser.add_argument('-t', '--typeOfAverage', type=str,
-            default='jackknife',
-            help='NOT WORKING YET: Do you want jackknife or bootstrap?')
-    parser.add_argument('-s', '--skip', type=int,
-            default=1000,
-            help='Number of bins to skip')
-    parser.add_argument('-c', '--crunched', action='store_true', 
-            dest='Crunched', default=False,
-            help='Is Cv data already crunched from multiple seeds?')
-    parser.add_argument('-r', '--reduceType', type=str,
-            default='T',
-            help='What are we reducing over? [T,u]')
-    
-    return parser.parse_args()
 
 def getHeadersFromFile(fileName, skipLines=0):
     ''' 
@@ -31,6 +19,7 @@ def getHeadersFromFile(fileName, skipLines=0):
         temps.pop(0)
 
     return temps
+
 
 def jackknife(data,data2=None,data3=None):
     ''' 
@@ -82,5 +71,26 @@ def jackknife(data,data2=None,data3=None):
     jkErr = np.sqrt((numBins-1)*jkVar)
 
     return ActAve, jkErr
+
+
+def parseCMD():
+    ''' Parse the command line. '''
+    parser = argparse.ArgumentParser(description='pulls down lots of files.')
+    parser.add_argument('fileNames', help='Data File Name.', nargs='+')
+    parser.add_argument('-t', '--typeOfAverage', type=str,
+            default='jackknife',
+            help='NOT WORKING YET: Do you want jackknife or bootstrap?')
+    parser.add_argument('-s', '--skip', type=int,
+            default=1000,
+            help='Number of bins to skip')
+    parser.add_argument('-c', '--crunched', action='store_true', 
+            dest='Crunched', default=False,
+            help='Is Cv data already crunched from multiple seeds?')
+    parser.add_argument('-r', '--reduceType', type=str,
+            default='T',
+            help='What are we reducing over? [T,u]')
+    
+    return parser.parse_args()
+
 
 # =============================================================================

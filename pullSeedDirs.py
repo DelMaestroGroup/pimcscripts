@@ -15,10 +15,19 @@ def main():
     
     passwd = cT.Credentials(args.UserName)
     
-    # define all data you want to pull from pimc data files
+    # define all data you want to pull from pimc data files IN ORDER.
     fileTypes = ['log','estimator','super','bipart_dens','ntWind']
-    colNums = [[4,11,12,13], [0,1,2,3], [0,1], [0,]]
-    
+    colNums = [
+            [4,11,12,13], 
+            [0,1,2,3], 
+            [0,1], 
+            [0,]]
+    observables = [
+            ['E','Cv1','Cv2','Cv3'],
+            ['rho_s/rho','Wx^2','Wy^2','Wz^2'],
+            ['filmDens','bulkDens'],
+            ['W^2']]
+
     estimTypes = list(fileTypes)
     if 'log' in estimTypes:
         estimTypes.pop(estimTypes.index('log'))
@@ -79,7 +88,7 @@ def main():
     # optionally combine all data of the same temperature into one
     # much larger array.
     if args.Crunch:
-        cT.crunchData(estimTypes,colNums)
+        cT.crunchData(estimTypes,colNums,observables)
         #cT.crunchDataOLD()
 
     # optionally make a trimmed version of the data files that

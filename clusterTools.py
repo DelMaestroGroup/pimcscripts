@@ -40,7 +40,7 @@ def Credentials(userN):
     return passwd
 
 
-def crunchData(estimTypes, colNums):
+def crunchData(estimTypes, colNums, observables):
     '''
     Takes a list of pimc file types ['estimator', 'super', etc..]
     and a list of list of column numbers (in order of file types) as
@@ -114,16 +114,23 @@ def crunchData(estimTypes, colNums):
         newName = 'Reduced'+str(estType.capitalize())+'Data.dat'
         fout = open(newName, 'w')
 
-        # write headers
+        # write independent variable as top header line
         fout.write('#%15s\t' % indList[0])
         for n in range(len(colNums[nType])-1):
             fout.write('%16s\t'% '')
-
         for temp in indList[1:]:
             fout.write('%16s\t'% temp)
             for n in range(len(colNums[nType])-1):
                 fout.write('%16s\t'% '')
+        fout.write('\n')
 
+        # write observable names as second header line
+        fout.write('#%15s\t' % observables[nType][0])
+        for n in range(len(observables[nType])-1):
+            fout.write('%16s\t' % observables[nType][n+1])
+        for temp in indList[1:]:
+            for obs in observables[nType]:
+                fout.write('%16s\t' % obs)
         fout.write('\n')
         
         # write data arrays to disk
@@ -307,290 +314,5 @@ def trimData(fileNames):
             for n, line in enumerate(inFile):
                 if n < lineStop:
                     outFile.write( line )
-
-
-#def makeTempList(estimFiles, canonical):
-#    ''' make list of all temperatures, in order, based on ensemble '''
-#    tempList = pl.array([])
-#    for f in estimFiles:
-#        if canonical: 
-#            temptemp = f[13:19]
-#        else:
-#            temptemp = f[14:20]
-#        
-#        if temptemp not in tempList:
-#            tempList = pl.append(tempList, temptemp)
-#    
-#    return pl.sort(tempList)
-#
-#def makeMuList(estimFiles, canonical):
-#    ''' make list of all chemical potentials, in order, based on ensemble '''
-#    muList = pl.array([])
-#    for f in estimFiles:
-#        if canonical: 
-#            tempMu = f[28:35]
-#        else:
-#            tempMu = f[29:36]
-#        
-#        if tempMu not in muList:
-#            muList = pl.append(muList, tempMu)
-#    
-#    return pl.sort(muList)
-#
-#def crunchDataOLD():
-#    '''
-#    This function will grab all (g)ce-estimator files in a directory and
-#    if there are multiple data files for the same temperature it will write
-#    all of the data into a new file categorized by the temperatures.
-#    The actual data stored will be in columns of the three terms (in order)
-#    needed to compute C_v. ( E, EEcv*beta^2, Ecv*beta, dEdB*beta^2 ).
-#    '''
-#
-#    args = parseCMD()
-#    reduceType = args.reduceType
-#
-#    # are we reducing over Temps or Mus?
-#    TempRed, MuRed = False, False
-#    if reduceType == 'T':
-#        TempRed = True
-#    elif reduceType == 'u':
-#        MuRed   = True
-#
-#    # PASS THESE NAMES THROUGH INTERFACE?
-#    # glob for files
-#    estimFiles  = glob.glob('*estimator*')
-#    biPartFiles = glob.glob('*bipart_dens*')
-#    superFiles  = glob.glob('*super*')
-#    ntWindFiles = glob.glob('*ntWind*')
-#    
-#    # GET RID OF THESE CHECKS
-#    # check for bipartition files
-#    if biPartFiles == []:
-#        biPart = False
-#    else:
-#        biPart = True
-#
-#    # check for ntWind files
-#    if ntWindFiles == []:
-#        ntwFiles = False
-#    else:
-#        ntwFiles = True
-#
-#    # check which ensemble
-#    canonical = True
-#    if estimFiles[0][0] == 'g':
-#        canonical = False
-#
-#    # make list of all reduced variable, in order, based on ensemble
-#    # CALL THIS independentVarList
-#    if TempRed:
-#        tempList = makeTempList(estimFiles, canonical)
-#    elif MuRed:
-#        tempList = makeMuList(estimFiles, canonical)
-#
-#    # DO THIS INSIDE OF A LOOP
-#    # lists to hold all data
-#    # first iter
-#    allTempsE   = []
-#    allTemps1   = []
-#    allTemps2   = []
-#    allTemps3   = []
-#    # second iter
-#    if biPart:
-#        allTempsfD = []
-#        allTempsbD = []
-#    # third iter
-#    allTempsSuper = []
-#    allTempsWx2 = []
-#    allTempsWy2 = []
-#    allTempsWz2 = []
-#    # fourth iter
-#    allTempsNTW = []
-#
-#    for numTemp,temp in enumerate(tempList):
-#        # only grab estimator files of correct temperature
-#        if TempRed:
-#            estFiles = glob.glob('*estimator-%s*' % temp)
-#            superFiles = glob.glob('*super-%s*' % temp)
-#        elif MuRed:
-#            estFiles = glob.glob('*estimator*%s*' % temp)
-#            superFiles = glob.glob('*super*%s*' % temp)
-#        
-#        E       = pl.array([])
-#        EEcv    = pl.array([])
-#        Ecv     = pl.array([])
-#        dEdB    = pl.array([])
-#        Super   = pl.array([])
-#        Wx2     = pl.array([])
-#        Wy2     = pl.array([])
-#        Wz2     = pl.array([])
-#
-#        NTW     = pl.array([])
-#
-#        if biPart:
-#            if TempRed:
-#                bipFiles = glob.glob('*bipart_dens-%s*' % temp)
-#            elif MuRed:
-#                bipFiles = glob.glob('*bipart_dens*%s*' % temp)
-#            bulkDens = pl.array([])
-#            filmDens = pl.array([])
-#            for bFile in bipFiles:
-#                if checkIfEmpty(bFile,2):
-#                    pass
-#                else:
-#                    fD, bD = pl.genfromtxt(bFile,unpack=True, \
-#                            usecols=(0,1))
-#                    bulkDens = pl.append(bulkDens, bD)
-#                    filmDens = pl.append(filmDens, fD)
-#            allTempsfD += [[filmDens]]
-#            allTempsbD += [[bulkDens]]
-#        
-#        for tFile in estFiles:
-#            #print tFile
-#            if checkIfEmpty(tFile,2):    # check for empty file
-#                pass
-#            else:
-#                ET, EEcvT, EcvT, dEdBT = pl.genfromtxt(tFile, unpack=True, \
-#                        usecols=(4,11,12,13))
-#                E       = pl.append(E, ET)
-#                EEcv    = pl.append(EEcv, EEcvT)
-#                Ecv     = pl.append(Ecv, EcvT)
-#                dEdB    = pl.append(dEdB, dEdBT)
-#        
-#        if TempRed:
-#            print 'T=',temp,', bins=',len(E)
-#        elif MuRed:
-#            print 'mu=',temp,', bins=',len(E)
-#
-#        for sFile in superFiles:
-#            if checkIfEmpty(sFile,2):
-#                pass
-#            else:
-#                rhos_rho, wx2, wy2, wz2 = pl.genfromtxt(sFile, unpack=True, usecols=(0,1,2,3))
-#                Super = pl.append(Super, rhos_rho)
-#                Wx2 = pl.append(Wx2, wx2)
-#                Wy2 = pl.append(Wy2, wy2)
-#                Wz2 = pl.append(Wz2, wz2)
-#
-#        if ntwFiles:
-#            if TempRed:
-#                ntWindFiles = glob.glob('*ntWind-%s*' % temp)
-#            elif MuRed:
-#                ntWindFiles = glob.glob('*ntWind*%s*' % temp)
-#            
-#            for ntFile in ntWindFiles:
-#                if checkIfEmpty(ntFile,2):
-#                    pass
-#                else:
-#                    ntWsq = pl.genfromtxt(ntFile, unpack=True, usecols=(0,))
-#                    NTW = pl.append(NTW, ntWsq)
-#            allTempsNTW += [[NTW]]
-#
-#        allTempsE += [[E]]
-#        allTemps1 += [[EEcv]]
-#        allTemps2 += [[Ecv]]
-#        allTemps3 += [[dEdB]]
-#
-#        allTempsSuper += [[Super]]
-#        allTempsWx2 += [[Wx2]]
-#        allTempsWy2 += [[Wy2]]
-#        allTempsWz2 += [[Wz2]]
-#
-#    # determine length of maximum sized array
-#    maxLen = 0
-#    for arr in range(len(allTemps1)):
-#        if int(len(allTemps1[arr][0])) > maxLen:
-#            maxLen = int(len(allTemps1[arr][0]))
-#
-#    # USAGE KEY:
-#    # len(allTemps1) gives number of temperatures
-#    # allTemps[i][0] gives the array for the i^th temperature
-#    # allTemps[i][0][j] gives the jth element of the ith temperature array
-#
-#    # create energy/ specific heat file and write the header
-#    fout = open('ReducedEstimatorData.dat', 'w')
-#    fout.write('#%15s\t%16s\t%16s\t%16s\t'% (tempList[0], '','',''))
-#    for temp in tempList[1:]:
-#        fout.write('%16s\t%16s\t%16s\t%16s\t'% (temp,'','',''))
-#    fout.write('\n')
-#
-#    # write energy and specific heat arrays to disk
-#    for line in range(maxLen):
-#        for numT in range(len(allTemps1)):
-#            if int(len(allTemps1[numT][0])) <= line:
-#                fout.write('%16s\t%16s\t%16s\t%16s\t' % ('','','',''))
-#            else:
-#                fout.write('%16.8E,\t%16.8E,\t%16.8E,\t%16.8E,\t'% (
-#                    float(allTempsE[numT][0][line]),
-#                    float(allTemps1[numT][0][line]),
-#                    float(allTemps2[numT][0][line]),
-#                    float(allTemps3[numT][0][line]) ))
-#        fout.write('\n')
-#
-#    fout.close()
-#
-#    # create superfluid file and write the header
-#    fout = open('ReducedSuperData.dat', 'w')
-#    fout.write('#%15s\t%16s\t%16s\t%16s\t'% ( tempList[0],'','','' ))
-#    for temp in tempList[1:]:
-#        fout.write('%16s\t%16s\t%16s\t%16s\t' % ( temp,'','','' ))
-#    fout.write('\n')
-#
-#    # write superfluid stiffness arrays to disk
-#    for line in range(maxLen):
-#        for numT in range(len(allTemps1)):
-#            if int(len(allTempsSuper[numT][0])) <= line:
-#                fout.write('%16s\t%16s\t%16s\t%16s\t' % ('','','',''))
-#            else:
-#                fout.write('%16.8E,\t%16.8E,\t%16.8E,\t%16.8E,\t'% (
-#                    float(allTempsSuper[numT][0][line]),
-#                    float(allTempsWx2[numT][0][line]),
-#                    float(allTempsWy2[numT][0][line]),
-#                    float(allTempsWz2[numT][0][line]) ))
-#        fout.write('\n')
-#
-#    fout.close()
-#
-#
-#    if biPart:
-#        # create file for bipartition density
-#        fout = open('ReducedBiPartData.dat', 'w')
-#        fout.write('#%15s\t%16s\t'% (tempList[0], ''))
-#        for temp in tempList[1:]:
-#            fout.write('%16s\t%16s\t'% (temp,''))
-#        fout.write('\n')
-#
-#        # write bipartition density arrays to disk
-#        for line in range(maxLen):
-#            for numT in range(len(allTempsfD)):
-#                if int(len(allTempsfD[numT][0])) <= line:
-#                    fout.write('%16s\t%16s\t' % ('',''))
-#                else:
-#                    fout.write('%16.8E,\t%16.8E,\t'% (
-#                        float(allTempsfD[numT][0][line]),
-#                        float(allTempsbD[numT][0][line]) ))
-#            fout.write('\n')
-#
-#        fout.close()
-#
-#    # create ntWind file and write the header
-#    fout = open('ReducedNTWindData.dat', 'w')
-#    fout.write('#%15s\t'%  tempList[0] )
-#    for temp in tempList[1:]:
-#        fout.write('%16s\t' %  temp )
-#    fout.write('\n')
-#
-#    # write ntWind arrays to disk
-#    for line in range(maxLen):
-#        for numT in range(len(allTempsNTW)):
-#            if int(len(allTempsNTW[numT][0])) <= line:
-#                fout.write('%16s\t' % '')
-#            else:
-#                fout.write('%16.8E,\t'% (
-#                    float(allTempsNTW[numT][0][line]) ))
-#        fout.write('\n')
-#
-#    fout.close()
-#
 
 # =============================================================================
