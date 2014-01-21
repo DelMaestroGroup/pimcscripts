@@ -150,8 +150,6 @@ class WLFrame:
         self.disPrevLink = []
         self.disNextLink = []
         beadRad = 0.08
-        #beadRad = 0.25
-        #beadRad = 1.80
         linkRad = 0.03
 
         # We first do the beads
@@ -273,12 +271,6 @@ class WLFrame:
                             p1 = copy(self.disBead[m][n].pos)
                             p2 = copy(self.disBead[ms][ns].pos)
                             
-                            #if sep(p1,p2) > 0.5*self.L:
-                            #    if p2[0] < 0:
-                            #        p2[0] += self.L
-                            #    else:
-                            #        p2[0] -= self.L
-
                             windBack = False
                             # enforce PBC in x-direction
                             if abs(p1[0]-p2[0]) > 0.5*self.L:

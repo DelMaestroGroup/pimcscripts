@@ -74,33 +74,57 @@ def crunchData(estimTypes, colNums, observables):
                 bipFiles = glob.glob('*%s-%s*' % (estimTypes[nType], temp))
             elif reduceType == 'u':
                 bipFiles = glob.glob('*%s*%s*' % (estimTypes[nType], temp))
-
+ 
             arrs = {}
-            numFile = 0
-            for f in bipFiles:
+            for nf, f in enumerate(bipFiles):
                 if checkIfEmpty(f,2):
                     print f,' is empty.'
                     pass
                 else:
                     dat = pl.genfromtxt(f, unpack=True, usecols=colNums[nType])
-                    
-                    if int(len(colNums[nType])) == 1: 
-                        if numFile == 0:
-                            arrs['arr'+str(n)] = dat
-                        else:
-                            arrs['arr'+str(n)] = pl.append(
-                                    arrs['arr'+str(n)], dat)
+
+                    # define key that can be sorted properly
+                    if numTemp < 10:
+                        arrName = 'arr00'+str(numTemp)
+                    elif (numTemp >= 10 and numTemp < 100):
+                        arrName = 'arr0'+str(numTemp)
                     else:
-                        if numFile == 0:
+                        arrName = 'arr'+str(numTemp)
+                    
+                    # treat data from one column
+                    if int(len(colNums[nType])) == 1:
+                        if nf == 0:
+                            arrs[arrName] = dat
+                        else:
+                            arrs[arrName] = pl.append(arrs[arrName], dat)
+
+                    # treat data from multiple columns
+                    else:
+                        if nf == 0:
                             for n, arr in enumerate(dat):
-                                arrs['arr'+str(n)] = arr
+                                arrs[arrName+'_'+str(n)] = arr
                         else:
                             for n, arr in enumerate(dat):
-                                arrs['arr'+str(n)] = pl.append(
-                                        arrs['arr'+str(n)], arr)
-                    numFile += 1
+                                arrs[arrName+'_'+str(n)] = pl.append(
+                                        arrs[arrName+'_'+str(n)], arr)
            
-            allTemps['allTemps'+str(numTemp)+str(nType)] = arrs
+            # construct key name.  This assumes <1000 temperatures.
+            if numTemp < 10:
+                allArrName = 'allTemps00'+str(numTemp)
+            elif (10 <= numTemp and numTemp < 100):
+                allArrName = 'allTemps0'+str(numTemp)
+            else:
+                allArrName = 'allTemps'+str(numTemp)
+
+            if nType < 10:
+                allArrName += '00'+str(nType)
+            elif (10 <= nType and nType < 100):
+                allArrName += '0'+str(nType)
+            else:
+                allArrName += str(nType)
+
+               
+            allTemps[allArrName] = arrs
 
         # determine length of maximum sized array
         maxLen = 0
@@ -109,7 +133,7 @@ def crunchData(estimTypes, colNums, observables):
                 arrayLen = len(allTemps[t][g])
                 if arrayLen > maxLen:
                     maxLen = arrayLen
-     
+
         # open new file
         newName = 'Reduced'+str(estType.capitalize())+'Data.dat'
         fout = open(newName, 'w')
@@ -135,13 +159,16 @@ def crunchData(estimTypes, colNums, observables):
         
         # write data arrays to disk
         for line in range(maxLen):
-            for t in sorted(allTemps.iterkeys()):
-                for g in sorted(allTemps[t].iterkeys()):
-                    if int(len(allTemps[t][g])) <= line:
-                        fout.write('%16s\t' % '')
-                    else:
+            for a in sorted(allTemps.iterkeys()):
+                for aa in sorted(allTemps[a]):
+                    #if int(len(allTemps[t][g])) <= line:
+                    #    fout.write('%16s,\t' % '')
+                    #else:
+                    try:
                         fout.write('%16.8E,\t' % (
-                            float(allTemps[t][g][line]) ))
+                            float(allTemps[a][aa][line]) ))
+                    except:
+                        fout.write('%16s,\t' % '')
             fout.write('\n')
         
         fout.close()

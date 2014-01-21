@@ -89,13 +89,13 @@ def main():
     # much larger array.
     if args.Crunch:
         cT.crunchData(estimTypes,colNums,observables)
-        #cT.crunchDataOLD()
 
     # optionally make a trimmed version of the data files that
     # makes all arrays the length of the shortest array.
-    if args.trimData:
-        print 'Decided to make trimmed data files'
-        cT.trimData(fileNames)
+    # NOT NECESSARY!
+    #if args.trimData:
+    #    print 'Decided to make trimmed data files'
+    #    cT.trimData(fileNames)
         
 # =============================================================================
 if __name__=='__main__':
