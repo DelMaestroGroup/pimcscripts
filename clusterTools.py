@@ -63,8 +63,13 @@ def crunchData(estimTypes, colNums, observables):
    
     for nType, estType in enumerate(estimTypes):
 
+        # dict to hold all estType data for all independent variables (T,..)
         allTemps = {}
 
+        # dict to hold numBins, average, stdErr for each data file
+        statTemps = {}
+
+        # loop over independent variable for given estType
         for numTemp, temp in enumerate(indList):
 
             # Get filenames.  The chemical potential always has a sign
@@ -75,7 +80,8 @@ def crunchData(estimTypes, colNums, observables):
             elif reduceType == 'u':
                 bipFiles = glob.glob('*%s*%s*' % (estimTypes[nType], temp))
  
-            arrs = {}
+            arrs    = {}
+            arrs2   = {}
             for nf, f in enumerate(bipFiles):
                 if checkIfEmpty(f,2):
                     print f,' is empty.'
@@ -95,18 +101,32 @@ def crunchData(estimTypes, colNums, observables):
                     if int(len(colNums[nType])) == 1:
                         if nf == 0:
                             arrs[arrName] = dat
+                            arrs2[arrName] = [[pl.average(dat),
+                                    pl.std(dat)/pl.sqrt(1.0*int(len(dat))),
+                                    int(len(dat))]]
                         else:
                             arrs[arrName] = pl.append(arrs[arrName], dat)
+                            arrs2[arrName] = pl.append(
+                                    arrs2[arrName], [[pl.average(dat),
+                                    pl.std(dat)/pl.sqrt(1.0*int(len(dat))),
+                                    int(len(dat))]])
 
                     # treat data from multiple columns
                     else:
                         if nf == 0:
                             for n, arr in enumerate(dat):
                                 arrs[arrName+'_'+str(n)] = arr
+                                arrs2[arrName+'_'+str(n)] = [[pl.average(arr),
+                                        pl.std(arr)/pl.sqrt(1.0*int(len(arr))),
+                                        int(len(arr))]]
                         else:
                             for n, arr in enumerate(dat):
                                 arrs[arrName+'_'+str(n)] = pl.append(
                                         arrs[arrName+'_'+str(n)], arr)
+                                arrs2[arrName+'_'+str(n)] = pl.append(
+                                        arrs2[arrName+'_'+str(n)], [[pl.average(arr),
+                                            pl.std(arr)/pl.sqrt(1.0*int(len(arr))),
+                                            int(len(arr))]])
            
             # construct key name.  This assumes <1000 temperatures.
             if numTemp < 10:
@@ -125,16 +145,16 @@ def crunchData(estimTypes, colNums, observables):
 
                
             allTemps[allArrName] = arrs
+            statTemps[allArrName] = arrs2
 
-        # determine length of maximum sized array
+        # length of max. sized array for all data
         maxLen = 0
         for t in allTemps:
             for g in allTemps[t]:
                 arrayLen = len(allTemps[t][g])
                 if arrayLen > maxLen:
                     maxLen = arrayLen
-
-        # open new file
+        # open file to hold all of estType data
         newName = 'Reduced'+str(estType.capitalize())+'Data.dat'
         fout = open(newName, 'w')
 
@@ -161,9 +181,6 @@ def crunchData(estimTypes, colNums, observables):
         for line in range(maxLen):
             for a in sorted(allTemps.iterkeys()):
                 for aa in sorted(allTemps[a]):
-                    #if int(len(allTemps[t][g])) <= line:
-                    #    fout.write('%16s,\t' % '')
-                    #else:
                     try:
                         fout.write('%16.8E,\t' % (
                             float(allTemps[a][aa][line]) ))
@@ -172,7 +189,66 @@ def crunchData(estimTypes, colNums, observables):
             fout.write('\n')
         
         fout.close()
+
+        # EXPERIMENTAL
+        # length of max. sized array for averages
+        maxLen2 = 0
+        for t in statTemps:
+            for g in statTemps[t]:
+                arrayLen = len(statTemps[t][g])
+                if arrayLen > maxLen2:
+                    maxLen2 = arrayLen
+        maxLen2 /= 3
+
+        # open file for standard error
+        newName = 'zAveraged'+str(estType.capitalize())+'Data.dat'
+        fout = open(newName, 'w')
+
+        # write independent variable as top header line
+        fout.write('#%15s\t%16s\t%16s\t' % (
+            indList[0], '',''))
+        for n in range(len(colNums[nType])-1):
+            fout.write('%16s\t%16s\t%16s\t'% ('','',''))
+        for temp in indList[1:]:
+            fout.write('%16s\t%16s\t%16s\t'% (temp,'',''))
+            for n in range(len(colNums[nType])-1):
+                fout.write('%16s\t%16s\t%16s\t'% ('','',''))
+        fout.write('\n')
+
+        # write observable names as second header line
+        fout.write('#%15s\t%16s\t%16s\t' % (
+            observables[nType][0],
+            'std Err',
+            'bins'))
+        for n in range(len(observables[nType])-1):
+            fout.write('%16s\t%16s\t%16s\t' % (
+                observables[nType][n+1],
+                'std Err',
+                'bins'))
+        for temp in indList[1:]:
+            for obs in observables[nType]:
+                fout.write('%16s\t%16s\t%16s\t' % (
+                    obs, 'std Err', 'bins'))
+        fout.write('\n')
         
+        # write data arrays to disk
+        en = 0
+        for line in range(maxLen2):
+            for a in sorted(statTemps.iterkeys()):
+                for aa in sorted(statTemps[a]):
+                    try:
+                        fout.write('%15.8E,\t%15.8E,\t%15.8E,\t' % (
+                            float(statTemps[a][aa][en]),
+                            float(statTemps[a][aa][en+1]),
+                            float(statTemps[a][aa][en+2])))
+                    except:
+                        fout.write('%15s,\t%15s,\t%15s,\t' % ('','',''))
+                    
+            fout.write('\n')
+            en += 3
+        
+        fout.close()
+       
 
 def ensembleCheck(firstLetter):
     '''
