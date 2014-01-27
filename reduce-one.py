@@ -225,7 +225,7 @@ def main():
     shortFlags = ['n','T','N','t','u','V','L','W','D']
     parMap = {'n':'Initial Density', 'T':'Temperature', 'N':'Initial Number Particles',
               't':'Imaginary Time Step', 'u':'Chemical Potential', 'V':'Container Volume',
-              'L':'Container Length', 'W':'Virial Window', 'D':'CoM Delta'}
+              'L':'Container Length', 'W':'Virial Window', 'M':'Update Slices (Mbar)'}
 
     # setup the command line parser options 
     parser = OptionParser() 
@@ -244,8 +244,8 @@ def main():
     parser.add_option("-V", "--volume", dest="V", type="float",
                       help="volume in Angstroms^d") 
     parser.add_option("-r", "--reduce", dest="reduce",
-                      choices=['T','N','n','u','t','L','V','W','D'], 
-                      help="variable name for reduction [T,N,n,u,M,L,V,W,D]") 
+                      choices=['T','N','n','u','t','L','V','W','M'], 
+                      help="variable name for reduction [T,N,n,u,M,L,V,W,M]") 
     parser.add_option("--canonical", action="store_true", dest="canonical",
                       help="are we in the canonical ensemble?")
     parser.add_option("-p", "--plot", action="store_true", dest="plot",

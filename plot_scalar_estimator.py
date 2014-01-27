@@ -1,12 +1,32 @@
-# plot_scalar_estimator.py
-# Adrian Del Maestro
-# 11.29.2011
-# 
-# Plot a single scalar estimator
+"""Plot one or more reduced scalar estimators.
+Author: Adrian Del Maestro
+Date: 11.29.2011
 
-import os,sys
-import loadgmt,kevent
-import argparse
+Description:
+    Plots a scalar estimator as a function of the reduced variable for one or
+    more fixed parameters
+
+usage: 
+    plot_scalar_estimator.py --estimator=<E>... [--legend=<L>...] [--xlim=<x>...] [--ylim=<y>...] [options] <reduce-files>... 
+
+    plot_scalar_estimator.py -h | --help
+
+Positional arguments:
+  reduce-files              Reduced scalar estimator files.
+
+Options:
+  -h, --help                Show this help message and exit
+
+  --estimator=<E>, -e <E>  The estimators to be plotted.
+  --plot_type=<P>, -p <P>  The plot type, a combination of l = lines,
+                           p = points, e = errorbars, f = filled, [default: lp].
+  --ndim=<d>, -d <d>       Number of spatial dimensions [default: 3].
+  --legend=<L>, -l <L>     Legend key for multiple curves.
+  --xlim=<x>, -x=<x>       X-axis limits.
+  --ylim=<y>, -y=<y>       Y-axis limits. 
+"""
+
+from docopt import docopt
 import pyutils
 import pimchelp
 import numpy as np
@@ -18,37 +38,24 @@ import plotoptions
 # -----------------------------------------------------------------------------
 def main(): 
 
-    # setup the argument parser
-    parser = argparse.ArgumentParser(description='Plot a scalar estimator.')
-    parser.add_argument('fileNames', help='Reduced scalar estimator files', 
-                        nargs='+')
-    parser.add_argument('--estimator','-e', help='A list of estimator names that \
-                        are to be plotted.', type=str, nargs='+', required=True)
-    parser.add_argument('--plot','-p', help='The plot type. l = lines, p = points, \
-                        e = errorbars', type=str, choices=['l','e','p','lp','le'], 
-                        default='e')
-    parser.add_argument('--ndim', '-d', help='Number of spatial dimensions.',
-                        type=int, default=3) 
-    parser.add_argument('--label', '-l', help='Parameter name for labels.', type=str)
-    parser.add_argument('--xlim', '-x', help='x-axis limits', type=float,
-                        nargs='+')
-    parser.add_argument('--ylim', '-y', help='y-axis limits', type=float,
-                        nargs='+')
-    args = parser.parse_args()
+    # Get the command line arguments
+    args = docopt(__doc__)
 
-    fileNames = args.fileNames
-    estimatorToPlot = args.estimator
-    NDIM = args.ndim
-    plotType = args.plot
-    varLabel = args.label
-    xLim = args.xlim
-    yLim = args.ylim
+    fileNames = args['<reduce-files>']
+    estimatorToPlot = args['--estimator']
+    NDIM = int(args['--ndim'])
+    plotType = args['--plot_type']
 
-    if len(fileNames) < 1:
-        parser.error("Need to specify at least one scalar estimator file")
+    if args['--legend']:
+        varLabel = [l for l in args['--legend']]
+    else: 
+        varLabel = [None]
+
+    xLim = args['--xlim'] and [float(x) for x in args['--xlim']]
+    yLim = args['--ylim'] and [float(y) for y in args['--ylim']]
 
     # Analyze the imput files
-    reduce = pimchelp.ScalarReduce(fileNames,varLabel)
+    reduce = pimchelp.ScalarReduce(fileNames,None)
 
     # Get a color scheme and marker list
     numColors = max(reduce.getNumVarParams(),2)
@@ -66,17 +73,27 @@ def main():
         ax = pl.subplot(111)
         for i in range(reduce.getNumVarParams()):
             lab = reduce.getVarLabel(i)
+            if not lab:
+                lab = varLabel[i]
             pOptions['color'] = colors[i]
+
+            # fill between to represent error bars
+            if 'f' in plotType:
+                emin = reduce.estimator(est,i)-reduce.estimatorError(est,i)
+                emax = reduce.estimator(est,i)+reduce.estimatorError(est,i)
+                pl.fill_between(reduce.param(), emax,emin, color=colors[i],
+                                alpha=0.2)
+            # plot with points
             if 'p' in plotType:
                 pl.plot(reduce.param(), reduce.estimator(est,i),
                         markerfacecolor=colors[i],label=lab, **pOptions)
+
+            # plot lines only
             if plotType == 'l':
                 pl.plot(reduce.param(), reduce.estimator(est,i),
                         label=lab,**pOptions)
+            # plot errorbars
             elif 'e' in plotType:
-                print reduce.param(),'  ',len(reduce.param())
-                print reduce.estimator(est,i),'   ',len(reduce.estimator(est,i))
-                print reduce.estimatorError(est,i),'   ',len(reduce.estimatorError(est,i))
                 eb = pl.errorbar(reduce.param(), reduce.estimator(est,i),
                         yerr=reduce.estimatorError(est,i), 
                         markerfacecolor=colors[i], ecolor=colors[i],
@@ -84,15 +101,16 @@ def main():
                 # Set the width of the cap lines
                 for cap in eb[1]:
                     cap.set_mew(2.0)
+
             
         #pl.tight_layout()
         pl.xlabel(descrip.paramLongName[reduce.reduceLabel])
         pl.ylabel(descrip.estimatorLongName[est])
         leg = pl.legend(frameon=False, loc='best', prop={'size':18})
-        if xLim != None:
+        if xLim != []:
             pl.xlim(xLim[0],xLim[1])
 
-        if yLim != None:
+        if yLim != []:
             pl.ylim(yLim[0],yLim[1])
 
     pl.show()

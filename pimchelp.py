@@ -437,19 +437,27 @@ class ScalarReduce:
         # create an array with the fixed parameters
         self.fixParNames = self.param_.keys()
         self.fixParNames.remove(self.reduceLabel)
-        
-        # find the name/label of the changing parameter
+
+        # Find the name/label of the changing parameter, allowing for arbitrary
+        # labelling.
         if len(fileNames) == 1:
             if varLabel == None:
                 self.varLabel = self.fixParNames[0]
+            elif varLabel not in self.fixParNames:
+                self.numParams[varLabel] = len(fileNames)
+                self.varLabel = varLabel
             else:
                 self.varLabel = varLabel
         else:
-            for parName in self.fixParNames:
-                if self.numParams[parName] > 1:
-                    self.varLabel = parName
-                    break;
-        
+            if varLabel not in self.fixParNames:
+                self.numParams[varLabel] = len(fileNames)
+                self.varLabel = varLabel
+            else:
+                for parName in self.fixParNames:
+                    if self.numParams[parName] > 1:
+                        self.varLabel = parName
+                        break;
+
         # Initialize and fill up the main estimator data array
         self.estimator_ = np.zeros([self.numParams[self.varLabel], 
                                    self.numParams[self.reduceLabel], 
@@ -483,12 +491,15 @@ class ScalarReduce:
     def getVarLabel(self,varIndex):
         '''Construct a label for the variable parameter.'''
 
-        labName = self.descrip.paramShortName[self.varLabel]
-        labFormat = self.descrip.paramFormat[self.varLabel]
-        labValue  = self.param_[self.varLabel][varIndex]
-        labUnit = self.descrip.paramUnit[self.varLabel]
+        if self.varLabel not in self.fixParNames:
+            return None
+        else:
+            labName = self.descrip.paramShortName[self.varLabel]
+            labFormat = self.descrip.paramFormat[self.varLabel]
+            labValue  = self.param_[self.varLabel][varIndex]
+            labUnit = self.descrip.paramUnit[self.varLabel]
 
-        return labName + ' = ' + labFormat % labValue + ' ' + labUnit
+            return labName + ' = ' + labFormat % labValue + ' ' + labUnit
 #        return lab.rjust(len(lab))
 
 # -------------------------------------------------------------------------------
@@ -631,10 +642,10 @@ class VectorReduce:
     def getReduceLabel(self,reduceIndex):
         '''Construct a label for the reduce parameter.'''
 
-        labName = self.descrip.paramShortName[self.reduceLabel]
-        labFormat = self.descrip.paramFormat[self.reduceLabel]
+        labName = self.descrip.paramShortName(self.reduceLabel)
+        labFormat = self.descrip.paramFormat(self.reduceLabel)
         labValue = self.param_[self.reduceLabel][reduceIndex]
-        labUnit = self.descrip.paramUnit[self.reduceLabel]
+        labUnit = self.descrip.paramUnit(self.reduceLabel)
 
         return labName + ' = ' + labFormat % labValue + ' ' + labUnit
 
@@ -667,10 +678,11 @@ class Description:
         # The name for the density dependent on the dimensionality
         densityName = ['Line', 'Area', 'Volume']
 
-        self.paramNames = ['T','V','u','t','N','n','R','L']
+        self.paramNames = ['T','V','u','t','N','n','R','L','M']
 
         self.paramShortName = {'T':'T',
                                'V':'V',
+                               'M':'M',
                                'u':r'$\mu$',
                                't':r'$\tau$',
                                'N':'N',
@@ -679,6 +691,7 @@ class Description:
                                'L':'L'}
 
         self.paramUnit = {'T':'K',
+                          'M':'',
                           'V':r'$\mathrm{\AA^{%d}}$' % NDIM,
                           'u':'K',
                           't':r'$K^{-1}$',
@@ -689,6 +702,7 @@ class Description:
 
         self.paramFormat = {'T':r'%4.2f',
                             'V':r'%3d',
+                            'M':r'%3d',
                             'u':r'%+3.1f',
                             't':r'%5.3f',
                             'N':'%3d',
@@ -705,6 +719,7 @@ class Description:
                               'R':'Pore Radius  %s ' % lengthTUnit,
                               'L':'Length %s' % lengthTUnit,
                               'W':'Virial Window [1/K]',
+                              'M':'Update Length'}
                               'D':r'CoM Delta [$\AA$]'}
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
