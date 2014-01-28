@@ -21,6 +21,16 @@ def getHeadersFromFile(fileName, skipLines=0):
     return temps
 
 
+def getXlabel(reduceType):
+    ''' given reduceType, return x axis label as string'''
+    if reduceType == 'T':
+        xLab = 'Temperature [K]'
+    elif reduceType == 'u':
+        xLab = 'Chemical Potential [K]'
+    
+    return xLab
+
+
 def jackknife(data,data2=None,data3=None):
     ''' 
     Return jackknife average (accounting for bias) and error.
@@ -75,17 +85,16 @@ def jackknife(data,data2=None,data3=None):
 
 def parseCMD():
     ''' Parse the command line. '''
-    parser = argparse.ArgumentParser(description='pulls down lots of files.')
-    parser.add_argument('fileNames', help='Data File Name.', nargs='+')
-    parser.add_argument('-t', '--typeOfAverage', type=str,
-            default='jackknife',
-            help='NOT WORKING YET: Do you want jackknife or bootstrap?')
+    parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
+    fNameHelp = 'Data File Names.  For checkStandardError.py, this will be \
+            the directory name that holds all direcs with zAveraged files.'
+    parser.add_argument('fileNames', help=fNameHelp, nargs='+')
     parser.add_argument('-s', '--skip', type=int,
-            default=1000,
+            default=0,
             help='Number of bins to skip')
     parser.add_argument('-c', '--crunched', action='store_true', 
             dest='Crunched', default=False,
-            help='Is Cv data already crunched from multiple seeds?')
+            help='Is the data already crunched from multiple seeds?')
     parser.add_argument('-r', '--reduceType', type=str,
             default='T',
             help='What are we reducing over? [T,u]')

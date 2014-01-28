@@ -229,11 +229,8 @@ def main():
     # =========================================================================
     # PLOTTING SECTION
     # =========================================================================
-    # some Plotting options
-    if reduceType == 'T':
-        xLab = 'Temperature [K]'
-    elif reduceType == 'u':
-        xLab = 'Chemical Potential [K]'
+    
+    xLab = jk.getXlabel(reduceType)
     
     plotNum = 1
 
@@ -243,7 +240,6 @@ def main():
         pl.errorbar(temps, ntWinds, ntWindErrs, fmt='o')
         pl.xlabel(xLab, fontsize=20)
         pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20) 
-        pl.legend()
         pl.grid(True)
         plotNum += 1
 

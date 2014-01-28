@@ -1,18 +1,43 @@
-# THIS ONLY WORKS FOR SINGLE ESTIMATORS RIGHT NOW!!
+# =============================================================================
+# Pulls data for new winding number from zAveragedNtwind.dat files.
+#
+# Author:           Max Graves
+# Last Revised:     28-JAN-2014
+# =============================================================================
 
 import pylab as pl
 import MTG_jkTools as jk
+import glob,sys,os
+from matplotlib import rcParams
+
+# set up latex fonts
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
 
 def main():
-
+   
     args = jk.parseCMD()
+    reduceType = args.reduceType
+    direc = args.fileNames[0]
 
-    files = args.fileNames
+    os.chdir(direc)
+    direcs = glob.glob('*')
 
-    for f in files:
+    # some plotting options
+    xLab = jk.getXlabel(reduceType)
+    colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
+            'Yellow','Maroon']
 
+    for nd, d in enumerate(direcs):
+
+        os.chdir('./'+d)
+        f = glob.glob('*')[0]
+
+        thickness = d[:4]
+        extent = d[12:16]
+               
         headers = jk.getHeadersFromFile(f)
-
         AVG = pl.array([])
         STD = pl.array([])
 
@@ -22,7 +47,8 @@ def main():
                     usecols=(0+3*n,1+3*n,2+3*n), 
                     unpack=True, delimiter=',')
 
-            # get rid of any items which are non numbers
+            # get rid of any items which are not numbers..
+            # this is some beautiful Python juju.
             bins = bins[pl.logical_not(pl.isnan(bins))]
             stds = stds[pl.logical_not(pl.isnan(stds))]
             avgs = avgs[pl.logical_not(pl.isnan(avgs))]
@@ -35,16 +61,34 @@ def main():
             avg = pl.sum(avgs)
             stdErr = pl.sum(stds)
 
-            print avg,' +/- ',stdErr
-
             AVG = pl.append(AVG, avg)
             STD = pl.append(STD, stdErr)
+ 
+        # determine titles for plotting
+        if nd==0:
+            firstExtent = extent 
+        if extent == firstExtent:
+            labl = 'thickness: '+thickness+' '+r'$[\AA]$'
+            titl = 'extent: '+extent+' '+r'$[\AA]$'
+        else:
+            labl = 'extent: '+extent+' '+r'$[\AA]$'
+            titl = 'thickness: '+thickness+' '+r'$[\AA]$' 
 
-        pl.errorbar(headers,AVG,STD,fmt='o',color='Pink')
-        
-        pl.show()
+
+        # add current data to plot
+        pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
+                label=labl)
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        pl.title(titl)
+        pl.legend()
+        pl.grid(True)
+
+        os.chdir('..')
+    
+    pl.show()
     
 
-
+# =============================================================================
 if __name__=='__main__':
     main()
