@@ -1,5 +1,9 @@
 # =============================================================================
 # Pulls data for new winding number from zAveragedNtwind.dat files.
+# This requires that data be arranged as:
+#       windingFiles/xx.xangFilm_xx.xangExtent/zAveragedNtwind.dat
+# where the xx.x are film thickness and extent (in that order) and each
+# NtWind averaged file has its own directory.
 #
 # Author:           Max Graves
 # Last Revised:     28-JAN-2014
@@ -22,7 +26,7 @@ def main():
     direc = args.fileNames[0]
 
     os.chdir(direc)
-    direcs = glob.glob('*')
+    direcs = glob.glob('*angFilm_*')
 
     # some plotting options
     xLab = jk.getXlabel(reduceType)
