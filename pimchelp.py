@@ -351,8 +351,9 @@ class PimcHelp:
             for id in idList: 
                 fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,type,id)
                 fileNames.extend(glob.glob(fileLoc))
-        for f in sorted(fileNames):
-            print f
+
+        #for f in sorted(fileNames):
+        #    print f
 
         #return fileNames
         return sorted(fileNames)
@@ -719,7 +720,7 @@ class Description:
                               'R':'Pore Radius  %s ' % lengthTUnit,
                               'L':'Length %s' % lengthTUnit,
                               'W':'Virial Window [1/K]',
-                              'M':'Update Length'}
+                              'M':'Update Length',
                               'D':r'CoM Delta [$\AA$]'}
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',

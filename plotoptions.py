@@ -17,7 +17,7 @@ def plotOptions(plotType):
     # marker properties
     pOps['markersize'] = 9
     pOps['markeredgewidth'] = 1.0
-    pOps['markeredgecolor'] = 'black'
+    pOps['markeredgecolor'] = 'None'
     pOps['marker'] = 'o'
 
     # line properties
@@ -57,7 +57,9 @@ def markersColors(numColors):
     if numColors == 1:
         numColors+=1;
     #colors  = loadgmt.getColorList('cb/div','Spectral_08',numColors)
-    colors  = loadgmt.getColorList('cb/div','PiYG_06',numColors)
+    #colors  = loadgmt.getColorList('cb/div','PiYG_07',numColors)
+    colors  = loadgmt.getColorList('cb/qual','Set1_09',numColors)
+
     colors.reverse()
     markers = loadgmt.getMarkerList()
 
