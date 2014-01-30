@@ -4,9 +4,9 @@
 # Author:           Max Graves
 # Last Revised:     18-JAN-2014
 # =============================================================================
+
 import numpy as np
 import glob,argparse
-
 
 def getHeadersFromFile(fileName, skipLines=0):
     ''' 

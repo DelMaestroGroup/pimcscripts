@@ -5,7 +5,7 @@
 # random number seeds.
 #
 # Author:           Max Graves
-# Last Revised:     7-JAN-2014
+# Last Revised:     28-JAN-2014
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil,subprocess
@@ -13,7 +13,6 @@ import paramiko
 import getpass
 import pylab as pl
 import numpy as np
-
 
 def checkIfEmpty(fName,n):
     '''
@@ -147,6 +146,7 @@ def crunchData(estimTypes, colNums, observables):
             allTemps[allArrName] = arrs
             statTemps[allArrName] = arrs2
 
+        # ---- Write all data to disk ----
         # length of max. sized array for all data
         maxLen = 0
         for t in allTemps:
@@ -190,7 +190,7 @@ def crunchData(estimTypes, colNums, observables):
         
         fout.close()
 
-        # EXPERIMENTAL
+        # ---- Average individual files and write to disk ----
         # length of max. sized array for averages
         maxLen2 = 0
         for t in statTemps:
@@ -327,7 +327,7 @@ def parseCMD():
             default='T',
             help='Variable to reduce over [T,u]')
     pullParse.add_argument('-T', '--trim', action='store_true',
-            dest='trimData', default=True,
+            dest='trimData', default=False,
             help='Create new reduced (equal length column) data files.')
 
     return parser.parse_args()

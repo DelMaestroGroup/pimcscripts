@@ -1,6 +1,13 @@
 # =============================================================================
-# This script assumes you will not have more than 1000 different
+# Main driver for pulling data from multiple array jobs from VACC.
+#
+# NOTE: Needs more thorough comments before being committed to TRUNK.
+#
+# NOTE: This script assumes you will not have more than 1000 different
 # random number seeds.
+#
+# Author:           Max Graves
+# Last Revised:     02-JAN-2014
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil,subprocess,getpass
@@ -43,6 +50,7 @@ def main():
         sftp.mkdir('OUTPUT')
 
         # path to gensubmit and submit file (must be named 'submit')
+        # NOTE: This could be made cmd line option before commit to TRUNK?
         genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
         if args.N52BulkHe:
             subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/N52BulkHeSubmit'
@@ -70,6 +78,7 @@ def main():
         # optionally submit jobs
         if args.submitJobs:
             # build submit command
+            # NOTE: New users need to change this based on their own data.
             expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/users/m/t/mtgraves/local/lib ; '
             expPBSstuff = 'export PATH=/opt/pbs/bin/:$PATH ; '
             submitStuff = 'qsub '+subFile[0]

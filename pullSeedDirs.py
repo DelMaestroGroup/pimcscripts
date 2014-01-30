@@ -1,6 +1,13 @@
 # =============================================================================
-# This script assumes you will not have more than 1000 different
+# Main driver for pushing multiple array jobs to the VACC.
+#
+# NOTE: Needs more thorough comments before being committed to TRUNK.
+#
+# NOTE: This script assumes you will not have more than 1000 different
 # random number seeds.
+#
+# Author:           Max Graves
+# Last Revised:     28-JAN-2014
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil
@@ -28,10 +35,12 @@ def main():
             ['filmDens','bulkDens'],
             ['W^2']]
 
+    # grab types of estimators from above.  Remove log file.
     estimTypes = list(fileTypes)
     if 'log' in estimTypes:
         estimTypes.pop(estimTypes.index('log'))
     
+    # create list of reduced file names for combined data.
     fileNames = []
     for f in estimTypes:
         fileNames.append(str('Reduced'+str(f.capitalize())+'Data.dat'))
@@ -92,10 +101,10 @@ def main():
 
     # optionally make a trimmed version of the data files that
     # makes all arrays the length of the shortest array.
-    # NOT NECESSARY!
-    #if args.trimData:
-    #    print 'Decided to make trimmed data files'
-    #    cT.trimData(fileNames)
+    # NOT NECESSARY BUT SOMETIMES USEFUL.
+    if args.trimData:
+        print 'Decided to make trimmed data files'
+        cT.trimData(fileNames)
         
 # =============================================================================
 if __name__=='__main__':
