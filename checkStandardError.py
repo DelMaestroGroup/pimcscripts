@@ -19,6 +19,31 @@ rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Computer Modern Roman']
 rcParams['text.usetex'] = True
 
+def thicknessORextent(direcs):
+    ''' 
+    determine titles for plotting zAveragedNtwind.dat files
+    '''
+    labl, extent = '',''
+    for nd, d in enumerate(direcs):
+        # determine titles for plotting
+
+        thickness = d[:4]
+        extent = d[12:16]
+
+        extentScale = False
+        if nd==0:
+           firstExtent = extent 
+        if extent == firstExtent:
+            #labl = 'thickness: '
+            #titl = 'extent: '
+            extentScale = True
+        else:
+            extentScale = False
+        #    labl = 'extent: '
+        #    titl = 'thickness: '
+    
+    return extentScale
+    
 def main():
    
     args = jk.parseCMD()
@@ -32,15 +57,17 @@ def main():
     xLab = jk.getXlabel(reduceType)
     colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
             'Yellow','Maroon']
+        
+    extentScale = thicknessORextent(direcs)
 
-    for nd, d in enumerate(direcs):
+    for nd, d in enumerate(sorted(direcs)):
 
         os.chdir('./'+d)
         f = glob.glob('*')[0]
 
         thickness = d[:4]
         extent = d[12:16]
-               
+
         headers = jk.getHeadersFromFile(f)
         AVG = pl.array([])
         STD = pl.array([])
@@ -69,22 +96,20 @@ def main():
             STD = pl.append(STD, stdErr)
  
         # determine titles for plotting
-        if nd==0:
-            firstExtent = extent 
-        if extent == firstExtent:
-            labl = 'thickness: '+thickness+' '+r'$[\AA]$'
-            titl = 'extent: '+extent+' '+r'$[\AA]$'
+        if extentScale:
+            labell = 'thickness: '+thickness+' '+r'$[\AA]$'
+            titlle = 'extent: '+extent+' '+r'$[\AA]$'
         else:
-            labl = 'extent: '+extent+' '+r'$[\AA]$'
-            titl = 'thickness: '+thickness+' '+r'$[\AA]$' 
+            labell = 'extent: '+extent+' '+r'$[\AA]$'
+            titlle = 'thickness: '+thickness+' '+r'$[\AA]$' 
 
 
         # add current data to plot
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
-                label=labl)
+                label=labell)
         pl.xlabel(xLab, fontsize=20)
         pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
-        pl.title(titl)
+        pl.title(titlle)
         pl.legend()
         pl.grid(True)
 
