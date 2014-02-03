@@ -35,11 +35,12 @@ def main():
     numFrames,wl = vt.loadPIMCPaths(fileName)
     print 'Number of frames: ',numFrames
     paths = []
+    print numFrames
     for t in range(numFrames):
         paths.append(vt.Path(wl[t]))
 
     # choose frame number
-    numFrame = 1
+    numFrame = 0
 
     # time slice data
     M = paths[numFrame].numTimeSlices

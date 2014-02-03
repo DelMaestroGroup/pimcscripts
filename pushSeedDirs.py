@@ -1,13 +1,11 @@
 # =============================================================================
 # Main driver for pulling data from multiple array jobs from VACC.
 #
-# NOTE: Needs more thorough comments before being committed to TRUNK.
-#
 # NOTE: This script assumes you will not have more than 1000 different
-# random number seeds.
+# random number seeds (000-999).
 #
 # Author:           Max Graves
-# Last Revised:     02-JAN-2014
+# Last Revised:     01-FEB-2014
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil,subprocess,getpass
@@ -17,8 +15,22 @@ import numpy as np
 
 def main():
 
+    # -------------------------------------------------------------------------
+    # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
+    # path to gensubmit and submit file (must be named 'submit').
+    genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
+    subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
+    
+    # commands to add directories to path where blitz, boost, pimc sit.
+    # not sure why, but this must be done every time for paramiko.
+    expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/users/m/t/mtgraves/local/lib ; '
+    expPBSstuff = 'export PATH=/opt/pbs/bin/:$PATH ; '
+    # -------------------------------------------------------------------------
+
+    # parse cmd line
     args = cT.parseCMD()
 
+    # get username and password for VACC
     passwd = cT.Credentials(args.UserName)
 
     # create ssh and sftp instances
@@ -40,6 +52,7 @@ def main():
     print seedNums
 
     for seedNum in seedNums:
+
         # create seedXXX direc.
         seedDirName = cT.returnSeedDirName(int(seedNum))
         sftp.mkdir(seedDirName)
@@ -48,14 +61,6 @@ def main():
         # create directory structure inside of each seedXXX direc.
         sftp.mkdir('out')
         sftp.mkdir('OUTPUT')
-
-        # path to gensubmit and submit file (must be named 'submit')
-        # NOTE: This could be made cmd line option before commit to TRUNK?
-        genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
-        if args.N52BulkHe:
-            subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/N52BulkHeSubmit'
-        else:
-            subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
 
         # change random number seed in submit file -- this defines hacky.
         with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
@@ -77,10 +82,8 @@ def main():
 
         # optionally submit jobs
         if args.submitJobs:
+
             # build submit command
-            # NOTE: New users need to change this based on their own data.
-            expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/users/m/t/mtgraves/local/lib ; '
-            expPBSstuff = 'export PATH=/opt/pbs/bin/:$PATH ; '
             submitStuff = 'qsub '+subFile[0]
             changeDir = 'cd '+args.targetDir+'/'+seedDirName+' ; '
             subComm = changeDir+expLibs+expPBSstuff+submitStuff

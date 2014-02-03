@@ -39,9 +39,12 @@ def main():
     '''Lx  = 8.0
     Ly  = 8.0
     Lz  = 24.0'''
-    Lx  = 12.0
+    '''Lx  = 12.0
     Ly  = 12.0
-    Lz  = 40.44
+    Lz  = 40.44'''
+    Lx = 10.0
+    Ly = 10.0
+    Lz = 30.0
 
     # Read in the command line arguments
     args = docopt(__doc__)

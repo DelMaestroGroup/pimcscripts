@@ -102,4 +102,30 @@ def parseCMD():
     return parser.parse_args()
 
 
+def thicknessORextent(direcs):
+    ''' 
+    determine titles for plotting zAveragedNtwind.dat files
+    '''
+    labl, extent = '',''
+    for nd, d in enumerate(direcs):
+        # determine titles for plotting
+
+        thickness = d[:4]
+        extent = d[12:16]
+
+        extentScale = False
+        if nd==0:
+           firstExtent = extent 
+        if extent == firstExtent:
+            #labl = 'thickness: '
+            #titl = 'extent: '
+            extentScale = True
+        else:
+            extentScale = False
+        #    labl = 'extent: '
+        #    titl = 'thickness: '
+    
+    return extentScale
+
+
 # =============================================================================

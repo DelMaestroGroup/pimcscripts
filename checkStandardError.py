@@ -19,31 +19,6 @@ rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Computer Modern Roman']
 rcParams['text.usetex'] = True
 
-def thicknessORextent(direcs):
-    ''' 
-    determine titles for plotting zAveragedNtwind.dat files
-    '''
-    labl, extent = '',''
-    for nd, d in enumerate(direcs):
-        # determine titles for plotting
-
-        thickness = d[:4]
-        extent = d[12:16]
-
-        extentScale = False
-        if nd==0:
-           firstExtent = extent 
-        if extent == firstExtent:
-            #labl = 'thickness: '
-            #titl = 'extent: '
-            extentScale = True
-        else:
-            extentScale = False
-        #    labl = 'extent: '
-        #    titl = 'thickness: '
-    
-    return extentScale
-    
 def main():
    
     args = jk.parseCMD()
@@ -102,7 +77,6 @@ def main():
         else:
             labell = 'extent: '+extent+' '+r'$[\AA]$'
             titlle = 'thickness: '+thickness+' '+r'$[\AA]$' 
-
 
         # add current data to plot
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
