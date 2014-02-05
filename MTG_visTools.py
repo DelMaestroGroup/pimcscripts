@@ -15,15 +15,13 @@
 # This was adapted from pathconfig.py and vis1D.py
 # =============================================================================
 
+import os,sys,subprocess,argparse,commands
 from numpy import *
 #import numpy as np
-import os,sys
 import pimchelp
 from optparse import OptionParser
 from visual import *
 #import visual as vis
-import commands
-import argparse
 
 
 # some global variables that we need to get rid of
@@ -78,6 +76,7 @@ def getCellDimensions(fileName):
 def getScreenShot(frameNum):
     ''' 
     Take a screenshot and save it to disk.
+    THIS CAN PROBABLY BE DISCARDED.
     '''
     fname = 'OUTPUT/POREMOVIE/He1d-%04d.tiff' % frameNum
     commands.getoutput('/usr/sbin/screencapture -x -t tiff %s' % fname)
@@ -121,6 +120,9 @@ def parseCMD():
     ''' parse the command line. '''
     parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
     parser.add_argument('fileNames', help='(g)ce-wl-.. data files', nargs='+')
+    parser.add_argument('-o', '--output', type=str,
+            choices=['single','rotate','bins'], default='single',
+            help='Enter type of output you want')
 
     return parser.parse_args()
 
@@ -138,30 +140,39 @@ def sep(p1,p2):
     return sqrt(d)
 
 
-def writeINIfile(povFileName):
+def writeINIfile(povFileName,HT,WD,finFrame):
     ''' writes .ini file for POV-ray animation. '''
-    # define what goes in .ini file
+    
+    # this is what goes into the .ini file
     iniTemplate = """; POV-Ray animation ini file
 Antialias=Off
 Antialias_Threshold=0.1
 Antialias_Depth=2
 
+Height=%(ht)s
+Width=%(wd)s
+
 Input_File_Name=%(iFName)s
 
 Initial_Frame=1
-Final_Frame=30
+Final_Frame=%(finalFrame)s
 Initial_Clock=0
 Final_Clock=1
 
 Cyclic_Animation=on
 Pause_when_Done=off
 """
+    # put quotes around pofFileName for .ini file
     povfName = '"'+povFileName+'"'
-    iniText = iniTemplate % {'iFName':povfName}
+    iniText = iniTemplate % {'iFName':povfName,
+            'ht':HT,
+            'wd':WD,
+            'finalFrame':finFrame}
 
+    # name .ini file according to .pov file name
     iniFileName =  povFileName[:-4]+'.ini'
-    print iniFileName
 
+    # write iniText to the iniFileName
     with open(iniFileName, 'w') as outFile:
         outFile.write(iniText)
 

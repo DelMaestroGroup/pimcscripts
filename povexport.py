@@ -146,6 +146,12 @@ jhat=vector(0, 1, 0)
 khat=vector(0, 0, 1)
 displayscale = 1.0 # global scale factor to adjust scene.range to 100
 
+# DEFINE CAMERA ROTATION VARIABLES --MTG
+rotateCamera1 = 0
+rotateCamera2 = '270*clock'
+rotateCamera3 = 0
+
+
 # DEFINE FINISH CHARACTERISTICS --MTG
 amb = '0.2'
 dif = '1.0'
@@ -637,7 +643,7 @@ camera {
     sky <%(upx)f, %(upy)f, %(upz)f>
     look_at <%(pos2x)f, %(pos2y)f, %(pos2z)f>
     angle %(fov)f
-    rotate <0, 0, 0>
+    rotate <%(rot1)s, %(rot2)s, %(rot3)s>
 }
 """
 
@@ -686,7 +692,10 @@ camera {
                                     'posx':cpos.x, 'posy':cpos.y, 'posz':cpos.z,
                                     'upx':cup.x, 'upy':cup.y, 'upz':cup.z,
                                     'pos2x':ctr.x, 'pos2y':ctr.y, 'pos2z':ctr.z,
-                                    'fov':display.fov*180/pi } )
+                                    'fov':display.fov*180/pi,
+                                    'rot1':rotateCamera1,
+                                    'rot2':rotateCamera2,
+                                    'rot3':rotateCamera3 } )
 
     for obj in display.objects:
         key = obj.__class__
