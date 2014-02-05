@@ -126,11 +126,17 @@ Further documentation is found at the start of the file.
 # 2009-08-26
 # Visual object attribute no_reflection=True means that object doesn't cast a shadow
 
+# Max Graves        mtg6193@gmail.com
+# 2014-02-04
+# All sorts of stuff.  See --MTG flag.
+# Added comments to functions.
+
 ## NOTE: when changing this module please change the following string:
 #POVEXPORT_VERSION = "povexport 2009-08-26 for Visual 3 and Visual 5"
 POVEXPORT_VERSION = "povexport 2014-01-26 for Visual 3 and Visual 5"
 
 from visual import *
+import argparse
 
 legal = {frame:'frame', sphere:'sphere', box:'box', cylinder:'cylinder',
                    curve:'curve', ring:'ring', arrow:'arrow', label: 'label',
@@ -140,7 +146,7 @@ jhat=vector(0, 1, 0)
 khat=vector(0, 0, 1)
 displayscale = 1.0 # global scale factor to adjust scene.range to 100
 
-# DEFINE FINISH CHARACTERISTICS
+# DEFINE FINISH CHARACTERISTICS --MTG
 amb = '0.2'
 dif = '1.0'
 refl = '0.8'
@@ -148,19 +154,37 @@ boxrefl = '0'
 boxdif = '1.0'
 boxamb = '0.2'
 
+
+def parseCMD(): # --MTG
+    ''' parse the command line. '''
+    parseDesc = 'turn visual python scene into .pov file'
+    parser = argparse.ArgumentParser(description=parseDesc)
+    parser.add_argument('fileNames', help='(g)ce-wl-.. data files', nargs='+')
+    parser.add_argument('-b','--backgroundColor',type=str,
+            default = 'white',
+            help='Enter Background color')
+
+    return parser.parse_args()
+
+
 def version():
+    ''' print version of povexport. '''
     return POVEXPORT_VERSION
 
+
 def getpolar(a):
-    # a is a vector
-    # find rotation angles (standard polar coord)
+    '''
+    takes a vector and find rotation angles (standard polar coord).
+    '''
     xy = sqrt(a.x**2 + a.y**2)
     theta = atan2(xy, a.z)
     phi = atan2(a.y, a.x)
+    
     return [theta, phi]
 
+
 def find_rotations(a):
-    # find rotations
+    ''' find rotations '''
     theta, phi = getpolar(a.axis)
     # find rotation around x-axis (if a.up <> jhat)
     # "undo" theta & phi rotations so can find alpha
@@ -170,10 +194,12 @@ def find_rotations(a):
     a_sin = dot(cross(jhat, norm(aup)), ihat)
     a_cos = dot(norm(aup), jhat)
     alpha = atan2(a_sin, a_cos)
+    
     return (alpha, theta, phi)
 
+
 def process_frame(a, code):
-    # add in frame rotations & translations (may be nested)
+    ''' add in frame rotations & translations (may be nested). '''
     frame_code = ''
     fr = a.frame
     while fr:
@@ -190,22 +216,26 @@ def process_frame(a, code):
     # insert frame_code at end (these rot's must be done last)
     end = code.rfind('}')
     code = code[:end] + frame_code + code[end:]
+
     return code
 
+
 def add_texture(a, code):
-    # add in user-specified texture (will override color)
+    ''' add in user-specified texture (will override color) '''
     mat = None
     if hasattr(a, 'pov_texture'):
         mat = a.pov_texture
-## Maybe could interpret materials like this (need to include POV-Ray definitions):
-##    elif hasattr(a, 'material'):
-##        if a.material == materials.wood:
-##            mat = "T_Wood20"
+    # Maybe could interpret materials like this (need to include POV-Ray definitions):
+    # elif hasattr(a, 'material'):
+    # if a.material == materials.wood:
+    # mat = "T_Wood20"
     if mat:
         tstring = '    texture { '+ mat + ' }\n'
         end = code.rfind('}')
         code = code[:end] + tstring + code[end:] 
+    
     return code
+
 
 def no_shadow(a):
     if hasattr(a,"no_shadow") and a.no_shadow:
@@ -213,17 +243,20 @@ def no_shadow(a):
     else:
         return ""
 
+
 def no_reflection(a):
     if hasattr(a,"no_reflection") and a.no_reflection:
         return "no_reflection"
     else:
         return ""
 
+
 def transparency(a):
     if hasattr(a,"opacity"):
         return 1.0-a.opacity
     else:
         return 0.0
+
 
 def export_sphere(a):
     sphere_template = """
@@ -238,16 +271,18 @@ sphere {
 }
 """
     object_code = sphere_template % { 'posx':displayscale*a.x, 'posy':displayscale*a.y, 'posz':displayscale*a.z,
-                                      'radius':displayscale*a.radius,
-                                      'red':a.red, 'green':a.green, 'blue':a.blue, 'transparency':transparency(a),
-                                      'no_shadow':no_shadow(a),
-                                      'reflection':refl,
-                                      'diffuse':dif,
-                                      'ambient':amb}
-                                      #'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a)}
+            'radius':displayscale*a.radius,
+            'red':a.red, 'green':a.green, 'blue':a.blue, 'transparency':transparency(a),
+            'no_shadow':no_shadow(a),
+            'reflection':refl,
+            'diffuse':dif,
+            'ambient':amb}
+    #'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a)}
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_ellipsoid(a):
     ellipsoid_template = """
@@ -270,7 +305,9 @@ sphere {
                     'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a) }
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_box(a):
     # create box at origin along x-axis
@@ -307,7 +344,9 @@ box {
                                     'ambient':boxamb}
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_cylinder(a):
     cylinder_template = """
@@ -333,7 +372,9 @@ cylinder {
                                         'ambient':amb}
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_curve(a):
     object_code = ''
@@ -378,7 +419,9 @@ def export_curve(a):
         object_code += export_sphere(csph)
         del(ccyl)
         del(csph)
+    
     return object_code
+
 
 def export_ring(a):
     torus_template = """
@@ -402,7 +445,9 @@ torus {
                                      'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a) }
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_pyramid(a):
     pyramid_template = """
@@ -425,7 +470,9 @@ object {Pyramid
                               'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a) }
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
+
 
 def export_arrow(a):
     al = a.length
@@ -440,8 +487,8 @@ def export_arrow(a):
     hw = a.headwidth
     if hw == 0:
         hw = 3*sw
-## The following may have been needed only because there were other problems:
-##    hw *= 0.8  ## seems too big, decrease this 2008-11-07 rwc
+    ## The following may have been needed only because there were other problems:
+    ##    hw *= 0.8  ## seems too big, decrease this 2008-11-07 rwc
     if a.fixedwidth:
         if hl > .5*al:
             hl = .5*al
@@ -478,7 +525,9 @@ def export_arrow(a):
     del(abox)
     # concatenate pyramid & box
     object_code = m1 + m2
+    
     return object_code
+
 
 def export_cone(a):
     cone_template = """
@@ -498,7 +547,9 @@ cone {
                                     'no_shadow':no_shadow(a), 'no_reflection':no_reflection(a) }
     object_code = process_frame(a,object_code)
     object_code = add_texture(a,object_code)
+    
     return object_code
+
 
 def export_label(a):
     label_template = """
@@ -518,9 +569,15 @@ text {
                                     'no_shadow': no_shadow(a), 'no_reflection': no_reflection(a)}
     object_code = process_frame(a, object_code)
     object_code = add_texture(a, object_code)
+    
     return object_code
 
+
 def export(display=None, filename=None, include_list=None, xy_ratio=4./3., custom_text='', shadowless=0):
+    '''
+    This is essentially the function which does all the grunt work
+    to convert the visual python scene into a .pov file.
+    '''
     global displayscale
     if display == None:         # no display specified so find active display
         b = box(visible=0)
@@ -589,14 +646,16 @@ camera {
 
     file.write( initial_comment + include_text + custom_text + pyramid_def )
     if type(display.ambient) is tuple or type(display.ambient) is list:
-        file.write( ambient_template % { 'red':display.ambient[0]*10 ,
-                                         'green':display.ambient[1]*10,
-                                         'blue':display.ambient[2]*10 })
+        file.write( ambient_template % { 
+            'red':display.ambient[0]*10 ,
+            'green':display.ambient[1]*10,
+            'blue':display.ambient[2]*10 })
     else:
         file.write( scalar_ambient_template % { 'amb':display.ambient*10 } )
-    file.write( background_template % { 'red':display.background[0],
-                                        'green':display.background[1],
-                                        'blue':display.background[2] } )
+        file.write( background_template % { 
+            'red':display.background[0],
+            'green':display.background[1],
+            'blue':display.background[2] } )
 
     displayscale = 10.0/(mag(scene.mouse.camera-scene.center)*tan(scene.fov/2.))
 

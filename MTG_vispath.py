@@ -8,18 +8,18 @@
 # Main driver for visualizing worldlines from (g)ce-wl- files.
 # =============================================================================
 
-import os,sys
-from optparse import OptionParser
+import os,sys,subprocess
 import visual as vis
 import MTG_visTools as vt
 import povexport as pov
 
 def main():
 
+    vt.writeINIfile('kittisCattis.pov')
+    sys.exit()
     # parse the command line options
-    parser = OptionParser()
-    (options, args) = parser.parse_args()
-    fileName = args[0]
+    args = vt.parseCMD() 
+    fileName = args.fileNames[0]
 
     # get cell lengths
     cellDims, excDims = vt.getCellDimensions(fileName)
@@ -35,7 +35,7 @@ def main():
     numFrames,wl = vt.loadPIMCPaths(fileName)
     print 'Number of frames: ',numFrames
     paths = []
-    print numFrames
+
     for t in range(numFrames):
         paths.append(vt.Path(wl[t]))
 
@@ -48,12 +48,9 @@ def main():
 
     # set up background
     scene = vis.display(title='World Lines!!',x=0, y=0, width=800, height=844,\
-            center=(0,0,0), background=(0.0,0.0,0.0))
+            center=(0,0,0), background=(1.0,1.0,1.0))
+            #center=(0,0,0), background=(0.0,0.0,0.0))
     scene.autoscale = 0
-    scene.userzoom = False
-    scene.userspin = False
-    #scene.zoom = 2.0
-    #scene.spin = 60
 
     # Set up excluded volume
     if len(excDims)>0:
@@ -67,14 +64,36 @@ def main():
     #line = [(-0.5*L,-0.5*L,0),(0.5*L,-0.5*L,0),(0.5*L,ymax,0),(-0.5*L,ymax,0),(-0.5*L,-0.5*L,0)]
     #vis.curve(pos=line,radius=0.20,color=(0.5,0.5,0.5))
     
-    print "displaying scene"
     wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
     vt.getScreenShot(0)
-    
-    print "Creating POVray file..."
-    pov.export(scene, 'kittisCattis.pov')
 
-    print "...finished exporting."
+    povFileName = 'kittisCattis.pov'
+    print "Creating POVray file..."
+    pov.export(scene, povFileName)
+    print "...finished exporting.  Now converting to pdf..."
+    
+    # set up bash commands to run povray
+    command = ('povray', povFileName, 'Height=1200','Width=1600')
+
+    print "\n\nabout to execute:\n%s\n\n" % ' '.join(command)
+    subprocess.check_call(command)
+
+    #os.chdir
+
+    vt.findMencoder()
+
+    vt.writeINIfile(povFileName)
+
+    # set up bash commands to run mencoder
+    command = ('mencoder', 'mf://*.png', '-mf', 'type=png:w=800:h=600:fps=25',
+           '-ovc', 'lavc', '-lavcopts', 'vcodec=mpeg4', '-oac', 'copy',
+           '-o', 'animatedStuff.avi')
+
+    print "\n\nabout to execute:\n%s\n\n" % ' '.join(command)
+    subprocess.check_call(command)
+
+    print "\n The movie was written to 'animatedStuff.avi'"
+
 
     '''
     n = 1

@@ -8,7 +8,7 @@
 #
 # Includes classes that store:
 #       - All information about world line trajectories of particles computed 
-#       from path integral monte carlo calculations.
+#           from path integral monte carlo calculations.
 #       - All visual data for use with vPython.
 #       - Some functions used by the main driver 
 #
@@ -16,11 +16,14 @@
 # =============================================================================
 
 from numpy import *
+#import numpy as np
 import os,sys
 import pimchelp
 from optparse import OptionParser
 from visual import *
+#import visual as vis
 import commands
+import argparse
 
 
 # some global variables that we need to get rid of
@@ -37,6 +40,18 @@ scale = 1.0
 # =============================================================================
 # Some useful functions
 # =============================================================================
+
+def findMencoder():
+    """ checks for Mencoder, returns error and exits if it doesn't find it """
+    try:
+        subprocess.check_call(['mencoder'])
+    except subprocess.CalledProcessError:
+        print "mencoder command was found"
+        pass
+    except OSError:
+        print 'could not find mencoder.'
+        sys.exit("quitting\n")
+
 
 def getCellDimensions(fileName):
     ''' Get the cell dimensions. '''
@@ -102,6 +117,14 @@ def loadPIMCPaths(fileName):
     return n,wl
 
 
+def parseCMD():
+    ''' parse the command line. '''
+    parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
+    parser.add_argument('fileNames', help='(g)ce-wl-.. data files', nargs='+')
+
+    return parser.parse_args()
+
+
 def sep(p1,p2):
     ''' 
     Get the scalar separation between two points.
@@ -113,6 +136,34 @@ def sep(p1,p2):
         d += (p1[i]-p2[i])**2
 
     return sqrt(d)
+
+
+def writeINIfile(povFileName):
+    ''' writes .ini file for POV-ray animation. '''
+    # define what goes in .ini file
+    iniTemplate = """; POV-Ray animation ini file
+Antialias=Off
+Antialias_Threshold=0.1
+Antialias_Depth=2
+
+Input_File_Name=%(iFName)s
+
+Initial_Frame=1
+Final_Frame=30
+Initial_Clock=0
+Final_Clock=1
+
+Cyclic_Animation=on
+Pause_when_Done=off
+"""
+    povfName = '"'+povFileName+'"'
+    iniText = iniTemplate % {'iFName':povfName}
+
+    iniFileName =  povFileName[:-4]+'.ini'
+    print iniFileName
+
+    with open(iniFileName, 'w') as outFile:
+        outFile.write(iniText)
 
 
 # =============================================================================

@@ -25,15 +25,15 @@ def main():
     # define all data you want to pull from pimc data files IN ORDER.
     fileTypes = ['log','estimator','super','bipart_dens','ntWind']
     colNums = [
-            [4,11,12,13], 
+            [4,11,12,13,-4], 
             [0,1,2,3], 
             [0,1], 
-            [0,]]
+            [0,] ]
     observables = [
-            ['E','Cv1','Cv2','Cv3'],
+            ['E','Cv1','Cv2','Cv3','N'],
             ['rho_s/rho','Wx^2','Wy^2','Wz^2'],
             ['filmDens','bulkDens'],
-            ['W^2']]
+            ['W^2'] ]
 
     # grab types of estimators from above.  Remove log file.
     estimTypes = list(fileTypes)
