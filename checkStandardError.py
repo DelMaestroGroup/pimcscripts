@@ -11,7 +11,7 @@
 
 import pylab as pl
 import MTG_jkTools as jk
-import glob,sys,os
+import glob,sys,os,random
 from matplotlib import rcParams
 
 # set up latex fonts
@@ -24,6 +24,7 @@ def main():
     args = jk.parseCMD()
     reduceType = args.reduceType
     direc = args.fileNames[0]
+    nEst = args.nEst
 
     os.chdir(direc)
     direcs = glob.glob('*angFilm_*')
@@ -32,8 +33,12 @@ def main():
     xLab = jk.getXlabel(reduceType)
     colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
             'Yellow','Maroon']
-        
-    extentScale = thicknessORextent(direcs)
+
+    # shuffle colors around randomly
+    if args.RandomColors:
+        random.shuffle(colors)
+    
+    extentScale = jk.thicknessORextent(direcs)
 
     for nd, d in enumerate(sorted(direcs)):
 
@@ -47,10 +52,12 @@ def main():
         AVG = pl.array([])
         STD = pl.array([])
 
-        for n in range(int(len(headers))):
+        #for n in range(int(len(headers))):
+        n = nEst-1
+        for header in headers:
 
             avgs,stds,bins = pl.genfromtxt(f, 
-                    usecols=(0+3*n,1+3*n,2+3*n), 
+                    usecols=(0+3*n, 1+3*n, 2+3*n), 
                     unpack=True, delimiter=',')
 
             # get rid of any items which are not numbers..
@@ -69,6 +76,8 @@ def main():
 
             AVG = pl.append(AVG, avg)
             STD = pl.append(STD, stdErr)
+
+            n += nEst
  
         # determine titles for plotting
         if extentScale:
@@ -82,7 +91,8 @@ def main():
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
                 label=labell)
         pl.xlabel(xLab, fontsize=20)
-        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        #pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        pl.ylabel(r'$\langle N \rangle$', fontsize=20)
         pl.title(titlle)
         pl.legend()
         pl.grid(True)

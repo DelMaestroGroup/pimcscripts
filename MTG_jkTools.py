@@ -86,8 +86,14 @@ def jackknife(data,data2=None,data3=None):
 def parseCMD():
     ''' Parse the command line. '''
     parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
+    
+    # help strings.
     fNameHelp = 'Data File Names.  For checkStandardError.py, this will be \
             the directory name that holds all direcs with zAveraged files.'
+    nEstHelpStr = ('Column number of first occurrence of the type of data you '+
+            'want to analyze from zAveraged file. Used for checkStandardError.')
+    
+    # parser arguments.
     parser.add_argument('fileNames', help=fNameHelp, nargs='+')
     parser.add_argument('-s', '--skip', type=int,
             default=0,
@@ -95,10 +101,15 @@ def parseCMD():
     parser.add_argument('-c', '--crunched', action='store_true', 
             dest='Crunched', default=False,
             help='Is the data already crunched from multiple seeds?')
+    parser.add_argument('-R', '--randomColors', action='store_false', 
+            dest='RandomColors', default=True,
+            help='Include this to NOT randomly shuffle list of plot colors.')
     parser.add_argument('-r', '--reduceType', type=str,
             default='T',
             help='What are we reducing over? [T,u]')
-    
+    parser.add_argument('-n', '--nEst', type=int,
+            default=1, help=nEstHelpStr)
+   
     return parser.parse_args()
 
 
