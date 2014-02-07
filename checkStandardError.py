@@ -18,6 +18,10 @@ from matplotlib import rcParams
 rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Computer Modern Roman']
 rcParams['text.usetex'] = True
+rcParams['text.latex.preamble'] = [
+       r'\usepackage{siunitx}', # load siunitx
+       r'\sisetup{detect-all}'  # force siunitx to use your fonts
+]
 
 def main():
    
@@ -81,11 +85,11 @@ def main():
  
         # determine titles for plotting
         if extentScale:
-            labell = 'thickness: '+thickness+' '+r'$[\AA]$'
-            titlle = 'extent: '+extent+' '+r'$[\AA]$'
+            labell = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$'
+            titlle = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
         else:
-            labell = 'extent: '+extent+' '+r'$[\AA]$'
-            titlle = 'thickness: '+thickness+' '+r'$[\AA]$' 
+            labell = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
+            titlle = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$' 
 
         # add current data to plot
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
