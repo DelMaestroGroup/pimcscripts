@@ -40,6 +40,8 @@ def main():
         if len(excDims) > 0:
             ay = float(excDims[0])
             az = float(excDims[1])
+        else:
+            ay, az = None, None
 
         # Load the configurations from disk	
         numFrames,wl = vt.loadPIMCPaths(fileName)
@@ -47,10 +49,10 @@ def main():
         
         paths = []
         for t in range(numFrames):
-            paths.append(vt.Path(wl[t]))
+            paths.append(vt.Path(wl[t],fileName))
 
         # choose frame number
-        numFrame = 1
+        numFrame = 0
 
         # time slice data
         M = paths[numFrame].numTimeSlices
@@ -59,13 +61,13 @@ def main():
         # set up background
         scene = vis.display(title='World Lines!!',x=0, y=0, 
                 width=800, height=844,
-                center=(0,0,0), background=(1.0,1.0,1.0))
+                center=(0,0,0), background=(0.0,0.0,0.0))
         scene.autoscale = 0
 
         # Set up excluded volume
         if len(excDims)>0:
             excVol = vis.box(pos=(0,0,0), length=L, 
-                    height=ay, width=az, opacity=0.2)
+                    height=ay, width=az, opacity=0.7)
 
         # Set up cell walls
         excVol = vis.box(pos=(0,0,0), length=L, 
@@ -78,6 +80,8 @@ def main():
         #vis.curve(pos=line,radius=0.20,color=(0.5,0.5,0.5))
         
         wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
+
+        sys.exit()
 
         # define povray file names
         povFileName = 'kittisCattis.pov'
