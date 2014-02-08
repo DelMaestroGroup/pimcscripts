@@ -462,21 +462,27 @@ class Path:
         '''
 
         #dobead = np.ones([self.numTimeSlices,self.numParticles])
+        print 'current'
+        #print self.bead
+        print 'next'
+        #print self.next
+        print '\n\n'
 
-        startBead = self.bead[0,0]
-        print next(startBead)
-        print startBead
-        currBead = np.array([0,0,0])
-        #nextBead = self.next[m,0]
-        #while (startBead != currBead):
-        #    currBead 
+        dobead = np.ones([self.numTimeSlices,self.numParticles])
+        print sum(dobead)
+        for n in range(self.numParticles):
+            startBead = 0,n
+            dobead[startBead] = 0
+            currBead = tuple(self.next[startBead])
+            print currBead 
+            while (currBead != startBead):
+                currBead = tuple(self.next[currBead])
+                self.COLOR[currBead] = colors[1]
+                dobead[currBead] = 0
+                print currBead
+        print sum(dobead)
+           
 
-            #print startBead
-            #if (n == 0):
-            #    self.COLOR[m,n,0] = 1.0
-            #    self.COLOR[m,n,1] = 0.0
-            #    self.COLOR[m,n,2] = 0.0
-            
         '''
 
        

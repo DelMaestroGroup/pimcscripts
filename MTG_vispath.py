@@ -8,7 +8,8 @@
 # Main driver for visualizing worldlines from (g)ce-wl- files.
 # =============================================================================
 
-import os,sys,subprocess,glob,wx
+import os,sys,subprocess,glob
+#import wx
 import visual as vis
 import MTG_visTools as vt
 import povexport as pov
@@ -58,10 +59,10 @@ def main():
         M = paths[numFrame].numTimeSlices
         dM = 1.0*L/(1.0*(M-1))
 
-        sys.exit()
         # ----- This is where you define cell characteristics -----------------
         scene = vis.display(title='World Lines!!',x=0, y=0, 
-                width=800, height=844,
+                #width=800, height=844,
+                width=400, height=422,
                 center=(0,0,0), background=(1.0,1.0,1.0))
         scene.autoscale = 0
 
@@ -140,7 +141,7 @@ def main():
 
  
     # close visual python window
-    wx.Exit()
+    #wx.Exit()
  
 
 
