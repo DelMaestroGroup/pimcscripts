@@ -109,34 +109,32 @@ def parseCMD():
             help='What are we reducing over? [T,u]')
     parser.add_argument('-n', '--nEst', type=int,
             default=1, help=nEstHelpStr)
+    parser.add_argument('-e', '--extent', type=int,
+            default=1, help='Enter the extent.  Used for Lz scaling.')
    
     return parser.parse_args()
 
 
-def thicknessORextent(direcs):
+def scalingVariable(direcs):
     ''' 
     determine titles for plotting zAveragedNtwind.dat files
     '''
-    labl, extent = '',''
     for nd, d in enumerate(direcs):
         # determine titles for plotting
-
-        thickness = d[:4]
-        extent = d[12:16]
-
-        extentScale = False
-        if nd==0:
-           firstExtent = extent 
-        if extent == firstExtent:
-            #labl = 'thickness: '
-            #titl = 'extent: '
-            extentScale = True
+        if ('Lz' in d):
+            scalingVar = 'Lz'
         else:
+            extent = d[12:16]
+
             extentScale = False
-        #    labl = 'extent: '
-        #    titl = 'thickness: '
+            if nd==0:
+               firstExtent = extent 
+            if extent == firstExtent:
+                scalingVar = 'extent'
+            else:
+                scalingVar = 'thickness'
     
-    return extentScale
+    return scalingVar
 
 
 # =============================================================================

@@ -49,7 +49,7 @@ def main():
         
         paths = []
         for t in range(numFrames):
-            paths.append(vt.Path(wl[t],fileName))
+            paths.append(vt.Path(wl[t],Ly,Lz))
 
         # choose frame number
         numFrame = 0
@@ -58,10 +58,11 @@ def main():
         M = paths[numFrame].numTimeSlices
         dM = 1.0*L/(1.0*(M-1))
 
-        # set up background
+        sys.exit()
+        # ----- This is where you define cell characteristics -----------------
         scene = vis.display(title='World Lines!!',x=0, y=0, 
                 width=800, height=844,
-                center=(0,0,0), background=(0.0,0.0,0.0))
+                center=(0,0,0), background=(1.0,1.0,1.0))
         scene.autoscale = 0
 
         # Set up excluded volume
@@ -78,7 +79,10 @@ def main():
         #line = [(-0.5*L,-0.5*L,0),(0.5*L,-0.5*L,0),(0.5*L,ymax,0),
         #        (-0.5*L,ymax,0),(-0.5*L,-0.5*L,0)]
         #vis.curve(pos=line,radius=0.20,color=(0.5,0.5,0.5))
-        
+
+        # ---------------------------------------------------------------------
+
+
         wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
 
         sys.exit()
@@ -98,7 +102,7 @@ def main():
             print "\nAbout to execute:\n%s\n" % ' '.join(command)
             subprocess.check_call(command)
 
-        # -- generate multiple images, all the same but rotating about origin -
+        # -- generate multiple images, same image but rotating about origin ---
         if outType == 'rotate':
             vt.writeINIfile(povFileName,HT,WD,finFrame)
 

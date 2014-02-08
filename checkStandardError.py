@@ -28,10 +28,14 @@ def main():
     args = jk.parseCMD()
     reduceType = args.reduceType
     direc = args.fileNames[0]
+
+    #dependentVar = direc[:-6]
     nEst = args.nEst
 
     os.chdir(direc)
     direcs = glob.glob('*angFilm_*')
+    if (direcs == []):
+        direcs = glob.glob('*Lz*')
 
     # some plotting options
     xLab = jk.getXlabel(reduceType)
@@ -42,21 +46,39 @@ def main():
     if args.RandomColors:
         random.shuffle(colors)
     
-    extentScale = jk.thicknessORextent(direcs)
+    scaleVar = jk.scalingVariable(direcs)
 
     for nd, d in enumerate(sorted(direcs)):
 
         os.chdir('./'+d)
         f = glob.glob('*')[0]
 
-        thickness = d[:4]
-        extent = d[12:16]
+        if (scaleVar != 'Lz'):
+            thickness = d[:4]
+            extent = d[12:16]
+        else:
+            Lz = d[2:]
+            extent = args.extent
+        
+        # determine titles for plotting
+        if (scaleVar == 'extent'):
+            labell = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$'
+            titlle = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
+        elif (scaleVar == 'thickness'):
+            labell = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
+            titlle = 'thickness: '+str(thickness)+' '+r'$[\si{\angstrom}]$'
+        elif (scaleVar == 'Lz'):
+            labell = r'$L_z$: '+Lz+' '+r'$[\si{\angstrom}]$'
+            titlle = 'extent: '+str(extent)+' '+r'$[\si{\angstrom}]$'
 
         headers = jk.getHeadersFromFile(f)
+        ReducedTemps = pl.array([])
+        for T in headers:
+            ReducedTemps = pl.append(ReducedTemps, abs(1.0 - float(T)/2.17))
+        
         AVG = pl.array([])
         STD = pl.array([])
 
-        #for n in range(int(len(headers))):
         n = nEst-1
         for header in headers:
 
@@ -83,20 +105,25 @@ def main():
 
             n += nEst
  
-        # determine titles for plotting
-        if extentScale:
-            labell = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$'
-            titlle = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
-        else:
-            labell = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
-            titlle = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$' 
-
-        # add current data to plot
+                # add current data to plot
+        pl.figure(1)
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
                 label=labell)
         pl.xlabel(xLab, fontsize=20)
-        #pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
-        pl.ylabel(r'$\langle N \rangle$', fontsize=20)
+        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
+        pl.title(titlle)
+        pl.legend()
+        pl.grid(True)
+        
+        pl.figure(2)
+        pl.yscale('log')
+        pl.xscale('log')
+        pl.errorbar(ReducedTemps, AVG, STD, fmt='o', color=colors[nd], 
+                label=labell)
+        pl.xlabel(xLab, fontsize=20)
+        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
         pl.title(titlle)
         pl.legend()
         pl.grid(True)

@@ -17,7 +17,7 @@
 
 import os,sys,subprocess,argparse,commands
 from numpy import *
-#import numpy as np
+import numpy as np
 import pimchelp
 from optparse import OptionParser
 from visual import *
@@ -389,14 +389,15 @@ class Path:
     MC step.
     '''
 
-    def __init__(self,wlData,fileName,num_particles=None):
+    def __init__(self, wlData, Ly=None, Lz=None, num_particles=None):
         ''' 
         Given a single worldine configuration, we populate the data arrays.
         We expect data as a list containing lines of a worldine file that
         have already been split.
         '''
 
-        self.fName = fileName
+        self.Ly = Ly
+        self.Lz = Lz
 
         # First we determine how many particles there are in this config
         self.numParticles = XXX
@@ -434,11 +435,12 @@ class Path:
                 self.prev[m,n,1] = int(line[7])     # prev particle
                 self.next[m,n,0] = int(line[8])     # next time slice
                 self.next[m,n,1] = int(line[9])     # next particle
+                self.wlNum[m,n] = int(line[10])     # worldline number
                 self.active[m,n] = 1
                 self.COLOR[m,n,0]= 1.0
                 self.COLOR[m,n,1]= 1.0
-                self.COLOR[m,n,2]= 1.0
-                self.opac[m,n]   = 1.0
+                self.COLOR[m,n,2]= 1.0  # make non winding beads white
+                self.opac[m,n]   = 1.0  # ...and transparent. (THIS BREAKS)
 
             self.wlData = wlData
 
@@ -450,167 +452,185 @@ class Path:
 
 
     def distinguishWindingWLs(self):
-        ''' Compute winding and keep knowledge of winding wls. '''
-       
-        dobead   = ones([self.numTimeSlices,self.numParticles],int)
-        for m in range(self.numTimeSlices):
-            for n in range(self.numParticles):
-                print self.next[m,n]
-                sys.exit()
-
-        # get cell lengths
-        cDims, eDims = getCellDimensions(self.fName)
-        L = float(cDims[0])
-        Ly = float(cDims[1])
-        Lz = float(cDims[2])
-        if len(eDims) > 0:
-            ay = float(eDims[0])
-            az = float(eDims[1])
-
-
-
-        # keep track of number of beads in region excY away from excVol */
-        '''double N_2D (0.0);
-
-        # compute number of beads in the region excY away from excVol */
-        dVec pos;
-        beadLocator beadIndex;
-        for (int slice = 0; slice < path.numTimeSlices; slice++) {
-            for (int ptcl = 0; ptcl < path.numBeadsAtSlice(slice); ptcl++) {
-
-                beadIndex = slice,ptcl;
-                pos = path(beadIndex);
-
-                if (pos[2] > (excZ+excY))
-                    continue;
-                else if (pos[2] < -(excZ+excY))
-                    continue;
-                else
-                    N_2D += 1;
-            }
-        }
-
-        # here we use N_2D = (# beads surrounding excVol) / M. */
-        N_2D /= (1.0*path.numTimeSlices);
+        ''' 
+        Build dictionary of all paths, accessed by the worldline
+        they are a member of.  Then, loop over each WL and compute
+        the winding estimator around the center of the cell (excluded
+        volume).  If we have winding, change the color and opacity
+        of these beads.  This is hacky and could probably be done 
+        much better with the data structures supplied in path.
         '''
-        # The start bead for each world line, and the moving index */
-        #beadLocator startBead;
-        #int numWorldlines = path.numBeadsAtSlice(0);
 
-        # We create a local vector, which determines whether or not we have
-        # already included a bead at slice 0*/
-        #doBead.resize(numWorldlines);
-        #doBead = true;
+        #dobead = np.ones([self.numTimeSlices,self.numParticles])
 
+        startBead = self.bead[0,0]
+        print next(startBead)
+        print startBead
+        currBead = np.array([0,0,0])
+        #nextBead = self.next[m,0]
+        #while (startBead != currBead):
+        #    currBead 
+
+            #print startBead
+            #if (n == 0):
+            #    self.COLOR[m,n,0] = 1.0
+            #    self.COLOR[m,n,1] = 0.0
+            #    self.COLOR[m,n,2] = 0.0
+            
+        '''
+
+       
+        
+        Ly = float(self.Ly)
+        Lz = float(self.Lz)
+
+        # we loop over all data and store it in the form of a dictionary.
+        currentWL = 0
+        wlDict = {}
+        n = 0
+        for nl,l in enumerate(self.wlData):
+
+            # create sortable dict. key index
+            if (len(l[-1]) == 1):
+                lab = '000'+l[-1]
+            elif (len(l[-1]) == 2):
+                lab = '00'+l[-1]
+            elif (len(l[-1]) == 3):
+                lab = '0'+l[-1]
+            else:
+                lab = l[-1]
+            
+            # store first WL key and first data points
+            if (nl == 0):
+                wlDictKey = 'WLnum'+lab
+                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
+
+            # add bead positions of currentWL to wlDictKey
+            if ((nl != 0) and (int(l[-1]) == currentWL)):
+                wlDict[wlDictKey] = np.append(wlDict[wlDictKey],
+                        [[float(l[3]),float(l[4]),float(l[5])]])
+
+            # update to a new WL key and store first data points
+            if (int(l[-1]) != currentWL):
+                currentWL += 1
+                wlDictKey = 'WLnum'+lab
+                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
+
+        # reshape all numpy arrays into 3-tuples
+        for n in sorted(wlDict.iterkeys()):
+            wlDict[n] = np.reshape(wlDict[n], (int(len(wlDict[n]))/3, 3))
+
+ 
+        for nnn, n in enumerate(sorted(wlDict.iterkeys())):
+            if nnn ==0:
+                print wlDict[n]
+
+       
+
+        
         # sum of winding numbers
         Wtot = 0.0;
 
-        '''
-        # We go through each particle/worldline */
-        for (int n = 0; n < numWorldlines; n++) {
-
-            # The initial bead to be moved */
-            startBead = 0,n;# LOOP OVER WLS
-
-            # We make sure we don't try to touch the same worldline twice */
-                # Mark the beads as touched and increment the number of worldlines */
-                #beadIndex = startBead;
-
+        # loop through our WL positions!
+        for numn, n in enumerate(sorted(wlDict.iterkeys())):
+ 
             # LOOP OVER BEADS
             W = 0.0;
-            yposOld = path(beadIndex)[1];   // initial y position
-            zposOld = path(beadIndex)[2];   // initial z position
+            yposOld = float(wlDict[n][0][1]);   # initial y position
+            zposOld = float(wlDict[n][0][2]);   # initial z position
             thetaOld = 0.0;
-            int counter = 0;
-            #/* Here, we want to loop over the current worldline until we get back
-            # * to the bead we started on.  Along the way, we integrate over the 
-            # * angle between the bead and the z-axis. */
-            do {
-                #/* get y, z positions, reset theta */
-                ypos = path(beadIndex)[1];
-                zpos = path(beadIndex)[2];
+            counter = 0;
+            
+            # Here, we want to loop over the current worldline until we get back
+            # to the bead we started on.  Along the way, we integrate over the 
+            # angle between the bead and the z-axis.
+            for pos in wlDict[n]:
+                # get y, z positions, reset theta
+                ypos = float(pos[1])
+                zpos = float(pos[2])
                 theta = 0.0;
 
-                #/* take out PBC to correctly compute angle. --CHECKED */
-                if (yposOld - ypos > 0.5*Ly)
-                    ypos += Ly;
-                if (yposOld - ypos < -0.5*Ly)
-                    ypos -= Ly;
-                if (zposOld - zpos > 0.5*Lz)
-                    zpos += Lz;
-                if (zposOld - zpos < -0.5*Lz)
-                    zpos -= Lz;
+                # take out PBC to correctly compute angle. --CHECKED
+                if (yposOld - ypos > 0.5*Ly):
+                    ypos += Ly
+                if (yposOld - ypos < -0.5*Ly):
+                    ypos -= Ly
+                if (zposOld - zpos > 0.5*Lz):
+                    zpos += Lz
+                if (zposOld - zpos < -0.5*Lz):
+                    zpos -= Lz
 
-                #/* compute angle between z-axis and bead in the zy plane */
+                # compute angle between z-axis and bead in the zy plane
                 if (ypos >= 0 and zpos >= 0):       # first quadrant
-                theta = atan(ypos/zpos)
-                elif (ypos >= 0 and zpos <= 0):   # second quadrant
-                    theta = 0.5*M_PI + atan(-zpos/ypos);
-                else if (ypos <= 0 and zpos <= 0)   // third quadrant
-                    theta = M_PI + atan(ypos/zpos);
-                    else if (ypos <= 0 and zpos >= 0):   #fourth quadrant
-                    theta = 1.5*M_PI + atan(-zpos/ypos);
+                    theta = np.arctan(ypos/zpos)
+                elif (ypos >= 0 and zpos <= 0):     # second quadrant
+                    theta = 0.5*np.pi + np.arctan(-zpos/ypos)
+                elif (ypos <= 0 and zpos <= 0):     # third quadrant
+                    theta = np.pi + np.arctan(ypos/zpos)
+                elif (ypos <= 0 and zpos >= 0):     # fourth quadrant
+                    theta = 1.5*np.pi + np.arctan(-zpos/ypos)
 
                 # store first bead location/theta
                 if (counter == 0):
-                    origTheta = theta;
-                    origYpos = ypos;
-                    origZpos = zpos;
+                    origTheta = theta
+                    origYpos = ypos
+                    origZpos = zpos
 
-                delta = theta-thetaOld;
+                delta = theta-thetaOld
                 # account for going from first quadrant to fourth 
                 if (yposOld>0 and zposOld>0 and ypos<0 and zpos>0):
-                    delta -= 2.0*M_PI;
+                    delta -= 2.0*np.pi
                 # account for going from fourth quadrant to first 
                 if (yposOld<0 and zposOld>0 and ypos>0 and zpos>0):
-                    delta += 2.0*M_PI;
+                    delta += 2.0*np.pi
 
                 # start updating winding after first bead 
-                if (counter != 0)
-                    W += delta;
+                if (counter != 0):
+                    W += delta
 
                 # store previous y,z positions and previous theta 
-                thetaOld = theta;
-                yposOld = ypos;
-                zposOld = zpos;
+                thetaOld = theta
+                yposOld = ypos
+                zposOld = zpos
 
-                # We turn off any zero-slice beads we have touched 
-                if (beadIndex[0]==0)
-                    doBead(beadIndex[1]) = false;
-
-                beadIndex = path.next(beadIndex);
-
-                counter += 1;
-
-            } while (!all(beadIndex==startBead));
+                counter += 1
 
             # account for last Delta term theta_0 - theta_{last} 
-            delta = origTheta - theta;
+            delta = origTheta - theta
 
             # account for going from fourth quadrant to first
-            if (origYpos>0 and origZpos>0 and ypos<0 and zpos>0)
-                delta += 2.0*M_PI;
+            if (origYpos>0 and origZpos>0 and ypos<0 and zpos>0):
+                delta += 2.0*np.pi
             # account for going from first quadrant to fourth
-            if (origYpos<0 and origZpos>0 and ypos>0 and zpos>0)
-                delta -= 2.0*M_PI;
+            if (origYpos<0 and origZpos>0 and ypos>0 and zpos>0):
+                delta -= 2.0*np.pi
 
-            W += delta;
-            W /= (2.0*M_PI);
+            W += delta
+            W /= (2.0*np.pi)
 
             # keep running total of winding number.
-            Wtot += W;
+            Wtot += W
 
-        } #// n
+            # Change color and opacity of beads in WL that winds.
+            if (W*W > 0.1):
+                permutedParticles = int(len(wlDict[n]))/(3*self.numTimeSlices)
+                print 'found winding of ',W,' for ',n
+                print 'there are ',permutedParticles,' particles in this worldline!'
+                for m in range(self.numTimeSlices):
+                    for l in range(self.numParticles):
+                        if ([self.bead[m,l,0],self.bead[m,l,1],self.bead[m,l,2]] in wlDict[n]):
+                            self.opac[m,l] = 1.0
+                            self.COLOR[m,l] = colors[1]
+            if (numn == 0):
+                for m in range(self.numTimeSlices):
+                    for l in range(self.numParticles):
+                        if ([self.bead[m,l,0],self.bead[m,l,1],self.bead[m,l,2]] in wlDict[n]):
+                            self.opac[m,l] = 1.0
+                            self.COLOR[m,l] = colors[1]
+            
 
         #/* Store W^2 value. */
         #estimator(0) += Wtot*Wtot;
         #estimator(1) += (Wtot*Wtot /(1.0*N_2D));
         #estimator(2) += (Wtot*Wtot / (1.0*path.getTrueNumParticles()));
-
-        #if (Wtot*Wtot > 0.1) {
-            # update color to not transparent somehow.
-        #}
         '''
-
-
-
