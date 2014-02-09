@@ -16,14 +16,15 @@ import povexport as pov
 
 def main():
 
-    HT = '100'
-    WD = '150'
-    finFrame = '30'
+    # TEST
+    #HT = '100'
+    #WD = '150'
+    #finFrame = '30'
 
-    # Production Rotate Video Parameters
-    #HT = '1200'
-    #WD = '1800'
-    #finFrame = '120'
+    # PRODUCTION Rotate Video Parameters
+    HT = '1200'
+    WD = '1800'
+    finFrame = '120'
 
     # parse the command line options
     args = vt.parseCMD() 
@@ -58,11 +59,10 @@ def main():
         # time slice data
         M = paths[numFrame].numTimeSlices
         dM = 1.0*L/(1.0*(M-1))
-        sys.exit()
+        
         # ----- This is where you define cell characteristics -----------------
         scene = vis.display(title='World Lines!!',x=0, y=0, 
-                #width=800, height=844,
-                width=400, height=422,
+                width=800, height=844,
                 center=(0,0,0), background=(1.0,1.0,1.0))
         scene.autoscale = 0
 
@@ -85,8 +85,6 @@ def main():
 
 
         wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
-
-        sys.exit()
 
         # define povray file names
         povFileName = 'kittisCattis.pov'
