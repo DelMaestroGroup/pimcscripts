@@ -470,6 +470,8 @@ class Path:
 
         dobead = np.ones([self.numTimeSlices,self.numParticles])
         print sum(dobead)
+        # while sum(dobead) > 0:
+        #    find first nonzero index and start there!
         for n in range(self.numParticles):
             startBead = 0,n
             dobead[startBead] = 0
