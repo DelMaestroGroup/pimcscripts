@@ -445,13 +445,23 @@ class Path:
             self.wlData = wlData
 
             # find winding WLs, making everything else transparent.
-            self.distinguishWindingWLs()
+            self.distinguishWLs()
 
         else:
             self.wlData = None
 
 
-    def distinguishWindingWLs(self):
+    def findNextStartBead(self, dobead):
+        '''  '''
+        
+        for m in range(len(dobead)):
+            for n in range(len(dobead[m])):
+                if (dobead[m,n] == 1):
+                    startBead = m,n
+                    return startBead
+        
+
+    def distinguishWLs(self):
         ''' 
         Build dictionary of all paths, accessed by the worldline
         they are a member of.  Then, loop over each WL and compute
@@ -461,101 +471,44 @@ class Path:
         much better with the data structures supplied in path.
         '''
 
-        #dobead = np.ones([self.numTimeSlices,self.numParticles])
-        print 'current'
-        #print self.bead
-        print 'next'
-        #print self.next
-        print '\n\n'
-
-        dobead = np.ones([self.numTimeSlices,self.numParticles])
-        print sum(dobead)
-        # while sum(dobead) > 0:
-        #    find first nonzero index and start there!
-        for n in range(self.numParticles):
-            startBead = 0,n
-            dobead[startBead] = 0
-            currBead = tuple(self.next[startBead])
-            print currBead 
-            while (currBead != startBead):
-                currBead = tuple(self.next[currBead])
-                self.COLOR[currBead] = colors[1]
-                dobead[currBead] = 0
-                print currBead
-        print sum(dobead)
-           
-
-        '''
-
-       
-        
         Ly = float(self.Ly)
         Lz = float(self.Lz)
 
-        # we loop over all data and store it in the form of a dictionary.
-        currentWL = 0
-        wlDict = {}
-        n = 0
-        for nl,l in enumerate(self.wlData):
-
-            # create sortable dict. key index
-            if (len(l[-1]) == 1):
-                lab = '000'+l[-1]
-            elif (len(l[-1]) == 2):
-                lab = '00'+l[-1]
-            elif (len(l[-1]) == 3):
-                lab = '0'+l[-1]
-            else:
-                lab = l[-1]
-            
-            # store first WL key and first data points
-            if (nl == 0):
-                wlDictKey = 'WLnum'+lab
-                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
-
-            # add bead positions of currentWL to wlDictKey
-            if ((nl != 0) and (int(l[-1]) == currentWL)):
-                wlDict[wlDictKey] = np.append(wlDict[wlDictKey],
-                        [[float(l[3]),float(l[4]),float(l[5])]])
-
-            # update to a new WL key and store first data points
-            if (int(l[-1]) != currentWL):
-                currentWL += 1
-                wlDictKey = 'WLnum'+lab
-                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
-
-        # reshape all numpy arrays into 3-tuples
-        for n in sorted(wlDict.iterkeys()):
-            wlDict[n] = np.reshape(wlDict[n], (int(len(wlDict[n]))/3, 3))
-
- 
-        for nnn, n in enumerate(sorted(wlDict.iterkeys())):
-            if nnn ==0:
-                print wlDict[n]
-
+        # create array of ones.  As we loop through and touch beads, we
+        # mark them as touched by changing their index to zero.
+        dobead = np.ones([self.numTimeSlices,self.numParticles])
        
-
-        
         # sum of winding numbers
         Wtot = 0.0;
 
-        # loop through our WL positions!
-        for numn, n in enumerate(sorted(wlDict.iterkeys())):
- 
-            # LOOP OVER BEADS
+        while sum(dobead) > 0:
+            
+            # find a bead which hasn't been turned off yet and use it
+            # as a starting bead.  Make sure we mark it as touched (0).
+            startBead = self.findNextStartBead(dobead)
+            dobead[startBead] = 0
+            
+            currBead = tuple(self.next[startBead])
+           
+            # keep track of the winding around the origin of the yz plane
             W = 0.0;
-            yposOld = float(wlDict[n][0][1]);   # initial y position
-            zposOld = float(wlDict[n][0][2]);   # initial z position
+            yposOld = self.bead[startBead][1];   # initial y position
+            zposOld = self.bead[startBead][2];   # initial z position
             thetaOld = 0.0;
             counter = 0;
             
-            # Here, we want to loop over the current worldline until we get back
-            # to the bead we started on.  Along the way, we integrate over the 
-            # angle between the bead and the z-axis.
-            for pos in wlDict[n]:
+            # step through beads, turning them off after touching them.
+            # Along the way, we integrate over the angle between the bead
+            # and the z-axis to compute the winding around the origin.
+            while (currBead != startBead):
+                
+                currBead = tuple(self.next[currBead])
+                self.COLOR[currBead] = colors[1]
+                dobead[currBead] = 0
+        
                 # get y, z positions, reset theta
-                ypos = float(pos[1])
-                zpos = float(pos[2])
+                ypos = float(self.bead[currBead][1])
+                zpos = float(self.bead[currBead][2])
                 theta = 0.0;
 
                 # take out PBC to correctly compute angle. --CHECKED
@@ -635,7 +588,52 @@ class Path:
                         if ([self.bead[m,l,0],self.bead[m,l,1],self.bead[m,l,2]] in wlDict[n]):
                             self.opac[m,l] = 1.0
                             self.COLOR[m,l] = colors[1]
+
+        '''
+               # we loop over all data and store it in the form of a dictionary.
+        currentWL = 0
+        wlDict = {}
+        n = 0
+        for nl,l in enumerate(self.wlData):
+
+            # create sortable dict. key index
+            if (len(l[-1]) == 1):
+                lab = '000'+l[-1]
+            elif (len(l[-1]) == 2):
+                lab = '00'+l[-1]
+            elif (len(l[-1]) == 3):
+                lab = '0'+l[-1]
+            else:
+                lab = l[-1]
             
+            # store first WL key and first data points
+            if (nl == 0):
+                wlDictKey = 'WLnum'+lab
+                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
+
+            # add bead positions of currentWL to wlDictKey
+            if ((nl != 0) and (int(l[-1]) == currentWL)):
+                wlDict[wlDictKey] = np.append(wlDict[wlDictKey],
+                        [[float(l[3]),float(l[4]),float(l[5])]])
+
+            # update to a new WL key and store first data points
+            if (int(l[-1]) != currentWL):
+                currentWL += 1
+                wlDictKey = 'WLnum'+lab
+                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
+
+        # reshape all numpy arrays into 3-tuples
+        for n in sorted(wlDict.iterkeys()):
+            wlDict[n] = np.reshape(wlDict[n], (int(len(wlDict[n]))/3, 3))
+
+ 
+        for nnn, n in enumerate(sorted(wlDict.iterkeys())):
+            if nnn ==0:
+                print wlDict[n]
+
+       
+
+                   
 
         #/* Store W^2 value. */
         #estimator(0) += Wtot*Wtot;

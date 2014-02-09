@@ -58,7 +58,7 @@ def main():
         # time slice data
         M = paths[numFrame].numTimeSlices
         dM = 1.0*L/(1.0*(M-1))
-
+        sys.exit()
         # ----- This is where you define cell characteristics -----------------
         scene = vis.display(title='World Lines!!',x=0, y=0, 
                 #width=800, height=844,
