@@ -148,8 +148,11 @@ displayscale = 1.0 # global scale factor to adjust scene.range to 100
 
 # DEFINE CAMERA ROTATION VARIABLES --MTG
 rotateCamera1 = 0
-rotateCamera2 = '270*clock'
+#rotateCamera2 = '270*clock'
+rotateCamera2 = 85
 rotateCamera3 = 0
+
+cameraZoom = 1.5
 
 
 # DEFINE FINISH CHARACTERISTICS --MTG
@@ -159,6 +162,8 @@ refl = '0.8'
 boxrefl = '0'
 boxdif = '1.0'
 boxamb = '0.2'
+
+cylinderTrans = 1.0
 
 
 def parseCMD(): # --MTG
@@ -370,7 +375,9 @@ cylinder {
     endpt2=displayscale*(a.pos+a.axis)
     object_code = cylinder_template % { 'posx':endpt1.x, 'posy':endpt1.y, 'posz':endpt1.z,
                                         'pos2x':endpt2.x, 'pos2y':endpt2.y, 'pos2z':endpt2.z,
-                                        'red':a.red, 'green':a.green, 'blue':a.blue, 'transparency':transparency(a),
+                                        'red':a.red, 'green':a.green, 'blue':a.blue, 
+                                        #'transparency':transparency(a),
+                                        'transparency':cylinderTrans,
                                         'radius':displayscale*a.radius,
                                         'no_shadow':no_shadow(a),
                                         'reflection':refl,
@@ -689,7 +696,9 @@ camera {
     ctr = displayscale*display.center
     cup = display.up
     file.write( camera_template % { 'xyratio':xy_ratio,
-                                    'posx':cpos.x, 'posy':cpos.y, 'posz':cpos.z,
+                                    'posx':cpos.x/cameraZoom, 
+                                    'posy':cpos.y/cameraZoom, 
+                                    'posz':cpos.z/cameraZoom,
                                     'upx':cup.x, 'upy':cup.y, 'upz':cup.z,
                                     'pos2x':ctr.x, 'pos2y':ctr.y, 'pos2z':ctr.z,
                                     'fov':display.fov*180/pi,

@@ -9,7 +9,6 @@
 # =============================================================================
 
 import os,sys,subprocess,glob
-#import wx
 import visual as vis
 import MTG_visTools as vt
 import povexport as pov
@@ -17,8 +16,8 @@ import povexport as pov
 def main():
 
     # TEST
-    #HT = '100'
-    #WD = '150'
+    #HT = '300'
+    #WD = '450'
     #finFrame = '30'
 
     # PRODUCTION Rotate Video Parameters
@@ -72,8 +71,8 @@ def main():
                     height=ay, width=az, opacity=0.7)
 
         # Set up cell walls
-        excVol = vis.box(pos=(0,0,0), length=L, 
-                height=Ly, width=Lz, opacity=0.1)
+        cellWalls = vis.box(pos=(0,0,0), length=L, 
+                height=Ly, width=Lz, opacity=0.05)
 
         # The boundary of the simulation box in space-time -- 1D
         #ymax = -0.5*L + (M-1)*dM
@@ -86,7 +85,7 @@ def main():
         wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
         
         # define povray file names
-        povFileName = 'wlView.pov'
+        povFileName = 'wlview.pov'
         iniFileName =  povFileName[:-4]+'.ini'
         
         pov.export(scene, povFileName)
@@ -131,11 +130,13 @@ def main():
         print "\n The movie was written to 'animatedStuff.avi'"
 
  
-    # close visual python window
-    #wx.Exit()
+    # try to close visual python window
+    try:
+        import wx
+        wx.Exit()
+    except:
+        pass
  
-
-
 # =============================================================================
 if __name__ == "__main__":
     main()

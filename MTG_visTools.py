@@ -215,8 +215,8 @@ class WLFrame:
         self.disPrevLink = []
         self.disNextLink = []
         beadRad = 0.08
-        #linkRad = 0.03
-        linkRad = 0.005
+        linkRadSmall = 0.005
+        linkRadLarge = 0.03
 
         # We first do the beads
         for m in range(path.numTimeSlices):
@@ -243,8 +243,20 @@ class WLFrame:
                 bnList.append(bn)
 
                 # Initialize links (prev and next curves)
-                cp = curve(pos=(0.0,0.0,0.0),radius=linkRad,color=(0.0,0.0,0.0))
-                cn = curve(pos=(0.0,0.0,0.0),radius=linkRad,color=(0.0,0.0,0.0))
+                print 'm ',m
+                print 'n ',n
+                print path.winding[m,n]
+                print '\n'
+                if (sum(path.winding) > 0):
+                    if path.winding[m,n] == 0:
+                        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
+                        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
+                    else:
+                        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                else:
+                    cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                    cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
                 cp.visible = False
                 cn.visible = False
                 pList.append(cp)
@@ -325,7 +337,10 @@ class WLFrame:
 
                 if path.active[m,n]:
                     if path.wlIndex[m,n] == XXX:
-                        lcol = colors[3]
+                        if path.winding[m,n] == 0:
+                            lcol = (1.0,1.0,1.0)
+                        else:
+                            lcol = colors[3]
                         bcol = colors[3]
                     else:
                         lcol    = colors[2]
@@ -422,6 +437,7 @@ class Path:
             self.COLOR   = zeros([self.numTimeSlices,self.numParticles,3],float)
             self.opac    = zeros([self.numTimeSlices,self.numParticles],float)
             self.wlNum   = zeros([self.numTimeSlices,self.numParticles],int)
+            self.winding = zeros([self.numTimeSlices,self.numParticles],int)
 
             # store all data from (g)ce-wl- file.
             for line in wlData:
@@ -436,6 +452,7 @@ class Path:
                 self.next[m,n,0] = int(line[8])     # next time slice
                 self.next[m,n,1] = int(line[9])     # next particle
                 self.active[m,n] = 1
+                self.winding[m,n] = 0   # keep track of winding beads.
                 self.COLOR[m,n,0]= 1.0
                 self.COLOR[m,n,1]= 1.0
                 self.COLOR[m,n,2]= 1.0  # make non winding beads white
@@ -451,7 +468,7 @@ class Path:
 
 
     def findNextStartBead(self, dobead):
-        '''  '''
+        ''' find the first non-zero (1) entry in a matrix '''
         
         for m in range(len(dobead)):
             for n in range(len(dobead[m])):
@@ -598,72 +615,7 @@ class Path:
                 while (currBead != startBead):
                     currBead = tuple(self.next[currBead])
                     self.COLOR[currBead] = colors[1]
+                    self.opac[currBead] = 1.0
+                    self.winding[currBead] = 1
             # -----------------------------------------------------------------
 
-            '''
-            # Change color and opacity of beads in WL that winds.
-            if (W*W > 0.1):
-                print 'found winding of ',W,' for ',n
-                print 'there are ',permutedParticles,' particles in this worldline!'
-                for m in range(self.numTimeSlices):
-                    for l in range(self.numParticles):
-                        if ([self.bead[m,l,0],self.bead[m,l,1],self.bead[m,l,2]] in wlDict[n]):
-                            self.opac[m,l] = 1.0
-                            self.COLOR[m,l] = colors[1]
-            if (test == 0):
-                for m in range(self.numTimeSlices):
-                    for l in range(self.numParticles):
-                        if ([self.bead[m,l,0],self.bead[m,l,1],self.bead[m,l,2]] in wlDict[n]):
-                            self.opac[m,l] = 1.0
-                            self.COLOR[m,l] = colors[1]
-
-               # we loop over all data and store it in the form of a dictionary.
-        currentWL = 0
-        wlDict = {}
-        n = 0
-        for nl,l in enumerate(self.wlData):
-
-            # create sortable dict. key index
-            if (len(l[-1]) == 1):
-                lab = '000'+l[-1]
-            elif (len(l[-1]) == 2):
-                lab = '00'+l[-1]
-            elif (len(l[-1]) == 3):
-                lab = '0'+l[-1]
-            else:
-                lab = l[-1]
-            
-            # store first WL key and first data points
-            if (nl == 0):
-                wlDictKey = 'WLnum'+lab
-                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
-
-            # add bead positions of currentWL to wlDictKey
-            if ((nl != 0) and (int(l[-1]) == currentWL)):
-                wlDict[wlDictKey] = np.append(wlDict[wlDictKey],
-                        [[float(l[3]),float(l[4]),float(l[5])]])
-
-            # update to a new WL key and store first data points
-            if (int(l[-1]) != currentWL):
-                currentWL += 1
-                wlDictKey = 'WLnum'+lab
-                wlDict[wlDictKey] = [[float(l[3]),float(l[4]),float(l[5])]]
-
-        # reshape all numpy arrays into 3-tuples
-        for n in sorted(wlDict.iterkeys()):
-            wlDict[n] = np.reshape(wlDict[n], (int(len(wlDict[n]))/3, 3))
-
- 
-        for nnn, n in enumerate(sorted(wlDict.iterkeys())):
-            if nnn ==0:
-                print wlDict[n]
-
-       
-
-                   
-
-        #/* Store W^2 value. */
-        #estimator(0) += Wtot*Wtot;
-        #estimator(1) += (Wtot*Wtot /(1.0*N_2D));
-        #estimator(2) += (Wtot*Wtot / (1.0*path.getTrueNumParticles()));
-        '''
