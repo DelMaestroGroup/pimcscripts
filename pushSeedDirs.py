@@ -5,19 +5,25 @@
 # random number seeds (000-999).
 #
 # Author:           Max Graves
-# Last Revised:     01-FEB-2014
+# Last Revised:     10-FEB-2014
 # =============================================================================
+
 
 import os,argparse,re,sys,glob,shutil,subprocess,getpass
 import paramiko
 import clusterTools as cT
 import numpy as np
 
+
 def main():
 
     # -------------------------------------------------------------------------
     # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
     # full path to gensubmit and submit file must be supplied as below.
+    #
+    # NOTE:  This way of doing subFilePath has been replaced by keeping submit
+    # in the same directory as stateFiles on local machine in the case of
+    # submissions from equilibrated states.
     genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
     subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
     
@@ -50,6 +56,9 @@ def main():
 
     seedNums = np.arange(args.lowSeed,args.highSeed+1)
 
+    # keep track of directory you are in in the terminal
+    workingDir = os.getcwd()
+
     
     for seedNum in seedNums:
 
@@ -63,14 +72,24 @@ def main():
         sftp.mkdir('OUTPUT')
 
         # change random number seed in submit file -- this defines hacky.
-        with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
-            for n, line in enumerate(inFile):
-                if n==0:
-                    if '-p 000' not in line:
-                        sys.exit('Include -p 000 in submit script!')
-                outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
+        # treat new submission different than from equilibrated states.
+        if args.stateFilesDir == '':
+            with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
+                for n, line in enumerate(inFile):
+                    if n==0:
+                        if '-p 000' not in line:
+                            sys.exit('Include -p 000 in submit script!')
+                    outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
+        else:
+            subFilePath = args.stateFilesDir+'../submit'
+            with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
+                for n, line in enumerate(inFile):
+                    if n==0:
+                        if '-p 000' not in line:
+                            sys.exit('Include -p 000 in submit script!')
+                    outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
 
-   
+
         # run gensubmit
         command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster=bluemoon')
         subprocess.check_call(command, shell=True)
@@ -96,7 +115,7 @@ def main():
             # what they are doing.
             try:
                 sftp.chdir('../stateFiles')
-                stFs = sftp.listdir()
+                stFs = sorted(sftp.listdir())
                 if stateFileList != stFs:
                     sys.exit('ERROR: State files in targeted directory on '+
                             'cluster are different than on your machine.')
@@ -112,9 +131,11 @@ def main():
             numOccur = 0
             stateNum = 0
             clusterCWDpre = '${PBS_O_WORKDIR}/../stateFiles/'
+            
+            os.chdir(workingDir)
             with open(subFile) as inFile, open(sF2, 'w') as outFile:
                 for n, line in enumerate(inFile):
-                    
+                   
                     match = re.search(r'-E\s\d+',line)
                     if match != None:
                         outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
