@@ -306,6 +306,8 @@ def parseCMD():
     pushParse.add_argument('-s', '--submitJobs', action='store_true', 
             dest='submitJobs',default=False,
             help='Do you want to automatically submit the jobs?')
+    pushParse.add_argument('-S', '--stateFilesDir', type=str,
+            default = '', help='Path to stateFiles directory.')
     pushParse.add_argument('-L', '--lowSeed', type=int,
             default=0,
             help='Low seed.')

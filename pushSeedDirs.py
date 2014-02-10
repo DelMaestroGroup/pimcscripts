@@ -17,7 +17,7 @@ def main():
 
     # -------------------------------------------------------------------------
     # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
-    # path to gensubmit and submit file (must be named 'submit').
+    # full path to gensubmit and submit file must be supplied as below.
     genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
     subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
     
@@ -49,8 +49,8 @@ def main():
         sftp.chdir(args.targetDir)
 
     seedNums = np.arange(args.lowSeed,args.highSeed+1)
-    print seedNums
 
+    
     for seedNum in seedNums:
 
         # create seedXXX direc.
@@ -69,22 +69,74 @@ def main():
                     if '-p 000' not in line:
                         sys.exit('Include -p 000 in submit script!')
                 outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
-        
+
+   
         # run gensubmit
         command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster=bluemoon')
         subprocess.check_call(command, shell=True)
 
-        # copy submit file over to bluemoon
+       
+        # get submit file name generated from gensubmit
         subFile = glob.glob('*submit-pimc.*')
         if len(subFile) != 1:
             sys.exit('you have more than one submit file here')
-        sftp.put('./'+subFile[0], './'+subFile[0])
+        subFile = subFile[0]
+        
+        # optionally set up submit script to start from equilibrated state files
+        if args.stateFilesDir != '':
+
+            # get list of (g)ce-state files in directory supplied from cmdline.
+            os.chdir(args.stateFilesDir)
+            stateFileList = sorted(glob.glob('*state*'))
+            
+            # we check that there is a directory on the cluster called
+            # stateFiles that contains exactly the (g)ce-state files
+            # that are in the directory supplied from cmdline.
+            # This double-storage is set up to make the user think about
+            # what they are doing.
+            try:
+                sftp.chdir('../stateFiles')
+                stFs = sftp.listdir()
+                if stateFileList != stFs:
+                    sys.exit('ERROR: State files in targeted directory on '+
+                            'cluster are different than on your machine.')
+                sftp.chdir('../'+seedDirName)
+            except:
+                sys.exit('ERROR: Must have state files in directory called '+
+                        'stateFiles in the parent directory of your jobs.')
+
+            # now go through and replace the -E #### part of the submitscript
+            # -s /path/to/(g)ce-state... .  After every second occurrence of 
+            # the -E flag, we skip ahead once in the list of state file names.
+            sF2 = subFile[:-4]+'_temp.pbs'
+            numOccur = 0
+            stateNum = 0
+            clusterCWDpre = '${PBS_O_WORKDIR}/../stateFiles/'
+            with open(subFile) as inFile, open(sF2, 'w') as outFile:
+                for n, line in enumerate(inFile):
+                    
+                    match = re.search(r'-E\s\d+',line)
+                    if match != None:
+                        outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
+                    else:
+                        outFile.write(line)
+                   
+                    if numOccur%2 == 1:
+                        stateNum += 1
+                    
+                    if match != None:
+                        numOccur += 1
+
+            os.rename(sF2,subFile)
+
+        # copy submit file over to bluemoon
+        sftp.put('./'+subFile, './'+subFile)
 
         # optionally submit jobs
         if args.submitJobs:
 
             # build submit command
-            submitStuff = 'qsub '+subFile[0]
+            submitStuff = 'qsub '+subFile
             changeDir = 'cd '+args.targetDir+'/'+seedDirName+' ; '
             subComm = changeDir+expLibs+expPBSstuff+submitStuff
            

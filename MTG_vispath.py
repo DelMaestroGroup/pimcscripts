@@ -53,10 +53,10 @@ def main():
         for t in range(numFrames):
             paths.append(vt.Path(wl[t],Ly,Lz))
 
-        # choose frame number
+        # choose frame number from (g)ce-wl file.
         numFrame = 0
 
-        # time slice data
+        # time slice info.
         M = paths[numFrame].numTimeSlices
         dM = 1.0*L/(1.0*(M-1))
         
@@ -83,22 +83,17 @@ def main():
 
         # ---------------------------------------------------------------------
 
-
         wl = vt.WLFrame(paths[numFrame], L, Ly, Lz)
-
+        
         # define povray file names
-        povFileName = 'kittisCattis.pov'
+        povFileName = 'wlView.pov'
         iniFileName =  povFileName[:-4]+'.ini'
         
         pov.export(scene, povFileName)
-        print "\nCreated POVray file.\n"
-        
 
         # -- generate single image with povray --------------------------------
         if outType == 'single':
             command = ('povray', povFileName, 'Height='+HT,'Width='+WD)
-
-            print "\nAbout to execute:\n%s\n" % ' '.join(command)
             subprocess.check_call(command)
 
         # -- generate multiple images, same image but rotating about origin ---
@@ -106,8 +101,6 @@ def main():
             vt.writeINIfile(povFileName,HT,WD,finFrame)
 
             command = ('povray', iniFileName)
-
-            print "\nabout to execute:\n%s\n" % ' '.join(command)
             subprocess.check_call(command)
 
         # -- generate images showing evolving worldlines ----------------------
