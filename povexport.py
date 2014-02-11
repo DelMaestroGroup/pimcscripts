@@ -152,7 +152,7 @@ rotateCamera1 = 0
 rotateCamera2 = 85
 rotateCamera3 = 0
 
-cameraZoom = 1.5
+cameraZoom = 2.0
 
 
 # DEFINE FINISH CHARACTERISTICS --MTG
@@ -163,7 +163,7 @@ boxrefl = '0'
 boxdif = '1.0'
 boxamb = '0.2'
 
-cylinderTrans = 1.0
+cylinderTrans = 0.5
 
 
 def parseCMD(): # --MTG

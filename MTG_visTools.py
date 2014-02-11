@@ -12,11 +12,13 @@
 #       - All visual data for use with vPython.
 #       - Some functions used by the main driver 
 #
+# The distinguishWLs method will only work for a fully diagonal ensemble,
+# but could probably be easily adapted to handle worms.
+#
 # This was adapted from pathconfig.py and vis1D.py
 # =============================================================================
 
 import os,sys,subprocess,argparse,commands
-from numpy import *
 import numpy as np
 import pimchelp
 from optparse import OptionParser
@@ -217,7 +219,7 @@ class WLFrame:
         self.disNextLink = []
         beadRad = 0.08
         linkRadSmall = 0.005
-        linkRadLarge = 0.03
+        linkRadLarge = 0.02
 
         # We first do the beads
         for m in range(path.numTimeSlices):
@@ -244,16 +246,16 @@ class WLFrame:
                 bnList.append(bn)
 
                 # Initialize links (prev and next curves)
-                if (sum(path.winding) > 0):
-                    if path.winding[m,n] == 0:
-                        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
-                        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
-                    else:
-                        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
-                        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
-                else:
-                    cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
-                    cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                #if (sum(path.winding) > 0):
+                #    if path.winding[m,n] == 0:
+                #        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
+                #        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))
+                #    else:
+                #        cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                #        cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                #else:
+                cp = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
+                cn = curve(pos=(0.0,0.0,0.0),radius=linkRadLarge,color=(0.0,0.0,0.0))
                 cp.visible = False
                 cn.visible = False
                 pList.append(cp)
