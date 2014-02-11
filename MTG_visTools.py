@@ -207,7 +207,8 @@ class WLFrame:
             self.dim = 2
 
         self.dM = 1.0*self.L/(1.0*(path.numTimeSlices-1))
-        self.maxNumParticles = path.numParticles + 20
+# REPLACE THIS WITH DOBEAD AS BELOW
+        self.maxNumParticles = path.numParticles + 20   # can be replaced.
 
         self.disBead = []
         self.disPrevBead = []
@@ -243,10 +244,6 @@ class WLFrame:
                 bnList.append(bn)
 
                 # Initialize links (prev and next curves)
-                print 'm ',m
-                print 'n ',n
-                print path.winding[m,n]
-                print '\n'
                 if (sum(path.winding) > 0):
                     if path.winding[m,n] == 0:
                         cp = curve(pos=(0.0,0.0,0.0),radius=linkRadSmall,color=(0.0,0.0,0.0))

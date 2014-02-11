@@ -64,7 +64,7 @@ def main():
                 width=800, height=844,
                 center=(0,0,0), background=(1.0,1.0,1.0))
         scene.autoscale = 0
-
+        
         # Set up excluded volume
         if len(excDims)>0:
             excVol = vis.box(pos=(0,0,0), length=L, 
