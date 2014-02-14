@@ -81,7 +81,7 @@ def main():
                             sys.exit('Include -p 000 in submit script!')
                     outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
         else:
-            subFilePath = args.stateFilesDir+'../submit'
+            subFilePath = args.stateFilesDir+'/../submit'
             with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
                 for n, line in enumerate(inFile):
                     if n==0:

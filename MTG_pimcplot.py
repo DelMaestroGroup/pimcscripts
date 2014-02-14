@@ -214,7 +214,7 @@ def main():
 
         n = 0
         for n,cdata in enumerate(data):
-        #for cdata in data:
+            
             if size(cdata) > 1:
                 
                 # Get the cumulative moving average
@@ -238,9 +238,9 @@ def main():
 
         ylabel(yLong)
         xlabel("MC Bin Number")
-        tight_layout()
+        
         if numEst == 0:
-            leg = legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+            leg = legend(loc='best', frameon=False, prop={'size':12},markerscale=2, ncol=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
 
