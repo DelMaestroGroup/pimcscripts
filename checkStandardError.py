@@ -30,6 +30,7 @@ def main():
     direc = args.fileNames[0]
 
     #dependentVar = direc[:-6]
+    nCol = args.nCol
     nEst = args.nEst
 
     os.chdir(direc)
@@ -39,8 +40,8 @@ def main():
 
     # some plotting options
     xLab = jk.getXlabel(reduceType)
-    colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
-            'Yellow','Maroon']
+    colors = ['Salmon','MediumSpringGreen','DarkViolet','Fuchsia','Blue',
+            'Maroon']
 
     # shuffle colors around randomly
     if args.RandomColors:
@@ -58,18 +59,18 @@ def main():
             extent = d[12:16]
         else:
             Lz = d[2:]
-            extent = args.extent
+            extent = args.bulkSeparation
         
         # determine titles for plotting
         if (scaleVar == 'extent'):
             labell = 'thickness: '+thickness+' '+r'$[\si{\angstrom}]$'
-            titlle = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
+            titlle = 'Bulk Separation: '+extent+' '+r'$[\si{\angstrom}]$'
         elif (scaleVar == 'thickness'):
-            labell = 'extent: '+extent+' '+r'$[\si{\angstrom}]$'
+            labell = 'Bulk Separation: '+extent+' '+r'$[\si{\angstrom}]$'
             titlle = 'thickness: '+str(thickness)+' '+r'$[\si{\angstrom}]$'
         elif (scaleVar == 'Lz'):
             labell = r'$L_z$: '+Lz+' '+r'$[\si{\angstrom}]$'
-            titlle = 'extent: '+str(extent)+' '+r'$[\si{\angstrom}]$'
+            titlle = 'Bulk Separation: '+str(extent)+' '+r'$[\si{\angstrom}]$'
 
         headers = jk.getHeadersFromFile(f)
         ReducedTemps = pl.array([])
@@ -79,7 +80,7 @@ def main():
         AVG = pl.array([])
         STD = pl.array([])
 
-        n = nEst-1
+        n = nCol-1
         for header in headers:
 
             avgs,stds,bins = pl.genfromtxt(f, 
@@ -110,7 +111,9 @@ def main():
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
                 label=labell)
         pl.xlabel(xLab, fontsize=20)
-        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+        pl.ylabel(r'$\langle \Omega^2 \rangle/2 \beta \lambda N $', fontsize=20)
+        #pl.ylabel(r'$\langle \Omega^2 \rangle/2 \beta \lambda N_{\text{film}} $', fontsize=20)
+        #pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
         #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
         pl.title(titlle)
         pl.legend()

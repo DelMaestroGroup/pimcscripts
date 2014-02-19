@@ -90,7 +90,7 @@ def parseCMD():
     # help strings.
     fNameHelp = 'Data File Names.  For checkStandardError.py, this will be \
             the directory name that holds all direcs with zAveraged files.'
-    nEstHelpStr = ('Column number of first occurrence of the type of data you '+
+    nColHelpStr = ('Column number of first occurrence of the type of data you '+
             'want to analyze from zAveraged file. Used for checkStandardError.')
     
     # parser arguments.
@@ -107,10 +107,15 @@ def parseCMD():
     parser.add_argument('-r', '--reduceType', type=str,
             default='T',
             help='What are we reducing over? [T,u]')
-    parser.add_argument('-n', '--nEst', type=int,
-            default=1, help=nEstHelpStr)
-    parser.add_argument('-e', '--extent', type=int,
-            default=1, help='Enter the extent.  Used for Lz scaling.')
+    parser.add_argument('-n', '--nCol', type=int,
+            default=1, 
+            help=nColHelpStr)
+    parser.add_argument('-e', '--nEst', type=int,
+            default=1, 
+            help='Number of different types of estimators in data file.')   
+    parser.add_argument('-S', '--bulkSeparation', type=int,
+            default=1, 
+            help='Enter the bulk separation.  Used for Lz scaling.')
    
     return parser.parse_args()
 

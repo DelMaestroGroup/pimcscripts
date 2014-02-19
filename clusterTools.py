@@ -331,7 +331,10 @@ def parseCMD():
     pullParse.add_argument('-T', '--trim', action='store_true',
             dest='trimData', default=False,
             help='Create new reduced (equal length column) data files.')
-
+    pullParse.add_argument('-p', '--pulled', action='store_true',
+            dest='pulled', default=False,
+            help='Include if all data has already been pulled from cluster.')
+ 
     return parser.parse_args()
 
 

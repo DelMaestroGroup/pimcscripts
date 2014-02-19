@@ -28,12 +28,12 @@ def main():
             [4,11,12,13,-4], 
             [0,1,2,3], 
             [0,1], 
-            [0,] ]
+            [0,1,2] ]
     observables = [
             ['E','Cv1','Cv2','Cv3','N'],
             ['rho_s/rho','Wx^2','Wy^2','Wz^2'],
             ['filmDens','bulkDens'],
-            ['W^2'] ]
+            ['W^2','W_{2d}^2','W_{3d}^2'] ]
 
     # grab types of estimators from above.  Remove log file.
     estimTypes = list(fileTypes)
@@ -47,56 +47,62 @@ def main():
 
     print '\nCreating: ',fileNames,'\n'
 
-    # create ssh and sftp instances
-    ssh = paramiko.SSHClient() 
-    ssh.load_host_keys(os.path.expanduser(
-        os.path.join("~", ".ssh", "known_hosts")))
-    ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, 
-            password=passwd)
-    sftp = ssh.open_sftp()
+    # if data doesn't exist, pull it from cluster
+    if not args.pulled:
 
-    # move to desired directory on cluster
-    sftp.chdir(args.targetDir)
+        print 'Pulling data from cluster.'
 
-    # create list of only seed directory names, get rid of other things
-    seedDirs = sftp.listdir()
-    for s in seedDirs:
-        if 'seed' not in s:
-            seedDirs.pop(seedDirs.index(s))
-    
-    # pull all requested file types into organized directories
-    for s in seedDirs:
-        newName = cT.returnSeedDirName(s)
-        if os.path.exists("./"+newName):
-            sys.exit(newName+' already exists.')
-        os.makedirs("./"+newName)
-        os.chdir("./"+newName)
-        sftp.chdir('./'+s+'/OUTPUT/')
+        # create ssh and sftp instances
+        ssh = paramiko.SSHClient() 
+        ssh.load_host_keys(os.path.expanduser(
+            os.path.join("~", ".ssh", "known_hosts")))
+        ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, 
+                password=passwd)
+        sftp = ssh.open_sftp()
+
+        # move to desired directory on cluster
+        sftp.chdir(args.targetDir)
+
+        # create list of only seed directory names, get rid of other things
+        seedDirs = sftp.listdir()
+        for s in seedDirs:
+            if 'seed' not in s:
+                seedDirs.pop(seedDirs.index(s))
         
-        moose = sftp.listdir()
-        for thing in fileTypes:
-            for m in moose:
-                if thing in m:
-                    sftp.get('./'+m, './'+m)
-            print 'pulled ',thing,' files for ',newName
+        # pull all requested file types into organized directories
+        for s in seedDirs:
+            newName = cT.returnSeedDirName(s)
+            if os.path.exists("./"+newName):
+                sys.exit(newName+' already exists.')
+            os.makedirs("./"+newName)
+            os.chdir("./"+newName)
+            sftp.chdir('./'+s+'/OUTPUT/')
+            
+            moose = sftp.listdir()
+            for thing in fileTypes:
+                for m in moose:
+                    if thing in m:
+                        sftp.get('./'+m, './'+m)
+                print 'pulled ',thing,' files for ',newName
 
-        sftp.chdir('../..')
-        os.chdir('..')
-    
-    # Rename files to have seed number replace first three numbers of pimcID.
-    # Optionally delete all seed directories that were pulled from cluster.
-    cT.renameFilesInDirecs(args.delDir)
-  
-    # check for repeated pimcIDs -- broken.
-    #cT.repeatCheck()
+            sftp.chdir('../..')
+            os.chdir('..')
+        
+        # Rename files to have seed number replace first three numbers of pimcID.
+        # Optionally delete all seed directories that were pulled from cluster.
+        cT.renameFilesInDirecs(args.delDir)
+      
+        # check for repeated pimcIDs -- broken.
+        #cT.repeatCheck()
 
-    # close instances of sftp and ssh
-    sftp.close()
-    ssh.close()
-    
+        # close instances of sftp and ssh
+        sftp.close()
+        ssh.close()
+        
     # optionally combine all data of the same temperature into one
     # much larger array.
     if args.Crunch:
+        print 'Crunching Data'
         cT.crunchData(estimTypes,colNums,observables)
 
     # optionally make a trimmed version of the data files that
