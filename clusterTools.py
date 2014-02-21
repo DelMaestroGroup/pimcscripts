@@ -5,7 +5,7 @@
 # random number seeds.
 #
 # Author:           Max Graves
-# Last Revised:     28-JAN-2014
+# Last Revised:     21-FEB-2014
 # =============================================================================
 
 import os,argparse,re,sys,glob,shutil,subprocess
@@ -50,6 +50,12 @@ def crunchData(estimTypes, colNums, observables):
 
     args = parseCMD()
     reduceType = args.reduceType
+    numToDelete = args.deleteNum
+    deleteList = []
+    for n in range(numToDelete):
+        deleteList.append(n)
+    print 'deleting elements indexed by: ',deleteList
+
 
     # make list of data file names
     estimFiles  = glob.glob('*%s*' % estimTypes[0])
@@ -86,7 +92,11 @@ def crunchData(estimTypes, colNums, observables):
                     print f,' is empty.'
                     pass
                 else:
+                    
                     dat = pl.genfromtxt(f, unpack=True, usecols=colNums[nType])
+
+                    for d in dat:
+                        d = pl.delete(d, deleteList)
 
                     # define key that can be sorted properly
                     if numTemp < 10:
@@ -334,6 +344,9 @@ def parseCMD():
     pullParse.add_argument('-p', '--pulled', action='store_true',
             dest='pulled', default=False,
             help='Include if all data has already been pulled from cluster.')
+    pullParse.add_argument('-D', '--deleteNum', type=int,
+            dest='deleteNum', default=2,
+            help='Number of elements to trim from beginning of each data file.')
  
     return parser.parse_args()
 
