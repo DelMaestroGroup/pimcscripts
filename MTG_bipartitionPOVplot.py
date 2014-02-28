@@ -29,14 +29,14 @@ def main():
     sphRad = 0.25   # angstroms
 
     # define colors
-    partOneCol = (0.1,0.1,0.1)  # black
-    partTwoCol = (3.0,0.1,0.1)  # red
-    #partOneCol = (0.1,0.1,1.0)  # white
-    #partTwoCol = (2.0,2.0,2.0)  # blue
+    #partOneCol = (0.1,0.1,0.1)  # black
+    #partTwoCol = (3.0,0.1,0.1)  # red
+    partOneCol = (0.1,0.1,1.0)  # white
+    partTwoCol = (2.0,2.0,2.0)  # blue
 
     # define partition type
-    partitionType = 'planar'
-    #partitionType = 'spherical'
+    #partitionType = 'planar'
+    partitionType = 'spherical'
     #partitionType = 'particle'
 
     # ----- Generate atomic positions -----------------------------------------
@@ -62,6 +62,12 @@ def main():
                         positions[atomNum].append(la[li])
                     
                     atomNum += 1
+    
+    # ----- visual python scene -----------------------------------------------
+    scene = vis.display(title='World Lines!!',x=0, y=0, 
+            width=800, height=844,
+            center=(0,0,0), background=vis.color.white)
+    scene.autoscale = 0
 
     # ----- partition cell by colors ------------------------------------------
     colors = []
@@ -79,12 +85,23 @@ def main():
         # compute radius of sphere that contains half the atoms in the cell
         Rhalf = (8.0/(3.0*np.pi)*Lx*Ly*Lz)**(1.0/3)
 
-        for atomPos in positions:
+        newpos = []
+        for i, atomPos in enumerate(positions):
             atomRad = np.sqrt(atomPos[0]**2 + atomPos[1]**2 + atomPos[2]**2)
+            # get rid of atoms that intersect 'bubble'
+            if not (atomRad > Rhalf-sphRad and atomRad < Rhalf+sphRad):
+                newpos.append(atomPos)
+        print 'Cropped out ',str(len(positions)-len(newpos)),' pesky buggers.'
+        positions = newpos
+        for atomPos in positions:
             if atomRad < Rhalf:
                 colors.append(partOneCol)
             else:
                 colors.append(partTwoCol)
+
+        # add sphere around central atoms
+        vis.sphere(pos=(0,0,0), 
+                radius=sphRad+Rhalf, color=partOneCol, opacity=0.4)
 
     # --- random ---
     if partitionType == 'particle':
@@ -95,15 +112,11 @@ def main():
             else:
                 colors.append(partTwoCol)
     
-    # ----- visual python scene -----------------------------------------------
-    scene = vis.display(title='World Lines!!',x=0, y=0, 
-            width=800, height=844,
-            center=(0,0,0), background=vis.color.white)
-    scene.autoscale = 0
 
     for numAtom,atomPos in enumerate(positions):
         vis.sphere(pos=atomPos, radius=sphRad, color=colors[numAtom])
 
+    
     # ----- povray stuff ------------------------------------------------------
 
     # define povray file names

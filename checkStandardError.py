@@ -97,8 +97,8 @@ def main():
             stds = stds[pl.logical_not(pl.isnan(stds))]
             avgs = avgs[pl.logical_not(pl.isnan(avgs))]
 
-            stds *= normFactor
-            avgs *= normFactor
+            #stds *= normFactor
+            #avgs *= normFactor
             
             weights = bins/pl.sum(bins)
 
@@ -118,10 +118,10 @@ def main():
         pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
                 label=labell)
         pl.xlabel(xLab, fontsize=20)
-        pl.ylabel(r'$\Omega$', fontsize=20)
+        #pl.ylabel(r'$\Omega$', fontsize=20)
         #pl.ylabel(r'$\langle \Omega^2 \rangle/2 \beta \lambda N_{\text{film}} $', fontsize=20)
         #pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
-        #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
+        pl.ylabel(r'$\langle N \rangle$', fontsize=20)
         pl.title(titlle)
         pl.legend()
         pl.grid(True)
