@@ -17,8 +17,9 @@ def main():
 
     # ----- User Defined Parameters -------------------------------------------
     # POV-ray image parameters
-    HT = '1200'     # height
-    WD = '1800'     # width
+    HT = '1600'     # height
+    WD = '2400'     # width
+
 
     # cell lengths
     Lx = 3.0    # angstroms
@@ -38,6 +39,8 @@ def main():
     #partitionType = 'planar'
     partitionType = 'spherical'
     #partitionType = 'particle'
+
+    ridIntersect = True
 
     # ----- Generate atomic positions -----------------------------------------
 
@@ -82,26 +85,36 @@ def main():
     
     # --- central sphere ---
     if partitionType == 'spherical':    
+        
         # compute radius of sphere that contains half the atoms in the cell
-        Rhalf = (8.0/(3.0*np.pi)*Lx*Ly*Lz)**(1.0/3)
+        per=0.7
+        Rcut = ((1.0/per)*4.0/(3.0*np.pi)*Lx*Ly*Lz)**(1.0/3)
 
-        newpos = []
-        for i, atomPos in enumerate(positions):
-            atomRad = np.sqrt(atomPos[0]**2 + atomPos[1]**2 + atomPos[2]**2)
+        centralRad = Rcut
+
+        if ridIntersect:
             # get rid of atoms that intersect 'bubble'
-            if not (atomRad > Rhalf-sphRad and atomRad < Rhalf+sphRad):
-                newpos.append(atomPos)
-        print 'Cropped out ',str(len(positions)-len(newpos)),' pesky buggers.'
-        positions = newpos
+            newpos = []
+            for i, atomPos in enumerate(positions):
+                atomRad = np.sqrt(atomPos[0]**2 + atomPos[1]**2 + atomPos[2]**2)
+                if not (atomRad > Rcut and atomRad < Rcut+2.0*sphRad):
+                    newpos.append(atomPos)
+
+            print 'Cropped out',str(len(positions)-len(newpos)),'pesky buggers.'
+            positions = newpos
+
+            centralRad = sphRad+Rcut
+        
         for atomPos in positions:
-            if atomRad < Rhalf:
+            atomRad = np.sqrt(atomPos[0]**2 + atomPos[1]**2 + atomPos[2]**2)
+            if atomRad < Rcut:
                 colors.append(partOneCol)
             else:
                 colors.append(partTwoCol)
 
         # add sphere around central atoms
         vis.sphere(pos=(0,0,0), 
-                radius=sphRad+Rhalf, color=partOneCol, opacity=0.4)
+                radius=centralRad, color=partOneCol, opacity=0.3)
 
     # --- random ---
     if partitionType == 'particle':
