@@ -139,7 +139,8 @@ def main():
                     match = re.search(r'-E\s\d+',line)
                     if match != None:
                         if args.keepEquilibrating:
-                            outFile.write( re.sub(r'-E\s\d+',(r'-E\s\d+'+' -s '+clusterCWDpre+
+                            equilNum = 50000
+                            outFile.write( re.sub(r'-E\s\d+',(r'-E 50000'+' -s '+clusterCWDpre+
                                 stateFileList[stateNum]), line))
                         else:
                             outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
