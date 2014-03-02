@@ -139,8 +139,8 @@ def main():
                     match = re.search(r'-E\s\d+',line)
                     if match != None:
                         if args.keepEquilibrating:
-                            outFile.write( re.sub(r'-E\s\d+',(r'-E\s\d+'+' -s
-                                '+clusterCWDpre+stateFileList[stateNum]), line))
+                            outFile.write( re.sub(r'-E\s\d+',(r'-E\s\d+'+' -s '+clusterCWDpre+
+                                stateFileList[stateNum]), line))
                         else:
                             outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
                     else:
