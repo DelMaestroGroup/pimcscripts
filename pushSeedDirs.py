@@ -59,7 +59,7 @@ def main():
     # keep track of directory you are in in the terminal
     workingDir = os.getcwd()
 
-    
+
     for seedNum in seedNums:
 
         # create seedXXX direc.
@@ -138,7 +138,10 @@ def main():
                    
                     match = re.search(r'-E\s\d+',line)
                     if match != None:
-                        outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
+                        if args.keepEquilibrating:
+                            outFile.write( re.sub(r'-E\s\d+','-E\s\d -s '+clusterCWDpre+stateFileList[stateNum], line))
+                        else:
+                            outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
                     else:
                         outFile.write(line)
                    
