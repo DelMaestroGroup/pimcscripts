@@ -81,7 +81,11 @@ def main():
                             sys.exit('Include -p 000 in submit script!')
                     outFile.write( re.sub(r'-p 000', r'-p '+str(seedNum), line))
         else:
-            subFilePath = args.stateFilesDir+'/../submit'
+            subFilePath = os.getcwd()
+            if subFilePath[-1]!='/':
+                subFilePath +='/'
+            subFilePath += args.stateFilesDir+'/../submit'
+            print subFilePath
             with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
                 for n, line in enumerate(inFile):
                     if n==0:
@@ -140,8 +144,8 @@ def main():
                     if match != None:
                         if args.keepEquilibrating:
                             equilNum = 50000
-                            outFile.write( re.sub(r'-E\s\d+',(r'-E 50000'+' -s '+clusterCWDpre+
-                                stateFileList[stateNum]), line))
+                            outFile.write( re.sub(r'-E\s\d+','-E '+str(equilNum)+
+                                ' -s '+clusterCWDpre+stateFileList[stateNum], line))
                         else:
                             outFile.write( re.sub(r'-E\s\d+','-s '+clusterCWDpre+stateFileList[stateNum], line))
                     else:
