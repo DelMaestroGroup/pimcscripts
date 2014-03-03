@@ -25,34 +25,51 @@ rcParams['text.latex.preamble'] = [
 
 def main():
 
+    # --- Set up all options --------------------------------------------------
+    
+    # determine normalization factor for NormAn winding.
     S = 5.0
     Ly = 12.0
     normFactor = 4.0*(S+Ly)**2
-   
+
+  
+    # parse command line, getting algorithmic and plotting options.
     args = jk.parseCMD()
     reduceType = args.reduceType
     direc = args.fileNames[0]
 
-    #dependentVar = direc[:-6]
     nCol = args.nCol
     nEst = args.nEst
 
+    # some plotting color and label options
+    xLab = jk.getXlabel(reduceType)
+    extent = args.bulkSeparation
+    colors = ['Salmon','MediumSpringGreen','DarkViolet','Fuchsia','Blue',
+            'Maroon']
+
+    if args.RandomColors:
+        random.shuffle(colors)
+ 
+    # get names of all subdirectories LzXXX.
     os.chdir(direc)
     direcs = glob.glob('*angFilm_*')
     if (direcs == []):
         direcs = glob.glob('*Lz*')
-
-    # some plotting options
-    xLab = jk.getXlabel(reduceType)
-    colors = ['Salmon','MediumSpringGreen','DarkViolet','Fuchsia','Blue',
-            'Maroon']
-
-    # shuffle colors around randomly
-    if args.RandomColors:
-        random.shuffle(colors)
-    
+   
     scaleVar = jk.scalingVariable(direcs)
 
+    # --- this section is used for a single temperature -----------------------
+
+    singleTemperature = True
+
+    # build array of Lz values for plotting Lz vs winding.
+    LzValues = pl.array([])
+
+    # build array of norman winding values along with bins, for Lz plotting.
+    allAverages = pl.array([])
+    allErrors = pl.array([])
+
+    # --- loop over and collect/analyze all data from files -------------------
     for nd, d in enumerate(sorted(direcs)):
 
         os.chdir('./'+d)
@@ -64,6 +81,7 @@ def main():
         else:
             Lz = d[2:]
             extent = args.bulkSeparation
+            LzValues = pl.append(LzValues, float(Lz))
         
         # determine titles for plotting
         if (scaleVar == 'extent'):
@@ -76,7 +94,14 @@ def main():
             labell = r'$L_z$: '+Lz+' '+r'$[\si{\angstrom}]$'
             titlle = 'Bulk Separation: '+str(extent)+' '+r'$[\si{\angstrom}]$'
 
+        # get headers from file.
         headers = jk.getHeadersFromFile(f)
+
+        # determine if this is for a single temperature
+        if len(headers) > 1:
+            singleTemperature = False
+        
+        # build array of reduced temperatures t = |1-T/T_c|
         ReducedTemps = pl.array([])
         for T in headers:
             ReducedTemps = pl.append(ReducedTemps, abs(1.0 - float(T)/2.17))
@@ -97,8 +122,9 @@ def main():
             stds = stds[pl.logical_not(pl.isnan(stds))]
             avgs = avgs[pl.logical_not(pl.isnan(avgs))]
 
-            #stds *= normFactor
-            #avgs *= normFactor
+            # normalize data.
+            stds *= normFactor
+            avgs *= normFactor
             
             weights = bins/pl.sum(bins)
 
@@ -112,33 +138,48 @@ def main():
             STD = pl.append(STD, stdErr)
 
             n += nEst
- 
-                # add current data to plot
-        pl.figure(1)
-        pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
-                label=labell)
-        pl.xlabel(xLab, fontsize=20)
-        #pl.ylabel(r'$\Omega$', fontsize=20)
-        #pl.ylabel(r'$\langle \Omega^2 \rangle/2 \beta \lambda N_{\text{film}} $', fontsize=20)
-        #pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
-        pl.ylabel(r'$\langle N \rangle$', fontsize=20)
-        pl.title(titlle)
-        pl.legend()
-        pl.grid(True)
-        
-        pl.figure(2)
-        pl.yscale('log')
-        pl.xscale('log')
-        pl.errorbar(ReducedTemps, AVG, STD, fmt='o', color=colors[nd], 
-                label=labell)
-        pl.xlabel(xLab, fontsize=20)
-        pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
-        #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
-        pl.title(titlle)
-        pl.legend()
-        pl.grid(True)
+
+        # if we find a range of temperatures, plot all of that data.
+        if not singleTemperature:
+
+            pl.figure(1)
+            pl.errorbar(headers, AVG, STD, fmt='o', color=colors[nd], 
+                    label=labell)
+            pl.xlabel(xLab, fontsize=20)
+            #pl.ylabel(r'$\Omega$', fontsize=20)
+            #pl.ylabel(r'$\langle \Omega^2 \rangle/2 \beta \lambda N_{\text{film}} $', fontsize=20)
+            pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
+            #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
+            pl.title(titlle)
+            pl.legend()
+            pl.grid(True)
+            
+            pl.figure(2)
+            pl.yscale('log')
+            pl.xscale('log')
+            pl.errorbar(ReducedTemps, AVG, STD, fmt='o', color=colors[nd], 
+                    label=labell)
+            pl.xlabel(xLab, fontsize=20)
+            pl.ylabel(r'$\langle \Omega^2 \rangle$', fontsize=20)
+            #pl.ylabel(r'$\langle N \rangle$', fontsize=20)
+            pl.title(titlle)
+            pl.legend()
+            pl.grid(True)
+        else:
+            allAverages = pl.append(allAverages, avg)
+            allErrors = pl.append(allErrors, stdErr)
 
         os.chdir('..')
+
+    if singleTemperature:
+        invLz = 1.0/LzValues
+        pl.figure(1)
+        pl.errorbar(invLz, allAverages, allErrors, fmt='o')
+        pl.xlabel(r'$L_z^{-1}\ [\si{\angstrom}^{-1}]$', fontsize=20)
+        pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
+        pl.xlim([0,0.06])
+        pl.title(r'$S =\ $'+str(extent)+r' $[\si{\angstrom}]$'+' , '+r'$T=\ $'+str(float(headers[0]))+' [K]')
+        pl.grid(True)
     
     pl.show()
     

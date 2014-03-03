@@ -26,7 +26,7 @@ def checkIfEmpty(fName,n):
         numLines += 1
     fp.close()
 
-    if numLines == n:
+    if numLines <= n:
         Empty=True
     
     return Empty
@@ -54,7 +54,9 @@ def crunchData(estimTypes, colNums, observables):
     deleteList = []
     for n in range(numToDelete):
         deleteList.append(n)
+    numLinesToSkip = 2+numToDelete
     print 'deleting elements indexed by: ',deleteList
+    print 'and skipping',numLinesToSkip,'lines of data file.'
 
 
     # make list of data file names
@@ -88,7 +90,7 @@ def crunchData(estimTypes, colNums, observables):
             arrs    = {}
             arrs2   = {}
             for nf, f in enumerate(bipFiles):
-                if checkIfEmpty(f,2):
+                if checkIfEmpty(f,numLinesToSkip):
                     print f,' is empty.'
                     pass
                 else:
@@ -330,7 +332,10 @@ def parseCMD():
     pushParse.add_argument('-B', '--N52BulkHe', action='store_true', 
             dest='N52BulkHe',default=False,
             help='Access the submit script for N=52, 3D Bulk He-4')   
-    
+    pushParse.add_argument('-m', '--memRequest', type=str,
+            dest='memRequest', default='1',
+            help='Integer number of gb you need in memory for job.')
+
     # pull options
     pullParse.add_argument('-d', '--deleteDirs', action='store_true', 
             dest='delDir',default=True,

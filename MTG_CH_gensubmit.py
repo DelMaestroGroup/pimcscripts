@@ -300,7 +300,7 @@ def bluemoon_blcr(staticPIMCOps,numOptions,optionValue,outName,run,initCheckPt,\
 
 # -----------------------------------------------------------------------------
 def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
-             resubIDX,oneD,PIGS):
+             resubIDX,oneD,PIGS,memRequest):
     ''' Write a pbs submit script for bluemoon using internal checkpointing'''
     
     if PIGS:    
@@ -336,6 +336,7 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
     pbsFile = open(fileName,'w')
     pbsFile.write('#!/bin/bash\n\n'+\
                   '#PBS -S /bin/bash\n'+\
+                  '#PBS -l pmem=%sgb,pvmem=%sgb\n' % (memRequest,memRequest)+\
                   '#PBS -l nodes=1:ppn=1\n'+\
                   '#PBS -l walltime=30:00:00\n'+\
                   '#PBS -N %s\n' % jobName+\
@@ -532,11 +533,14 @@ def main():
             default=False,
             help="RESTART a job on bluemoon with TORQUE checkpointing enabled")
     parser.add_argument("--oneD", action="store_true", dest="oneD",default=False,\
-                        help="Run a 1D job")
+            help="Run a 1D job")
     parser.add_argument("--pigs", action="store_true", dest="PIGS",default=False,\
-                                            help="Run a PIGS job")
+            help="Run a PIGS job")
     parser.add_argument("-i","--resubIDX", dest="resubIDX",type=int,default=0,\
-                            help="set resubmit index")
+            help="set resubmit index")
+    parser.add_argument('-m','--memRequest',dest = 'memRequest',
+            type=str, default='1',
+            help = 'How much memory (in gb) do you need?')
         
     # parse the command line options
     args = parser.parse_args() 
@@ -633,7 +637,7 @@ def main():
     
     if args.cluster == 'bluemoon':
         bluemoon(staticPIMCOps,numOptions,optionValue,outName,args.run,\
-                    args.resubIDX,args.oneD,args.PIGS)
+                    args.resubIDX,args.oneD,args.PIGS,args.memRequest)
     
     if args.cluster == 'mammouth':
         mammouth(staticPIMCOps,numOptions,optionValue,outName,args.run,\

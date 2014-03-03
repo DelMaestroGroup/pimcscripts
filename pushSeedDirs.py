@@ -17,6 +17,8 @@ import numpy as np
 
 def main():
 
+    equilNum = 200000
+    
     # -------------------------------------------------------------------------
     # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
     # full path to gensubmit and submit file must be supplied as below.
@@ -95,7 +97,8 @@ def main():
 
 
         # run gensubmit
-        command = ('python '+genSubPath+' '+subFilePath+'_temp --cluster=bluemoon')
+        command = ('python '+genSubPath+' '+subFilePath+\
+                '_temp --cluster=bluemoon '+'-m '+args.memRequest)
         subprocess.check_call(command, shell=True)
 
        
@@ -143,7 +146,6 @@ def main():
                     match = re.search(r'-E\s\d+',line)
                     if match != None:
                         if args.keepEquilibrating:
-                            equilNum = 50000
                             outFile.write( re.sub(r'-E\s\d+','-E '+str(equilNum)+
                                 ' -s '+clusterCWDpre+stateFileList[stateNum], line))
                         else:
