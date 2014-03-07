@@ -173,13 +173,23 @@ def main():
 
     if singleTemperature:
         invLz = 1.0/LzValues
-        pl.figure(1)
+        figg = pl.figure(1)
+        ax = figg.add_subplot(111)
         pl.errorbar(invLz, allAverages, allErrors, fmt='o')
-        pl.xlabel(r'$L_z^{-1}\ [\si{\angstrom}^{-1}]$', fontsize=20)
-        pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
+        pl.xlabel(r'$1/L_z\ [\si{\angstrom}^{-1}]$', fontsize=20)
+        pl.ylabel(r'$\langle \Omega \rangle$', fontsize=26)
         pl.xlim([0,0.06])
-        pl.title(r'$S =\ $'+str(extent)+r' $[\si{\angstrom}]$'+' , '+r'$T=\ $'+str(float(headers[0]))+' [K]')
+        #pl.title(r'$S =\ $'+str(extent)+r' $[\si{\angstrom}]$'+' , '+r'$T=\ $'+str(float(headers[0]))+' [K]')
         pl.grid(True)
+
+        pl.tick_params(axis='both', which='major', labelsize=16)
+        pl.tick_params(axis='both', which='minor', labelsize=16)
+        xticks = ax.xaxis.get_major_ticks()
+        xticks[0].set_visible(False)
+
+        pl.savefig('Omega_vs_inverseLZ.pdf', format='pdf',
+                bbox_inches='tight')
+
     
     pl.show()
     
