@@ -320,9 +320,9 @@ def parseCMD():
             help='Do you want to automatically submit the jobs?')
     pushParse.add_argument('-S', '--stateFilesDir', type=str,
             default = '', help='Path to stateFiles directory.')
-    pushParse.add_argument('-k', '--keepEquilibrating', action='store_true', 
-            dest='keepEquilibrating',default=False,
-            help='Do you want to keep equilibrating jobs from stateFiles?')
+    pushParse.add_argument('-R', '--restart', action='store_true', 
+            dest='restart',default=False,
+            help='Do you want to restart jobs from stateFiles?')
     pushParse.add_argument('-L', '--lowSeed', type=int,
             default=0,
             help='Low seed.')
@@ -335,6 +335,10 @@ def parseCMD():
     pushParse.add_argument('-m', '--memRequest', type=str,
             dest='memRequest', default='1',
             help='Integer number of gb you need in memory for job.')
+    pushParse.add_argument('-n', '--noSwaps', action='store_true', 
+            dest='noSwaps', default=False,
+            help='Submit jobs with exe created without swap moves.')   
+    
 
     # pull options
     pullParse.add_argument('-d', '--deleteDirs', action='store_true', 
