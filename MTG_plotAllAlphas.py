@@ -49,7 +49,12 @@ def main():
             'Yellow','Maroon']
     
     if excVol:
-        fig,ax = pl.subplots(1, figsize=(8,6.5))
+        fig,ax = pl.subplots(1, figsize=(10,8))
+        pl.tick_params(axis='both', which='major', labelsize=16)
+        pl.tick_params(axis='both', which='minor', labelsize=16)
+        yticks = ax.yaxis.get_major_ticks()
+        yticks[0].set_visible(False)
+
         n = 0
         for alpha in sorted(alphas):
             os.chdir(alpha)
@@ -58,11 +63,11 @@ def main():
                     'JackKnifeData_bipart.dat', unpack=True)
 
             pl.errorbar(mus, fDens, fErr, fmt='^', 
-                    label=('Film: '+r'$\alpha = $'+'%s' % a),
+                    label=('Film: '+r'$S = $'+'%s' % a),
                     color = colors[n], markeredgecolor='DarkSlateGray',
                     markersize=8)
             pl.errorbar(mus, bDens, bErr, fmt='o',
-                    label=('Bulk: '+r'$\alpha = $'+'%s' % a),
+                    label=('Bulk: '+r'$S = $'+'%s' % a),
                     color = colors[n], markeredgecolor='DarkSlateGray',
                     markersize=8)
 
@@ -160,7 +165,7 @@ def main():
     pl.savefig('superFrac_vs_mu_allAlphas_trans.pdf', format='pdf',
             bbox_inches='tight', transparent=True)
  
-
+    '''
     # WINDING NUMBER COMPONENTS
     fig3,ax3 = pl.subplots(1, figsize=(8,6.5))
 
@@ -265,7 +270,7 @@ def main():
  
     pl.savefig('windingZ_vs_mu_allAlphas_trans.pdf', format='pdf',
             bbox_inches='tight', transparent=True)
-
+    '''
 
     pl.show()
 
