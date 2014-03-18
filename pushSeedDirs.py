@@ -136,6 +136,9 @@ def main():
             # get list of (g)ce-log files also.
             os.chdir('../logFiles')
             logFileList = sorted(glob.glob('*log*'))
+
+            print len(logFileList)
+            sys.exit()
            
             # we check that there is a directory on the cluster called
             # stateFiles that contains exactly the (g)ce-state files
@@ -235,39 +238,6 @@ def main():
                         numOccur += 1
 
             os.rename(sF2,subFile)
-
-
-            '''
-            # -----------------------------------------------------------------
-            # now go through and replace subFile lines with lines from
-            # the log files.
-            if args.restart:
-                sF2 = subFile[:-4]+'_temp.pbs'
-                numOccur = 0
-                stateNum = 0
-
-                os.chdir(workingDir)
-                with open(subFile) as inFile, open(sF2, 'w') as outFile:
-                    for n, line in enumerate(inFile):
-                        
-                        match = re.search(r'pimc -T',line)
-                        echoMatch = re.search(r'echo "pimc -T',line)
-                        if echoMatch:
-                            outFile.write( (r'echo "'+restartStrList[stateNum][:-1]+'"\n') )
-                        else:
-                            if match != None:
-                                outFile.write( restartStrList[stateNum]  )
-                            else:
-                                outFile.write( line )
-
-                        if numOccur%2 == 1:
-                            stateNum += 1
-                        
-                        if match != None:
-                            numOccur += 1
-
-                os.rename(sF2,subFile)
-            '''
              
             # -----------------------------------------------------------------
             # now go through and replace the -E #### and -p ### part of the 

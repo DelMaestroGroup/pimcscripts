@@ -54,9 +54,6 @@ def main():
     # array of seed numbers, between -L and -H flag from cmd line.
     seedNums = np.arange(args.lowSeed,args.highSeed+1)
 
-    # keep track of directory you are in in the terminal.
-    workingDir = os.getcwd()
-
     # run through all seeds.
     for seedNum in seedNums:
 
@@ -94,10 +91,15 @@ def main():
             for n, line in enumerate(inFile):
                 if line[:4] == 'pimc':
                     outFile.write(restartStr)
+                if r'mkdir OUTPUT' in line:
+                    outFile.write(line)
+                    outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
+                    outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
+                    outFile.write('gunzip OUTPUT/*\n')
                 else:
                     outFile.write(line)
 
-        # my dumb work-around for letting writing on cluster to finish.
+        # my dumb work-around for allowing writing on cluster to finish.
         time.sleep(5)
 
         # -----------------------------------------------------------------  

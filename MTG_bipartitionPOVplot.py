@@ -27,7 +27,7 @@ def main():
     Lz = 3.0
 
     # define atomic sphere radius
-    sphRad = 0.25   # angstroms
+    sphRad = 0.20   # angstroms
 
     # define colors
     #partOneCol = (0.1,0.1,0.1)  # black
