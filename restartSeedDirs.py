@@ -25,8 +25,14 @@ import numpy as np
 
 def main():
 
+    # unique tag
+    uTag = 'S5_T0.5'
+
     # set number of equilibration steps
     equilNum = 0
+
+    # set number of bins to try
+    binNum = 500
     
     # -------------------------------------------------------------------------
     # commands to add directories to path where blitz, boost, pimc sit.
@@ -63,6 +69,10 @@ def main():
         seedDirName = cT.returnSeedDirName(int(seedNum))
         sftp.chdir('./'+seedDirName)
 
+        # if a resubmit file already exists, delete it.
+        if 'resubmit-pimc.pbs' in sftp.listdir():
+            sftp.remove('resubmit-pimc.pbs')
+
         # grab log file string from OUTPUT
         sftp.chdir('./OUTPUT')
 
@@ -78,6 +88,7 @@ def main():
         restartStr += ' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
         
         restartStr = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStr)
+        restartStr = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStr)
         
         print restartStr
 
@@ -91,7 +102,9 @@ def main():
             for n, line in enumerate(inFile):
                 if line[:4] == 'pimc':
                     outFile.write(restartStr)
-                if r'mkdir OUTPUT' in line:
+                elif r'#PBS -N' in line:
+                    outFile.write(line[:-1]+uTag+'\n')
+                elif r'mkdir OUTPUT' in line:
                     outFile.write(line)
                     outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
                     outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
