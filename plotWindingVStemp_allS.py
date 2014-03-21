@@ -52,7 +52,7 @@ def main():
     pl.xlabel(r'$T\ [K]$', fontsize=20)
     pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
     pl.grid(True)
-    pl.xlim([0.5,3.0])
+    pl.xlim([0.4,2.6])
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     yticks = ax.yaxis.get_major_ticks()
