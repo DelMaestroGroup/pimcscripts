@@ -25,6 +25,8 @@ rcParams['text.latex.preamble'] = [
 
 def main():
 
+    dens = False
+
     # --- Set up all options --------------------------------------------------
     
     # parse command line, getting algorithmic and plotting options.
@@ -43,35 +45,38 @@ def main():
     figg = pl.figure(1)
     ax = figg.add_subplot(111)
     pl.xlabel(r'$T\ [K]$', fontsize=20)
-    pl.ylabel('Spatial Density '+r'$[\si{\angstrom}^{-d}]$', fontsize=20)
+    #pl.ylabel('Spatial Density '+r'$[\si{\angstrom}^{-d}]$', fontsize=20)
+    pl.ylabel('Energy '+r'$[K]$', fontsize=20)
     pl.grid(True)
-    pl.xlim([0.5,3.0])
-    pl.ylim([0,0.07])
+    if dens:
+        pl.xlim([0.5,3.0])
+        pl.ylim([0,0.07])
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     yticks = ax.yaxis.get_major_ticks()
     yticks[0].set_visible(False)
 
-    # set up bulk SVP densities for plot
-    bulkVert = -30
-    minMus = 0.5
-    maxMus = 2.5
-    boxSubtract = 1.6
-    pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
-    pl.annotate('3D SVP', xy=(maxMus - boxSubtract, 0.02195),  #xycoords='data',
-            xytext=(-50, bulkVert), textcoords='offset points',
-            bbox=dict(boxstyle="round", fc="0.8"),
-            arrowprops=dict(arrowstyle="->",
-                connectionstyle="angle,angleA=0,angleB=90,rad=10"),
-            )
+    if dens:
+        # set up bulk SVP densities for plot
+        bulkVert = -30
+        minMus = 0.5
+        maxMus = 2.5
+        boxSubtract = 1.6
+        pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
+        pl.annotate('3D SVP', xy=(maxMus - boxSubtract, 0.02195),  #xycoords='data',
+                xytext=(-50, bulkVert), textcoords='offset points',
+                bbox=dict(boxstyle="round", fc="0.8"),
+                arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle,angleA=0,angleB=90,rad=10"),
+                )
 
-    pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
-    pl.annotate('2D SVP', xy=(maxMus - boxSubtract, 0.0432),  #xycoords='data',
-            xytext=(-50, 30), textcoords='offset points',
-            bbox=dict(boxstyle="round", fc="0.8"),
-            arrowprops=dict(arrowstyle="->",
-                connectionstyle="angle,angleA=0,angleB=90,rad=10"),
-            )
+        pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
+        pl.annotate('2D SVP', xy=(maxMus - boxSubtract, 0.0432),  #xycoords='data',
+                xytext=(-50, 30), textcoords='offset points',
+                bbox=dict(boxstyle="round", fc="0.8"),
+                arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle,angleA=0,angleB=90,rad=10"),
+                )
 
     # --- loop over all values of S -------------------------------------------
     os.chdir(direc)
@@ -108,7 +113,8 @@ def main():
             Ts = pl.append(Ts, float(Tdir[1:]))
 
             # get data file name
-            f = glob.glob('*Bipart*')[0]
+            #f = glob.glob('*Bipart*')[0]
+            f = glob.glob('*Estimator*')[0]
 
             #densData = pl.genfromtxt(f, delimiter=',')
             filmavg,filmstd,filmbins,bulkavg,bulkstd,bulkbins = pl.genfromtxt(f, 

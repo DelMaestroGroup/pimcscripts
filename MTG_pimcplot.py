@@ -99,6 +99,19 @@ def simpleMovingAverage(period,data):
     return np.convolve(data, weightings, 'valid')
 
 # -----------------------------------------------------------------------------
+def estimated_autocorrelation(x):
+    """
+    Compute the autocorrelation function. 
+    """
+    n = len(x)
+    variance = x.var()
+    x = x-x.mean()
+    r = np.correlate(x, x, mode = 'full')[-n:]
+    assert np.allclose(r, np.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))
+    result = r/(variance*(np.arange(n, 0, -1)))
+    return result
+
+# -----------------------------------------------------------------------------
 # Begin Main Program 
 # -----------------------------------------------------------------------------
 def main(): 
@@ -170,21 +183,17 @@ def main():
         # ============================================================================
         # Figure 1 : column vs. MC Steps
         # ============================================================================
+        figNum = 1
+        
         if args['--pdf']:
-            figure(1, dpi=40, figsize=(6,3.8))
+            figure(figNum, dpi=40, figsize=(6,3.8))
         else:
-            figure(1)
+            figure(figNum)
         connect('key_press_event',kevent.press)
 
-        #colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
-        #colors  = loadgmt.getColorList('cw/1','cw1-013',max(numFiles,2))
         colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
-    #    oc/rainbow
 
         for n,cdata in enumerate(data):
-        #for cdata in data:
-            #print n
-            print colors[n]
             plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
                  markersize=4,linestyle='-',linewidth=1.0, label=leglabel[n])
 
@@ -202,14 +211,15 @@ def main():
             savefig('col_vs_MCSteps_trans.png', format='png',
                     bbox_inches='tight', transparent=True)
 
-
         # ============================================================================
         # Figure 2 : running average of column vs. MC Bins
         # ============================================================================
+        figNum += 1
+        
         if args['--pdf']:
-            figure(2, dpi=40, figsize=(6,3.8))
+            figure(figNum, dpi=40, figsize=(6,3.8))
         else:
-            figure(2, figsize=(6,3.8))
+            figure(figNum, figsize=(6,3.8))
         connect('key_press_event',kevent.press)
 
         n = 0
@@ -266,14 +276,14 @@ def main():
                     for j in range(i+1,N):
                         tval[i,j],p[i,j] = stats.ttest_ind(data[i][skip:], data[j][skip:], 
                                 equal_var=False)
-
+            figNum += 1
             # ============================================================================
             # Figure 3 : plot the estimator histogram along with t-test values
             # ============================================================================
             if args['--pdf']:
-                fig = figure(3, dpi=40, figsize=(6,3.8))
+                fig = figure(figNum, dpi=40, figsize=(6,3.8))
             else:
-                fig = figure(3)
+                fig = figure(figNum)
             connect('key_press_event',kevent.press)
             for i in range(N):
                 n, bins, patches = hist(data[i], 100, normed=True, facecolor=colors[i], 
@@ -311,6 +321,42 @@ def main():
             else:
                 savefig('ttest_histogram_trans.png', format='png',
                         bbox_inches='tight', transparent=True)
+    
+        # ============================================================================
+        # Figure 4 : autocorrelation
+        # ============================================================================
+        figNum += 1
+        
+        if args['--pdf']:
+            figure(figNum, dpi=40, figsize=(6,3.8))
+        else:
+            figure(figNum)
+        connect('key_press_event',kevent.press)
+
+        colors  = loadgmt.getColorList('oc','rainbow',max(numFiles,2))
+
+        mcTime = arange(0,len(cdata[skip:]),1)
+
+        for n,cdata in enumerate(data):
+            plot(mcTime,estimated_autocorrelation(cdata[skip:]),
+                marker='s',color=colors[n],markeredgecolor=colors[n],
+                markersize=4,linestyle='-',linewidth=1.0, label=leglabel[n])
+
+        ylabel("Autocorrelation")
+        xlabel("Data")
+        if numEst == 0:
+            legend(loc=3, frameon=False, ncol=2)
+
+        '''if args['--pdf']:
+            savefig('autocorrelation.pdf', format='pdf',
+                    bbox_inches='tight')
+            savefig('autocorrelation_trans.pdf', format='pdf',
+                    bbox_inches='tight', transparent=True, dpi=40)
+        else:
+            savefig('autocorrelation_trans.png', format='png',
+                    bbox_inches='tight', transparent=True)
+        '''
+        
     show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

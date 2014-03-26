@@ -25,6 +25,10 @@ rcParams['text.latex.preamble'] = [
 
 def main():
 
+    omega = False
+    energy = True
+
+
     # --- Set up all options --------------------------------------------------
     
     Ly = 12.0
@@ -50,7 +54,10 @@ def main():
     figg = pl.figure(1)
     ax = figg.add_subplot(111)
     pl.xlabel(r'$T\ [K]$', fontsize=20)
-    pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
+    if omega:
+        pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
+    elif energy:
+        pl.ylabel(r'$\langle E \rangle$', fontsize=20)
     pl.grid(True)
     pl.xlim([0.4,2.6])
     pl.tick_params(axis='both', which='major', labelsize=16)
@@ -71,7 +78,10 @@ def main():
         S = re.search(r'\d+',Sval).group(0)
 
         # set normalization
-        normFactor = 4.0*(float(S)+Ly)**2
+        if omega:
+            normFactor = 4.0*(float(S)+Ly)**2
+        elif energy:
+            normFactor = 1.0
 
         # set label for plot
         if 'distinguishable' in Sval:
@@ -95,7 +105,8 @@ def main():
             Ts = pl.append(Ts, float(Tdir[1:]))
 
             # get data file name
-            f = glob.glob('*Ntwind*')[0]
+            #f = glob.glob('*Ntwind*')[0]
+            f = glob.glob('*Estimator*')[0]
 
             n = nCol-1
 
