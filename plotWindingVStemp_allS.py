@@ -26,7 +26,8 @@ rcParams['text.latex.preamble'] = [
 def main():
 
     omega = False
-    energy = True
+    energy = False
+    superFrac = True
 
 
     # --- Set up all options --------------------------------------------------
@@ -58,6 +59,8 @@ def main():
         pl.ylabel(r'$\langle \Omega \rangle$', fontsize=20)
     elif energy:
         pl.ylabel(r'$\langle E \rangle$', fontsize=20)
+    elif superFrac:
+        pl.ylabel(r'$\langle \rho_s/\rho \rangle$', fontsize=20)
     pl.grid(True)
     pl.xlim([0.4,2.6])
     pl.tick_params(axis='both', which='major', labelsize=16)
@@ -80,7 +83,7 @@ def main():
         # set normalization
         if omega:
             normFactor = 4.0*(float(S)+Ly)**2
-        elif energy:
+        else:
             normFactor = 1.0
 
         # set label for plot
@@ -105,8 +108,12 @@ def main():
             Ts = pl.append(Ts, float(Tdir[1:]))
 
             # get data file name
-            #f = glob.glob('*Ntwind*')[0]
-            f = glob.glob('*Estimator*')[0]
+            if omega:
+                f = glob.glob('*Ntwind*')[0]
+            elif energy:
+                f = glob.glob('*Estimator*')[0]
+            elif superFrac:
+                f = glob.glob('*Super*')[0]
 
             n = nCol-1
 
