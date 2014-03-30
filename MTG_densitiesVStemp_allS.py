@@ -32,6 +32,8 @@ def main():
     reduceType = args.reduceType
     direc = args.fileNames[0]
 
+    Lx = 12.0
+
     # some plotting color and label options
     colors = ['Salmon','MediumSpringGreen','DarkViolet','Fuchsia','Blue',
             'Maroon']
@@ -73,6 +75,17 @@ def main():
                 connectionstyle="angle,angleA=0,angleB=90,rad=10"),
             )
 
+    pl.figure(2)
+    pl.xlabel(r'$T\ [K]$', fontsize=20)
+    pl.ylabel('Number of Particles', fontsize=20)
+    pl.grid(True)
+    pl.xlim([0.5,3.0])
+    pl.ylim([0,2])
+    pl.tick_params(axis='both', which='major', labelsize=16)
+    pl.tick_params(axis='both', which='minor', labelsize=16)
+    yticks = ax.yaxis.get_major_ticks()
+    yticks[0].set_visible(False)
+
     # --- loop over all values of S -------------------------------------------
     os.chdir(direc)
     Svals = glob.glob('S*')
@@ -83,6 +96,9 @@ def main():
 
         # store bulk separation value
         S = re.search(r'\d+',Sval).group(0)
+
+        # projected area of film region
+        projArea = float(S)*Lx
 
         # set label for plot
         if 'distinguishable' in Sval:
@@ -146,16 +162,24 @@ def main():
             os.chdir('..')
         
         # add data to plot for given S value.
+        pl.figure(1)
         pl.errorbar(Ts, Films, filmErrs, fmt='-o', color=colors[nS], 
                 label=labell+', 2d')
         pl.errorbar(Ts, Bulks, bulkErrs, fmt = '--d', color=colors[nS],
                 label=labell+', 3d')
 
+        pl.figure(2)
+        pl.errorbar(Ts, Films*projArea, fmt='-o', color=colors[nS],
+                label = labell+', 2d')
+
         os.chdir('..')
 
+    pl.figure(1)
     pl.legend()
-    pl.savefig('Densities_vs_T_allS.pdf', format='pdf',
-            bbox_inches='tight')
+    #pl.savefig('Densities_vs_T_allS.pdf', format='pdf',
+    #        bbox_inches='tight')
+    pl.figure(2)
+    pl.legend()
     
     pl.show()
     

@@ -64,10 +64,14 @@ def main():
         sftp.chdir(args.targetDir)
 
         # create list of only seed directory names, get rid of other things
-        seedDirs = sftp.listdir()
-        for s in seedDirs:
-            if 'seed' not in s:
-                seedDirs.pop(seedDirs.index(s))
+        allStuffInDir = sftp.listdir()
+        #for s in seedDirs: # laptop didnt like this method sometimes. wtf?
+        #    if s[:4] != 'seed':
+        #        seedDirs.pop(seedDirs.index(s))
+        seedDirs = []
+        for s in range(len(allStuffInDir)):
+            if 'seed' in allStuffInDir[s]:
+                seedDirs.append( allStuffInDir[s] )
         
         # pull all requested file types into organized directories
         for s in seedDirs:

@@ -408,9 +408,11 @@ def returnSeedDirName(s):
     '''
     if type(s) == int:
         seedNum = s
-    elif type(s) == str:
+    else:
+        #elif type(s) == str:
         seedName = re.match(r"([a-z]+)([0-9]+)", s, re.I)
         seedNum = seedName.groups()[1]
+    
     if len(str(seedNum))==1:
         newName = 'seed00'+str(seedNum)
     elif len(str(seedNum))==2:
