@@ -60,7 +60,7 @@ def main():
     maxMus = 2.5
     boxSubtract = 1.6
     pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
-    pl.annotate('3D SVP', xy=(maxMus - boxSubtract, 0.02195),  #xycoords='data',
+    pl.annotate('3d SVP', xy=(maxMus - boxSubtract, 0.02195),  #xycoords='data',
             xytext=(-50, bulkVert), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
             arrowprops=dict(arrowstyle="->",
@@ -68,7 +68,7 @@ def main():
             )
 
     pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
-    pl.annotate('2D SVP', xy=(maxMus - boxSubtract, 0.0432),  #xycoords='data',
+    pl.annotate('2d SVP', xy=(maxMus - boxSubtract, 0.0432),  #xycoords='data',
             xytext=(-50, 30), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
             arrowprops=dict(arrowstyle="->",

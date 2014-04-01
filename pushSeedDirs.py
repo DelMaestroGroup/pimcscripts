@@ -18,7 +18,7 @@ import numpy as np
 def main():
 
     # set number of equilibration steps
-    equilNum = 20000
+    equilNum = 10000
     
     # -------------------------------------------------------------------------
     # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
@@ -83,7 +83,7 @@ def main():
         if subFilePath[-1]!='/':
             subFilePath +='/'
         #subFilePath += args.stateFilesDir+'/../submit'
-        subFilePath += args.stateFilesDir+'/submit'
+        subFilePath += args.stateFilesDir+'../submit'
         
         with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
             for n, line in enumerate(inFile):
@@ -137,8 +137,6 @@ def main():
             os.chdir('../logFiles')
             logFileList = sorted(glob.glob('*log*'))
 
-            print len(logFileList)
-            sys.exit()
            
             # we check that there is a directory on the cluster called
             # stateFiles that contains exactly the (g)ce-state files

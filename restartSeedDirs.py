@@ -21,12 +21,13 @@ import os,argparse,re,sys,glob,shutil,subprocess,getpass,time
 import paramiko
 import clusterTools as cT
 import numpy as np
+import natsort
 
 
 def main():
 
     # unique tag
-    uTag = 'S5_T0.5'
+    uTag = 'muScale_S40_T1'
 
     # set number of equilibration steps
     equilNum = 0
@@ -76,21 +77,30 @@ def main():
         # grab log file string from OUTPUT
         sftp.chdir('./OUTPUT')
 
-        # get name of log file
+        # get names of log files
+        logFileNames = []
         for f in sftp.listdir():
             if '-log-' in f:
-                logFileName = f
+                logFileNames.append(f)
+        
+        # Naturally sort the log files (account for +/- floats in name).
+        # NOTE:  This works for gce- files with all the same string
+        #   but varying chemical potential.  Any other use must be 
+        #   thought about first as this hasn't been tested for other uses!!!
+        logFileNames = natsort.natsorted(logFileNames)
 
-        with sftp.open(logFileName) as inFile:
-            for n,line in enumerate(inFile):
-                if n == 2:
-                    restartStr = line[2:-1]
-        restartStr += ' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
-        
-        restartStr = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStr)
-        restartStr = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStr)
-        
-        print restartStr
+        # build array of restart strings from naturally sorted logfiles
+        restartStrings = []
+
+        for logFileName in logFileNames:
+            with sftp.open(logFileName) as inFile:
+                for n,line in enumerate(inFile):
+                    if n == 2:
+                        restartStrings.append(line[2:-1])
+        for nr, restartStr in enumerate(restartStrings):
+            restartStrings[nr]+=' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
+            restartStrings[nr] = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStrings[nr])
+            restartStrings[nr] = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStrings[nr])
 
         sftp.chdir('..')
         for f in sftp.listdir():
@@ -98,12 +108,14 @@ def main():
                 subFileName = f
 
         reSubName = 'resubmit-pimc.pbs'
+        numStr = 0
         with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
             for n, line in enumerate(inFile):
                 if line[:4] == 'pimc':
-                    outFile.write(restartStr)
+                    outFile.write(restartStrings[numStr])
+                    numStr += 1
                 elif r'#PBS -N' in line:
-                    outFile.write(line[:-1]+uTag+'\n')
+                    outFile.write(line[:-2]+uTag+'\n')
                 elif r'mkdir OUTPUT' in line:
                     outFile.write(line)
                     outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
@@ -111,6 +123,8 @@ def main():
                     outFile.write('gunzip OUTPUT/*\n')
                 else:
                     outFile.write(line)
+
+        print restartStrings[0],'\n'
 
         # my dumb work-around for allowing writing on cluster to finish.
         time.sleep(5)
