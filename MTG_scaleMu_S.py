@@ -82,6 +82,16 @@ def main():
             arrowprops=dict(arrowstyle="->",
                 connectionstyle="angle,angleA=0,angleB=90,rad=10"),
             )
+    
+    solidDens = True
+    if solidDens:
+        pl.plot([minMus, maxMus], [0.0248, 0.0248], 'k-', lw=3)
+        pl.annotate('HCP solid SVP', xy=(maxMus - boxSubtract, 0.0248),  #xycoords='data',
+                xytext=(-50, 30), textcoords='offset points',
+                bbox=dict(boxstyle="round", fc="0.8"),
+                arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle,angleA=0,angleB=90,rad=10"),
+                )
 
     # plot just the bulk density as a function of chemical potential
     figg2 = pl.figure(2)
