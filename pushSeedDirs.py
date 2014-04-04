@@ -82,8 +82,12 @@ def main():
         subFilePath = os.getcwd()
         if subFilePath[-1]!='/':
             subFilePath +='/'
+
         #subFilePath += args.stateFilesDir+'/../submit'
-        subFilePath += args.stateFilesDir+'../submit'
+        if args.stateFilesDir != '':
+            subFilePath += args.stateFilesDir+'../submit'
+        else:
+            subFilePath += '/submit'
         
         with open(subFilePath) as inFile, open(subFilePath+'_temp', 'w') as outFile:
             for n, line in enumerate(inFile):
