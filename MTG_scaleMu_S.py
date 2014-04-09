@@ -323,7 +323,9 @@ def main():
    
     pl.figure(1)
     pl.legend(loc=2)
-    
+    pl.savefig('densities_vs_chemicalPotential_allS_1APR.pdf', format='pdf',
+            bbox_inches='tight')
+
     pl.figure(2)
     pl.legend(loc=2)
  

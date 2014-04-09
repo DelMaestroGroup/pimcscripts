@@ -360,7 +360,11 @@ def main():
    
     pl.figure(1)
     pl.legend(loc=1)
-    
+    pl.savefig('densities_vs_potentialShift_allS_8APR.pdf', format='pdf',
+            bbox_inches='tight')
+
+
+
     pl.figure(2)
     pl.legend(loc=1)
  
