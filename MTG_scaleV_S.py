@@ -23,6 +23,9 @@ def parseCMD():
 
 def main():
 
+    savePDF = False
+    solidDens = False
+
     args = parseCMD()
     Temp = args.Temperature
 
@@ -71,7 +74,6 @@ def main():
                 connectionstyle="angle,angleA=0,angleB=90,rad=10"),
             )
     
-    solidDens = False
     if solidDens:
         pl.plot([minMus, maxMus], [0.0248, 0.0248], 'k-', lw=3)
         pl.annotate('HCP solid SVP', xy=(maxMus - boxSubtract, 0.0248),  #xycoords='data',
@@ -360,10 +362,9 @@ def main():
    
     pl.figure(1)
     pl.legend(loc=1)
-    pl.savefig('densities_vs_potentialShift_allS_8APR.pdf', format='pdf',
-            bbox_inches='tight')
-
-
+    if savePDF:
+        pl.savefig('densities_vs_potentialShift_allS_8APR.pdf', format='pdf',
+                bbox_inches='tight')
 
     pl.figure(2)
     pl.legend(loc=1)

@@ -27,13 +27,13 @@ import natsort
 def main():
 
     # unique tag
-    uTag = 'muScale_S40_T1'
+    uTag = 'V-5.2_S40_T1'
 
     # set number of equilibration steps
     equilNum = 0
 
     # set number of bins to try
-    binNum = 500
+    binNum = 2000
     
     # -------------------------------------------------------------------------
     # commands to add directories to path where blitz, boost, pimc sit.
