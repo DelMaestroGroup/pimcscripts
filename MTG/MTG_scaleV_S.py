@@ -171,7 +171,8 @@ def main():
         projArea = float(S)*Lx
 
         # accessible volume in cell
-        accessibleVol = Lx*Ly*(2.0*az+float(S)) - Lx*float(S)*(Ly-2.0*ay)
+        #accessibleVol = Lx*(Ly*(float(S)+2.0*az) - float(S)*(Ly-2.0*ay))
+        accessibleVol = 2.0*Lx*Ly*az + 2.0*ay*Lx*float(S)
 
         # multiply angular winding by normalization to be fixed in code later 
         omegaNorm = 4.0*(float(S)+1.0*Ly)**2
@@ -277,8 +278,8 @@ def main():
             numAvg = numAvg[pl.logical_not(pl.isnan(numAvg))]
 
             # normalize data.
-            numStd /= (1.0*accessibleVol)
-            numAvg /= (1.0*accessibleVol)
+            #numStd /= (1.0*accessibleVol)
+            #numAvg /= (1.0*accessibleVol)
 
             weights = numBins/pl.sum(numBins)
 
