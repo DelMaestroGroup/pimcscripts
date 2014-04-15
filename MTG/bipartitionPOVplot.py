@@ -10,7 +10,7 @@
 
 import random,subprocess,sys
 import visual as vis
-import MTG_bipartPOVexport as pov
+import bipartPOVexport as pov
 import numpy as np
 
 def main():

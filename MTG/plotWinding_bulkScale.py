@@ -27,11 +27,12 @@ def main():
 
     # --- Set up all options --------------------------------------------------
     
+    singleTemperature = True
+    
     # determine normalization factor for NormAn winding.
     S = 5.0
     Ly = 12.0
     normFactor = 4.0*(S+Ly)**2
-
   
     # parse command line, getting algorithmic and plotting options.
     args = jk.parseCMD()
@@ -60,7 +61,6 @@ def main():
 
     # --- this section is used for a single temperature -----------------------
 
-    singleTemperature = True
 
     # build array of Lz values for plotting Lz vs winding.
     LzValues = pl.array([])

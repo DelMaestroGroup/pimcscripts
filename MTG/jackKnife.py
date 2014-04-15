@@ -1,6 +1,6 @@
 import pylab as pl
 import glob,argparse,sys
-import MTG_jkTools as aTools
+import jkTools as aTools
 from matplotlib import rcParams
 import csv
 

@@ -1,8 +1,8 @@
 # =============================================================================
 # Pulls data for new winding number from zAveragedNtwind.dat files.
 # This requires that data be arranged as:
-#       windingFiles/xx.xangFilm_xx.xangExtent/zAveragedNtwind.dat
-# where the xx.x are film thickness and extent (in that order) and each
+#       windingFiles/S{}/T{}zAveragedNtwind.dat
+# where the {} are film extent and temperature (in that order) and each
 # NtWind averaged file has its own directory.
 #
 # Author:           Max Graves
@@ -28,7 +28,6 @@ def main():
     omega = False
     energy = False
     superFrac = True
-
 
     # --- Set up all options --------------------------------------------------
     

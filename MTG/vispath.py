@@ -10,7 +10,7 @@
 
 import os,sys,subprocess,glob
 import visual as vis
-import MTG_visTools as vt
+import visTools as vt
 import povexport as pov
 
 def main():

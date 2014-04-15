@@ -27,8 +27,8 @@ def main():
     # NOTE:  This way of doing subFilePath has been replaced by keeping submit
     # in the same directory as stateFiles on local machine in the case of
     # submissions from equilibrated states.  See later in this script!
-    genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
-    subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
+    genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG/MTG_CH_gensubmit.py'
+    #subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
     
     # commands to add directories to path where blitz, boost, pimc sit.
     # not sure why, but this must be done every time for paramiko.

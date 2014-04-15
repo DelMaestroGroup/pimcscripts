@@ -120,7 +120,7 @@ def loadPIMCPaths(fileName):
 
 def parseCMD():
     ''' parse the command line. '''
-    parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
+    parser = argparse.ArgumentParser(description='worldline visualization script.')
     parser.add_argument('fileNames', help='(g)ce-wl-.. data files', nargs='+')
     parser.add_argument('-o', '--output', type=str,
             choices=['single','rotate','bins'], default='single',
