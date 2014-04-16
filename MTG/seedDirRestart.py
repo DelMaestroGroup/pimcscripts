@@ -27,7 +27,7 @@ import natsort
 def main():
 
     # unique tag
-    uTag = 'V-5.2_S40_T1'
+    uTag = 'V-4.7_S20_T2'
 
     # set number of equilibration steps
     equilNum = 0

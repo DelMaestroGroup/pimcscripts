@@ -25,10 +25,10 @@ def findExe(redOnePath):
 def main():
     
     # list of directories
-    dirs = (glob.glob("*N*"))
+    dirs = (glob.glob("N*"))
 
     # location of reduce-one.py
-    redOnePath = '../../../Code/C++/PIMC/SCRIPTS/reduce-one.py'
+    redOnePath = '../reduce-one.py'
     findExe(redOnePath)
    
     # create array of different N values
@@ -64,7 +64,7 @@ def main():
         Winds = (Wx2 + Wy2 + Wz2)/3.0
         WindsErr = (Wx2Err + Wy2Err + Wz2Err)/3.0
 
-        # linear regression
+        # regression
         (ar,br) = pl.polyfit(Temps,Winds,1)
         linY = pl.polyval([ar,br],Temps)
         

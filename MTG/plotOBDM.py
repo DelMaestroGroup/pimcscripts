@@ -8,9 +8,7 @@
 # =============================================================================
 
 import pylab as pl
-import glob
-import sys
-import os
+import glob,sys,os
 
 def main():
 

@@ -85,7 +85,9 @@ def jackknife(data,data2=None,data3=None):
 
 def parseCMD():
     ''' Parse the command line. '''
-    parser = argparse.ArgumentParser(description='multi-purpose Python juju.')
+    descLine = ('Script for analyzing data collected from multiple random'
+            +' number seeds.')
+    parser = argparse.ArgumentParser(description=descLine)
     
     # help strings.
     fNameHelp = 'Data File Names.  For checkStandardError.py, this will be \

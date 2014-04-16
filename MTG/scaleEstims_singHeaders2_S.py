@@ -10,7 +10,7 @@
 # =============================================================================
 
 import pylab as pl
-import MTG_jkTools as jk
+import jkTools as jk
 import glob,sys,os,random,re
 from matplotlib import rcParams
 

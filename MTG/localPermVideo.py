@@ -8,11 +8,8 @@
 # =============================================================================
 
 import matplotlib.gridspec as gridspec
-import subprocess
-import os
-import sys
+import os,sys,glob,subprocess
 import pylab as pl
-import glob
 
 # =============================================================================
 def findMencoder():
