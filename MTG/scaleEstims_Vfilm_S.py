@@ -1,6 +1,7 @@
 import pylab as pl
 import os, glob, sys, argparse, re
 from matplotlib import rcParams
+from matplotlib.ticker import FuncFormatter
 
 rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Computer Modern Roman']
@@ -10,34 +11,32 @@ rcParams['text.latex.preamble'] = [
        r'\sisetup{detect-all}'  # force siunitx to use your fonts
 ]
 
-def parseCMD():
-    ''' Parse the command line. '''
-    parser = argparse.ArgumentParser(
-            description='plots density vs Mu for lots of bulk Separations.')
-    parser.add_argument('-T', '--Temperature', type=str,
-            default='T',
-            help='Temperature (for plot title).')
-
-
-    return parser.parse_args()
+def my_formatter(x, pos):
+    """
+    Add a trailing zero at end of 
+    """
+    val_str = '{:g}'.format(x)
+    
+    if len(val_str) == 5:
+        return val_str+'0'
+    else:
+        return val_str+'00'
 
 def main():
 
     savePDF = False
     solidDens = False
 
-    args = parseCMD()
-    Temp = args.Temperature
-
     Lx = 12.0
     Ly = 12.0
     az = 47.5
     ay = 2.0
 
+    bulkVol = 2.0*Lx*Ly*az
 
     # define some plotting colors    
-    colors = ['Salmon','Blue','DarkViolet','MediumSpringGreen','Fuchsia',
-            'Yellow','Maroon']
+    colors = ['Navy','DarkViolet','MediumSpringGreen','Fuchsia',
+            'Yellow','Maroon','Salmon','Blue']
     
     # -------------------------------------------------------------------------
     # bulk and film density on same plot
@@ -91,6 +90,7 @@ def main():
     pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
     pl.ylabel('Bulk Density '+r'$[\si{\angstrom}^{-3}]$', fontsize=20)
     pl.grid(True)
+    pl.xlim([-5.5,0.5])
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     yticks = ax.yaxis.get_major_ticks()
@@ -136,6 +136,7 @@ def main():
     pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
     pl.ylabel(r'$\text{Film Density}\ [\si{\angstrom}^{-2}]$', fontsize=20)
     pl.ylim([0.03,0.05])
+    pl.xlim([-5.5,0.5])
     pl.grid(True)
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
@@ -144,7 +145,7 @@ def main():
  
     # film SVP density line
     pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
-    pl.annotate('2d SVP', xy=(maxMus - boxSubtract, 0.0432),  #xycoords='data',
+    pl.annotate('2d SVP', xy=(-4, 0.0432),  #xycoords='data',
             xytext=(30, -30), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
             arrowprops=dict(arrowstyle="->",
@@ -157,16 +158,76 @@ def main():
     pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
     pl.ylabel(r'$\rho_S/\rho$', fontsize=20)
     pl.grid(True)
+    pl.xlim([-5.5,0.5])
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     yticks = ax.yaxis.get_major_ticks()
     yticks[0].set_visible(False)
 
     # -------------------------------------------------------------------------
-    Tvals = glob.glob('*T*')
-    nS = 0
+    # film/bulk densities subplot 
+    pl.figure(7)
+    ax7a = pl.subplot(211)
+    pl.ylabel(r'$\text{Film Density}\ [\si{\angstrom}^{-2}]$', fontsize=20)
+    pl.ylim([0.03,0.05])
+    #pl.xlim([-5.5,0.5])
+    pl.grid(True)
+    pl.tick_params(axis='both', which='major', labelsize=16)
+    pl.tick_params(axis='both', which='minor', labelsize=16)
+    yticks = ax.yaxis.get_major_ticks()
+    yticks[0].set_visible(False)
+ 
+    # film SVP density line
+    pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
+    pl.annotate('2d SVP', xy=(-4, 0.0432),  #xycoords='data',
+            xytext=(30, -30), textcoords='offset points',
+            bbox=dict(boxstyle="round", fc="0.8"),
+            arrowprops=dict(arrowstyle="->",
+                connectionstyle="angle,angleA=0,angleB=90,rad=10"),
+            )
+    pl.setp(ax7a.get_xticklabels(), visible=False)
     
-    for Tval in Tvals:
+    ax7b = pl.subplot(212, sharex=ax7a)
+    pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
+    pl.ylabel('Bulk Density '+r'$[\si{\angstrom}^{-3}]$', fontsize=20)
+    pl.grid(True)
+    pl.xlim([-5.5,-0.5])
+    pl.tick_params(axis='both', which='major', labelsize=16)
+    pl.tick_params(axis='both', which='minor', labelsize=16)
+    yticks = ax7b.yaxis.get_major_ticks()
+    yticks[0].set_visible(False)
+
+    # set up bulk SVP densities for plot
+    bulkVert = 15   # changes text box above (positive) or below (negative) line
+    boxSubtract = 1.6
+    pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
+    pl.annotate('3d SVP', xy=(-3.5, 0.02198),  #xycoords='data',
+            xytext=(-50, bulkVert), textcoords='offset points',
+            bbox=dict(boxstyle="round", fc="0.8"),
+            arrowprops=dict(arrowstyle="->",
+                connectionstyle="angle,angleA=0,angleB=90,rad=10"),
+            )
+ 
+    # -------------------------------------------------------------------------
+    # number of particles in bulk
+    pl.figure(8)
+    pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
+    pl.ylabel(r'$N_{\text{bulk}}$', fontsize=20)
+    pl.grid(True)
+    pl.xlim([-5.5,0.5])
+    pl.tick_params(axis='both', which='major', labelsize=16)
+    pl.tick_params(axis='both', which='minor', labelsize=16)
+    yticks = ax.yaxis.get_major_ticks()
+    yticks[0].set_visible(False)
+
+
+    # -------------------------------------------------------------------------
+    Tvals = glob.glob('*T*')
+   
+    Markers = ['-o','-d','-*']
+
+    
+    for nT,Tval in enumerate(sorted(Tvals)):
         
         os.chdir(Tval)
 
@@ -175,7 +236,7 @@ def main():
         Svals = glob.glob('S*')
         
         # --- loop through known directory structure --------------------------
-        for Sval in sorted(Svals):
+        for nS,Sval in enumerate(sorted(Svals)):
             
             os.chdir(Sval)
 
@@ -191,6 +252,7 @@ def main():
                 labell = 'S = '+str(S)+', Boltzmannons, T='+str(T)
             else:
                 labell = 'S = '+str(S)+', Bosons, T='+str(T)
+                shortlabell = 'S = '+str(S)+', T='+str(T)
 
             # projected area of film region
             projArea = float(S)*Lx
@@ -352,58 +414,85 @@ def main():
 
 
             pl.figure(1) 
-            pl.errorbar(Vs, Films, filmErrs, fmt='--o', color=colors[nS],
+            pl.errorbar(Vs, Films, filmErrs, fmt=Markers[nT], color=colors[nS],
                     label=labell+', 2d',
                     markersize=8)
-            pl.errorbar(Vs, Bulks, bulkErrs, fmt = '-d', color=colors[nS],
-                    label=labell+', 3d',
+            pl.errorbar(Vs, Bulks, bulkErrs, fmt=Markers[nT], mec=colors[nS],
+                    label=labell+', 3d', mfc='None', 
                     markersize=8)
 
             pl.figure(2) 
-            pl.errorbar(Vs, Bulks, bulkErrs, fmt = '-d', color=colors[nS],
+            pl.errorbar(Vs, Bulks, bulkErrs, fmt = Markers[nT], color=colors[nS],
                     label=labell, markersize=8)
 
             pl.figure(3)
-            pl.errorbar(Vs, Films*projArea, fmt='-o', color=colors[nS],
+            pl.errorbar(Vs, Films*projArea, fmt=Markers[nT], color=colors[nS],
                     label = labell, markersize=8)
 
             pl.figure(4)
-            pl.errorbar(Vs, Omegas, omegaErrs, fmt='-o', color=colors[nS],
+            pl.errorbar(Vs, Omegas, omegaErrs, fmt=Markers[nT], color=colors[nS],
                     label = labell, markersize=8)
 
             pl.figure(5)
-            pl.errorbar(Vs, Films, filmErrs, fmt='-o', color=colors[nS],
+            pl.errorbar(Vs, Films, filmErrs, fmt=Markers[nT], color=colors[nS],
                     label = labell, markersize=8)
      
             pl.figure(6)
-            pl.errorbar(Vs, Supers, SuperErrs, fmt='-o', color=colors[nS],
+            pl.errorbar(Vs, Supers, SuperErrs, fmt=Markers[nT], color=colors[nS],
                     label = labell, markersize=8)
-           
-            nS += 1
+
+            pl.figure(7)
+            ax7a.errorbar(Vs, Films, filmErrs, fmt=Markers[nT], color=colors[nS],
+                    label=shortlabell, markersize=8)
+            ax7b.errorbar(Vs, Bulks, bulkErrs, fmt = Markers[nT], color=colors[nS],
+                    label=shortlabell, markersize=8)
+ 
+            pl.figure(8) 
+            pl.errorbar(Vs, Bulks*bulkVol, bulkErrs*bulkVol, 
+                    fmt = Markers[nT], color=colors[nS],
+                    label=labell, markersize=8)
+
+
             os.chdir('..')
         
         os.chdir('..')
    
     pl.figure(1)
     pl.legend(loc=1)
+    pl.tight_layout()
     if savePDF:
         pl.savefig('densities_vs_potentialShift_allS_8APR.pdf', format='pdf',
                 bbox_inches='tight')
 
     pl.figure(2)
     pl.legend(loc=1)
+    pl.tight_layout()
  
     pl.figure(3)
     pl.legend(loc=1)
+    pl.tight_layout()
   
     pl.figure(4)
     pl.legend(loc=1)
+    pl.tight_layout()
    
     pl.figure(5)
     pl.legend(loc=1)
+    pl.tight_layout()
 
     pl.figure(6)
     pl.legend(loc=1)
+    pl.tight_layout()
+ 
+    pl.figure(7)
+    ax7a.legend(loc=1)
+    major_formatter = FuncFormatter(my_formatter)
+    ax7a.yaxis.set_major_formatter(major_formatter)
+    pl.tight_layout()
+ 
+    pl.figure(8)
+    pl.legend(loc=1)
+    pl.tight_layout()
   
 
     pl.show()

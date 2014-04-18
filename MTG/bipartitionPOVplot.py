@@ -13,13 +13,18 @@ import visual as vis
 import bipartPOVexport as pov
 import numpy as np
 
+def hex_to_rgb(hexi):
+    hexi = hexi.lstrip('#')
+    hlen = len(hexi)
+    return tuple(int(hexi[i:i+hlen/3], 16) for i in range(0, hlen, hlen/3))
+
+
 def main():
 
     # ----- User Defined Parameters -------------------------------------------
     # POV-ray image parameters
     HT = '1600'     # height
     WD = '2400'     # width
-
 
     # cell lengths
     Lx = 3.0    # angstroms
@@ -29,18 +34,26 @@ def main():
     # define atomic sphere radius
     sphRad = 0.20   # angstroms
 
-    # define colors
+    # --- define colors -------------------------------
     #partOneCol = (0.1,0.1,0.1)  # black
     #partTwoCol = (3.0,0.1,0.1)  # red
-    partOneCol = (0.1,0.1,1.0)  # white
-    partTwoCol = (2.0,2.0,2.0)  # blue
-
-    # define partition type
+    #partOneCol = (0.1,0.1,1.0)  # navy
+    
+    # -------------------------------------------------
+    # BIPARTITION FIGURE COLORS
+    partTwoCol = (2.0,2.0,2.0)  # white
+    partOneCol = () # teal-ish color
+    for nv,val in enumerate(hex_to_rgb('#588492')): 
+        partOneCol += ((1.5/150)*val,) 
+    # -------------------------------------------------
+    
+    # --- define partition type -----------------------
     #partitionType = 'planar'
-    partitionType = 'spherical'
-    #partitionType = 'particle'
+    #partitionType = 'spherical'
+    partitionType = 'particle'
 
-    ridIntersect = True
+    # --- delete particles intersecting big sphere ---- 
+    ridIntersect = False
 
     # ----- Generate atomic positions -----------------------------------------
 

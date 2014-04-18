@@ -168,6 +168,7 @@ boxamb = '0.2'
 
 amb = '0.6'
 dif = '0.4'
+#refl = '0.1'
 refl = '0.0'
 pho = '1'
 boxrefl = '0'

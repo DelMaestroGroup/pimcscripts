@@ -94,7 +94,6 @@ def crunchData(estimTypes, colNums, observables):
                     print f,' is empty.'
                     pass
                 else:
-                    
                     dat = pl.genfromtxt(f, unpack=True, usecols=colNums[nType])
 
                     for d in dat:
