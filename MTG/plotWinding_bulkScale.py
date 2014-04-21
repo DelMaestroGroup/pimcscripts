@@ -22,6 +22,33 @@ rcParams['text.latex.preamble'] = [
        r'\sisetup{detect-all}'  # force siunitx to use your fonts
 ]
 
+def crunchZfile(f,aCol,sCol,bCol,normFactor):
+    '''
+    '''
+    avgs,stds,bins = pl.genfromtxt(f, usecols=(aCol, sCol, bCol), 
+            unpack=True, delimiter=',')
+
+    # get rid of any items which are not numbers..
+    # this is some beautiful Python juju.
+    bins = bins[pl.logical_not(pl.isnan(bins))]
+    stds = stds[pl.logical_not(pl.isnan(stds))]
+    avgs = avgs[pl.logical_not(pl.isnan(avgs))]
+
+    # normalize data.
+    stds *= normFactor
+    avgs *= normFactor
+    
+    weights = bins/pl.sum(bins)
+
+    avgs *= weights
+    stds *= weights
+
+    avg = pl.sum(avgs)
+    stdErr = pl.sum(stds)
+
+    return avg, stdErr
+
+
 def main():
 
     # --- Set up all options --------------------------------------------------
@@ -46,58 +73,84 @@ def main():
     azValues = pl.array([])
 
     # build array of norman winding values along with bins, for Lz plotting.
-    allAverages = pl.array([])
-    allErrors = pl.array([])
+    windingAverages = pl.array([])
+    windingErrors = pl.array([])
+    filmAverages = pl.array([])
+    filmErrors = pl.array([])
+    bulkAverages = pl.array([])
+    bulkErrors = pl.array([])
 
     # --- loop over and collect/analyze all data from files -------------------
     for nd, d in enumerate(sorted(direcs)):
 
         os.chdir('./'+d)
-        f = glob.glob('*Ntwind*')[0]
-
+        
         print d[3:]
-        
         azValues = pl.append(azValues, float(d[3:]))
-                
-        avgs,stds,bins = pl.genfromtxt(f, usecols=(3, 4, 5), 
-                unpack=True, delimiter=',')
-
-        # get rid of any items which are not numbers..
-        # this is some beautiful Python juju.
-        bins = bins[pl.logical_not(pl.isnan(bins))]
-        stds = stds[pl.logical_not(pl.isnan(stds))]
-        avgs = avgs[pl.logical_not(pl.isnan(avgs))]
-
-        # normalize data.
-        stds *= normFactor
-        avgs *= normFactor
         
-        weights = bins/pl.sum(bins)
+        # --- angular winding ---
+        f = glob.glob('*Ntwind*')[0]
+        
+        aCol = 3
+        sCol = 4
+        bCol = 5
+        
+        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,normFactor)
+        print avg
+        windingAverages = pl.append(windingAverages, avg)
+        windingErrors = pl.append(windingErrors, stdErr)
 
-        avgs *= weights
-        stds *= weights
+        # --- film densities ---
+        f = glob.glob('*Bipart*')[0]
+        aCol = 0
+        sCol = 1
+        bCol = 2
 
-        avg = pl.sum(avgs)
-        stdErr = pl.sum(stds)
+        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,1.0)
 
-        allAverages = pl.append(allAverages, avg)
-        allErrors = pl.append(allErrors, stdErr)
+        filmAverages = pl.append(filmAverages, avg)
+        filmErrors = pl.append(filmErrors,stdErr)
 
+        # --- bulk densities ---
+        aCol = 3
+        sCol = 4
+        bCol = 5
+        
+        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,normFactor)
+        
+        bulkAverages = pl.append(bulkAverages,avg)
+        bulkErrors = pl.append(bulkErrors, stdErr)
+        
         os.chdir('..')
 
 
     invaz = 1.0/azValues
     figg = pl.figure(1)
     ax = figg.add_subplot(111)
-    pl.errorbar(invaz, allAverages, allErrors, fmt='o')
+    pl.errorbar(invaz, windingAverages, windingErrors, fmt='o')
     pl.xlabel(r'$1/L_z\ [\si{\angstrom}^{-1}]$', fontsize=20)
     pl.ylabel(r'$\langle \Omega \rangle$', fontsize=26)
-    pl.xlim([0,0.06])
     pl.grid(True)
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     xticks = ax.xaxis.get_major_ticks()
     xticks[0].set_visible(False)
+    pl.tight_layout()
+
+    figg = pl.figure(2)
+    ax = figg.add_subplot(111)
+    pl.errorbar(invaz, filmAverages, filmErrors, fmt='o')
+    pl.xlabel(r'$1/L_z\ [\si{\angstrom}^{-1}]$', fontsize=20)
+    pl.ylabel(r'$ \rho_{\text{film}} $', fontsize=26)
+    pl.grid(True)
+    pl.tick_params(axis='both', which='major', labelsize=16)
+    pl.tick_params(axis='both', which='minor', labelsize=16)
+    xticks = ax.xaxis.get_major_ticks()
+    xticks[0].set_visible(False)
+    pl.tight_layout()
+
+
+
 
     #pl.savefig('Omega_vs_inverseLZ.pdf', format='pdf',
     #        bbox_inches='tight')
