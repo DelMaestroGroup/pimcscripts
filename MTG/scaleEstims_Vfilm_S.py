@@ -24,7 +24,7 @@ def my_formatter(x, pos):
 
 def main():
 
-    savePDF = False
+    savePDF = True
     solidDens = False
 
     Lx = 12.0
@@ -460,10 +460,6 @@ def main():
     pl.figure(1)
     pl.legend(loc=1)
     pl.tight_layout()
-    if savePDF:
-        pl.savefig('densities_vs_potentialShift_allS_8APR.pdf', format='pdf',
-                bbox_inches='tight')
-
     pl.figure(2)
     pl.legend(loc=1)
     pl.tight_layout()
@@ -489,7 +485,11 @@ def main():
     major_formatter = FuncFormatter(my_formatter)
     ax7a.yaxis.set_major_formatter(major_formatter)
     pl.tight_layout()
- 
+    if savePDF:
+        pl.savefig('Bulk_Film_Dens_vs_Vshift_allS_allT_18APR.pdf', format='pdf',
+                bbox_inches='tight')
+
+
     pl.figure(8)
     pl.legend(loc=1)
     pl.tight_layout()
