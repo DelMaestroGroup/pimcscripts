@@ -18,6 +18,7 @@ Options:
   --error=<units>, -d           Size of the error bars
   --nobin                       Don't use the binned errorbars
   --ttest                       Perform a ttest
+  --hline=<val>                 Include a horizontal line at <val> in the averaged plot
 """
 
 # pimcplot.py
@@ -27,7 +28,7 @@ Options:
 # Plot rough estimators vs. MC Bins for files supplied as input
 
 import matplotlib
-#matplotlib.use('TKAgg')
+matplotlib.use('TKAgg')
 
 import os,sys
 import pyutils
@@ -105,6 +106,7 @@ def main():
     estimator = args['--estimator']
     leglabel = args['--legend'] and args['--legend']
     error = args['--error'] and float(args['--error'])
+    val = args['--hline'] and float(args['--hline'])
 
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
@@ -215,6 +217,10 @@ def main():
                 label=leglabel[n])
             fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
             n += 1
+
+    # Add a possible horizontal line indicating some value
+    if args['--hline']:
+        axhline(y=val,color='gray',linewidth=2.5, label=yShort.split()[0] + ' = ' + args['--hline'])
 
     ylabel(yLong)
     xlabel("MC Bin Number")
