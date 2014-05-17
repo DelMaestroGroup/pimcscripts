@@ -34,8 +34,13 @@ def main():
 
     bulkVol = 2.0*Lx*Ly*az
 
+    lowX7 = -6.0
+    #lowX7 = -4.0   # boltzmannons
+    highX7 = 2.9
+    #highX7 = 2.5   # boltzmannons
+
     # define some plotting colors    
-    colors = ['Navy','DarkViolet','MediumSpringGreen','Fuchsia',
+    colors = ['Navy','DarkViolet','MediumSpringGreen','Salmon','Fuchsia',
             'Yellow','Maroon','Salmon','Blue']
     
     # -------------------------------------------------------------------------
@@ -55,7 +60,7 @@ def main():
     # bulk SVP density line
     bulkVert = -30
     minMus = -5.5
-    maxMus = -0.5
+    maxMus = 2.0
     boxSubtract = 1.6
     pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
     pl.annotate('3d SVP', xy=(maxMus - boxSubtract, 0.02195),  #xycoords='data',
@@ -144,7 +149,7 @@ def main():
     yticks[0].set_visible(False)
  
     # film SVP density line
-    pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
+    pl.plot([lowX7, highX7], [0.0432, 0.0432], 'k-', lw=3)
     pl.annotate('2d SVP', xy=(-4, 0.0432),  #xycoords='data',
             xytext=(30, -30), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
@@ -169,8 +174,7 @@ def main():
     pl.figure(7)
     ax7a = pl.subplot(211)
     pl.ylabel(r'$\text{Film Density}\ [\si{\angstrom}^{-2}]$', fontsize=20)
-    pl.ylim([0.03,0.05])
-    #pl.xlim([-5.5,0.5])
+    pl.ylim([0.035,0.05])
     pl.grid(True)
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
@@ -178,8 +182,8 @@ def main():
     yticks[0].set_visible(False)
  
     # film SVP density line
-    pl.plot([minMus, maxMus], [0.0432, 0.0432], 'k-', lw=3)
-    pl.annotate('2d SVP', xy=(-4, 0.0432),  #xycoords='data',
+    pl.plot([lowX7, highX7], [0.0432, 0.0432], 'k-', lw=3)
+    pl.annotate('2d SVP', xy=(-2, 0.0432),  #xycoords='data',
             xytext=(30, -30), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
             arrowprops=dict(arrowstyle="->",
@@ -191,7 +195,7 @@ def main():
     pl.xlabel(r'$\text{Potential Shift}\ [K]$', fontsize=20)
     pl.ylabel('Bulk Density '+r'$[\si{\angstrom}^{-3}]$', fontsize=20)
     pl.grid(True)
-    pl.xlim([-5.5,-0.5])
+    pl.xlim([lowX7,highX7])
     pl.tick_params(axis='both', which='major', labelsize=16)
     pl.tick_params(axis='both', which='minor', labelsize=16)
     yticks = ax7b.yaxis.get_major_ticks()
@@ -200,8 +204,8 @@ def main():
     # set up bulk SVP densities for plot
     bulkVert = 15   # changes text box above (positive) or below (negative) line
     boxSubtract = 1.6
-    pl.plot([minMus, maxMus], [0.02198, 0.02198], 'k-', lw=3)
-    pl.annotate('3d SVP', xy=(-3.5, 0.02198),  #xycoords='data',
+    pl.plot([lowX7, highX7], [0.02198, 0.02198], 'k-', lw=3)
+    pl.annotate('3d SVP', xy=(1.2, 0.02198),  #xycoords='data',
             xytext=(-50, bulkVert), textcoords='offset points',
             bbox=dict(boxstyle="round", fc="0.8"),
             arrowprops=dict(arrowstyle="->",
@@ -481,7 +485,7 @@ def main():
     pl.tight_layout()
  
     pl.figure(7)
-    ax7a.legend(loc=1)
+    pl.legend(loc=1,bbox_to_anchor=(1.,2.1))
     major_formatter = FuncFormatter(my_formatter)
     ax7a.yaxis.set_major_formatter(major_formatter)
     pl.tight_layout()

@@ -96,9 +96,10 @@ def crunchData(estimTypes, colNums, observables):
                 else:
                     dat = pl.genfromtxt(f, unpack=True, usecols=colNums[nType])
 
+                    # skip a few 
                     for d in dat:
                         d = pl.delete(d, deleteList)
-
+                    
                     # define key that can be sorted properly
                     if numTemp < 10:
                         arrName = 'arr00'+str(numTemp)
@@ -202,7 +203,7 @@ def crunchData(estimTypes, colNums, observables):
         fout.close()
 
         # ---- Average individual files and write to disk ----
-        # length of max. sized array for averages
+        # get length of max. sized array for averages
         maxLen2 = 0
         for t in statTemps:
             for g in statTemps[t]:
@@ -358,8 +359,49 @@ def parseCMD():
     pullParse.add_argument('-D', '--deleteNum', type=int,
             dest='deleteNum', default=2,
             help='Number of elements to trim from beginning of each data file.')
+    pullParse.add_argument('-b', '--binAgain', action='store_true',
+            dest='binAgain', default=False,
+            help='Write new data files, binning data?')
  
+
     return parser.parse_args()
+
+
+def reBin():
+    ''' 
+    re-bin data files that contain correlated data.  This doesn't
+    determine correlation of data, but simply rewrites the same
+    data to disk, skipping an amount specified by the user.
+    '''
+    print os.getcwd()
+    dataFiles = glob.glob('*.dat')
+
+    numBins = 100
+
+    # rename files to a temporary name
+    for d in dataFiles:
+        if 'log' not in d:
+            os.rename(d,d[:-4]+'-un.dat')
+        #os.rename(d,d[:-7]+'.dat')
+ 
+    # move full data files to a separate directory
+    # -- might want to just delete them?
+    os.mkdir('fullData')   
+
+    # write new data files (rebinned) and move full data files to 
+    # a separate directory.
+    dataFiles = glob.glob('*-un.dat')
+    for d in dataFiles:
+        if 'log' not in d:
+            with open(d) as inFile, open(d[:-7]+'.dat', 'w') as outFile:
+                for n, line in enumerate(inFile):
+                    if n==0:
+                        outFile.write(line)
+                    elif n==1:
+                        outFile.write(line)
+                    elif n%numBins==0:
+                        outFile.write(line)
+        shutil.move(d,'fullData/')
 
 
 def renameFilesInDirecs(delDir):

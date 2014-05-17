@@ -127,8 +127,9 @@ def main():
     invaz = 1.0/azValues
     figg = pl.figure(1)
     ax = figg.add_subplot(111)
-    pl.errorbar(invaz, windingAverages, windingErrors, fmt='o')
-    pl.xlabel(r'$1/L_z\ [\si{\angstrom}^{-1}]$', fontsize=20)
+    pl.errorbar(invaz, windingAverages, windingErrors, fmt='o',
+           color='Indigo')
+    pl.xlabel(r'$1/a_z\ [\si{\angstrom}^{-1}]$', fontsize=20)
     pl.ylabel(r'$\langle \Omega \rangle$', fontsize=26)
     pl.grid(True)
     pl.tick_params(axis='both', which='major', labelsize=16)
