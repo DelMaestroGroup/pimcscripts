@@ -103,13 +103,6 @@ def main():
         sftp.close()
         ssh.close()
 
-    # optionally go back and bin data from files that contained correlated
-    # data.  This data was collected by accident at one point, and needed
-    # to be dealt with in this manner.
-    if args.binAgain:
-        print 'rebinning data'
-        cT.reBin()
-
     # optionally combine all data of the same temperature into one
     # much larger array.
     if args.Crunch:
