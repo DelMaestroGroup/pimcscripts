@@ -10,7 +10,7 @@
 
 
 import os,argparse,re,sys,glob,shutil,subprocess,getpass
-import paramiko
+import paramiko,time
 import clusterTools as cT
 import numpy as np
 
@@ -18,7 +18,7 @@ import numpy as np
 def main():
 
     # set number of equilibration steps
-    equilNum = 0
+    equilNum = 1000
     
     # -------------------------------------------------------------------------
     # NOTE: NEW USERS WILL NEED TO CHANGE THESE STRINGS!!
@@ -27,8 +27,8 @@ def main():
     # NOTE:  This way of doing subFilePath has been replaced by keeping submit
     # in the same directory as stateFiles on local machine in the case of
     # submissions from equilibrated states.  See later in this script!
-    genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG_CH_gensubmit.py'
-    subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
+    genSubPath = '/home/max/Documents/Code/PIMC/SCRIPTS/MTG/MTG_CH_gensubmit.py'
+    #subFilePath = '/home/max/Documents/Code/PIMC/SCRIPTS/submitscripts/submit'
     
     # commands to add directories to path where blitz, boost, pimc sit.
     # not sure why, but this must be done every time for paramiko.
@@ -95,7 +95,7 @@ def main():
 
 
     subNum = 0
-    numToRepeat = 5
+    numToRepeat = 99999 # not currently set to start from multiple states
 
     if numToRepeat*len(stateFileList) < len(seedNums):
         sys.exit('Need to up numToRepeat')
@@ -304,6 +304,8 @@ def main():
             print 'Output: ',stdout.readlines()
             if stderr.readlines() != []:
                 print 'Error: ',stderr.readlines()
+
+        time.sleep(5)
    
         sftp.chdir('..')
 

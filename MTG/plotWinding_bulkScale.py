@@ -12,6 +12,7 @@
 import pylab as pl
 import glob,sys,os,random
 from matplotlib import rcParams
+import clusterTools as cT
 
 # set up latex fonts
 rcParams['font.family'] = 'serif'
@@ -21,33 +22,6 @@ rcParams['text.latex.preamble'] = [
        r'\usepackage{siunitx}', # load siunitx
        r'\sisetup{detect-all}'  # force siunitx to use your fonts
 ]
-
-def crunchZfile(f,aCol,sCol,bCol,normFactor):
-    '''
-    '''
-    avgs,stds,bins = pl.genfromtxt(f, usecols=(aCol, sCol, bCol), 
-            unpack=True, delimiter=',')
-
-    # get rid of any items which are not numbers..
-    # this is some beautiful Python juju.
-    bins = bins[pl.logical_not(pl.isnan(bins))]
-    stds = stds[pl.logical_not(pl.isnan(stds))]
-    avgs = avgs[pl.logical_not(pl.isnan(avgs))]
-
-    # normalize data.
-    stds *= normFactor
-    avgs *= normFactor
-    
-    weights = bins/pl.sum(bins)
-
-    avgs *= weights
-    stds *= weights
-
-    avg = pl.sum(avgs)
-    stdErr = pl.sum(stds)
-
-    return avg, stdErr
-
 
 def main():
 
@@ -95,7 +69,7 @@ def main():
         sCol = 4
         bCol = 5
         
-        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,normFactor)
+        avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,normFactor)
         print avg
         windingAverages = pl.append(windingAverages, avg)
         windingErrors = pl.append(windingErrors, stdErr)
@@ -106,7 +80,7 @@ def main():
         sCol = 1
         bCol = 2
 
-        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,1.0)
+        avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,1.0)
 
         filmAverages = pl.append(filmAverages, avg)
         filmErrors = pl.append(filmErrors,stdErr)
@@ -116,7 +90,7 @@ def main():
         sCol = 4
         bCol = 5
         
-        avg,stdErr = crunchZfile(f,aCol,sCol,bCol,normFactor)
+        avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,normFactor)
         
         bulkAverages = pl.append(bulkAverages,avg)
         bulkErrors = pl.append(bulkErrors, stdErr)
@@ -149,9 +123,6 @@ def main():
     xticks = ax.xaxis.get_major_ticks()
     xticks[0].set_visible(False)
     pl.tight_layout()
-
-
-
 
     #pl.savefig('Omega_vs_inverseLZ.pdf', format='pdf',
     #        bbox_inches='tight')

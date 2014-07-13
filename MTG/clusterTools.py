@@ -262,6 +262,44 @@ def crunchData(estimTypes, colNums, observables):
         fout.close()
        
 
+def crunchZfile(f,aCol,sCol,bCol,normFactor):
+    '''
+    Takes a zAveraged... data file generated from the crunchData
+    function of this library and produces the arithmetic mean
+    as well as the standard error from all seeds.  The error
+    is done through the propagation of errors as:
+    e = sqrt{ \sum_k (c_k e_k)^2 } where e_k are the individual
+    seed's standard errors and c_k are the weighting coefficients
+    obeying \sum_k c_k = 1.
+    '''
+    avgs,stds,bins = pl.genfromtxt(f, usecols=(aCol, sCol, bCol),
+            unpack=True, delimiter=',')
+
+    # get rid of any items which are not numbers..
+    # this is some beautiful Python juju.
+    bins = bins[pl.logical_not(pl.isnan(bins))]
+    stds = stds[pl.logical_not(pl.isnan(stds))]
+    avgs = avgs[pl.logical_not(pl.isnan(avgs))]
+
+    # normalize data.
+    stds *= normFactor
+    avgs *= normFactor
+
+    weights = bins/pl.sum(bins)
+
+    avgs *= weights
+    stds *= weights  # over-estimates error bars
+
+    stds *= stds
+
+    avg = pl.sum(avgs)
+    stdErr = pl.sum(stds)
+
+    stdErr = stdErr**0.5
+
+    return avg, stdErr
+
+
 def ensembleCheck(firstLetter):
     '''
     check the ensemble by checking the file names.

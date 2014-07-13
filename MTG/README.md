@@ -490,7 +490,12 @@ ADD THIS!!!!
 
 Notes
 -----
-ADD THIS!!!!
+- This is set up to work for a single set of job parameters and requires that
+your home machine as well as VACC account have a directory structure set up
+that contains a top level directory with subdirectories named:  'stateFiles'
+and 'logFiles', each containing the gce-state... or gce-log... file from 
+the equilibrated job.  The double storage is so that the user must really
+think about what they are doing.
 
 
 -------------------------------------------------------------------------------
