@@ -186,21 +186,21 @@ def main():
             sCol = 4
             bCol = 5
 
-            avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,normFactor)
+            avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,1.0)
 
             bulkAverages = pl.append(bulkAverages,avg)
             bulkErrors = pl.append(bulkErrors, stdErr)
 
             # --- superfluid fractions ---
-            f = glob.glob('*zAveragedSuper*')[0}
+            f = glob.glob('*zAveragedSuper*')[0]
             aCol = 0
             sCol = 1
             bCol = 2
 
-            avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,normFactor)
+            avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,1.0)
 
-            superAverages = pl.append(bulkAverages,avg)
-            superErrors = pl.append(bulkErrors, stdErr)
+            superAverages = pl.append(superAverages,avg)
+            superErrors = pl.append(superErrors, stdErr)
 
             # ----------------------
             os.chdir('..')
@@ -220,7 +220,7 @@ def main():
                 label=labell)
         
         pl.figure(4)
-        pl.errorbar(Ts, filmAverages, filmErrors, fmt='-o', color=colors[nS], 
+        pl.errorbar(Ts, bulkAverages, bulkErrors, fmt='-o', color=colors[nS], 
                 label=labell)
 
         os.chdir('..')
