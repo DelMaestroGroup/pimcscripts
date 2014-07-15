@@ -63,7 +63,7 @@ def main():
         azValues = pl.append(azValues, float(d[3:]))
         
         # --- angular winding ---
-        f = glob.glob('*Ntwind*')[0]
+        f = glob.glob('*AveragedNtwind*')[0]
         
         aCol = 3
         sCol = 4
@@ -75,7 +75,7 @@ def main():
         windingErrors = pl.append(windingErrors, stdErr)
 
         # --- film densities ---
-        f = glob.glob('*Bipart*')[0]
+        f = glob.glob('*AveragedBipart*')[0]
         aCol = 0
         sCol = 1
         bCol = 2
