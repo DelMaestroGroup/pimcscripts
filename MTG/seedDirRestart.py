@@ -27,7 +27,7 @@ import natsort
 def main():
 
     # unique tag
-    uTag = 'az17.5'
+    uTag = 'S5-T1.0'
 
     # set number of equilibration steps
     equilNum = 0
@@ -73,10 +73,10 @@ def main():
         # if a resubmit file already exists, delete it.
         if 'resubmit-pimc.pbs' in sftp.listdir():
             sftp.remove('resubmit-pimc.pbs')
-
+        
         # grab log file string from OUTPUT
         sftp.chdir('./OUTPUT')
-
+        
         # get names of log files
         logFileNames = []
         for f in sftp.listdir():
@@ -101,51 +101,63 @@ def main():
             restartStrings[nr]+=' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
             restartStrings[nr] = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStrings[nr])
             restartStrings[nr] = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStrings[nr])
-
+        
         sftp.chdir('..')
-        for f in sftp.listdir():
-            if 'submit-pimc' in f:
-                subFileName = f
+        
+        # check if no restart string exists, in this case just skip the seed
+        # (hackyyyy)
+        if restartStrings == []:
+            print 'seed number ',str(seedNum),' is empty'
+            sftp.chdir('..')
+            continue
+        else:
+            for f in sftp.listdir():
+                if 'submit-pimc' in f:
+                    subFileName = f
 
-        reSubName = 'resubmit-pimc.pbs'
-        numStr = 0
-        with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
-            for n, line in enumerate(inFile):
-                if line[:4] == 'pimc':
-                    outFile.write(restartStrings[numStr])
-                    numStr += 1
-                elif r'#PBS -N' in line:
-                    outFile.write(line[:-2]+uTag+'\n')
-                elif r'mkdir OUTPUT' in line:
-                    outFile.write(line)
-                    outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
-                    outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
-                    outFile.write('gunzip OUTPUT/*\n')
-                else:
-                    outFile.write(line)
+            reSubName = 'resubmit-pimc.pbs'
+            numStr = 0
+            with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
+                for n, line in enumerate(inFile):
+                    if line[:4] == 'pimc':
+                        outFile.write(restartStrings[numStr])
+                        numStr += 1
+                    elif r'#PBS -N' in line:
+                        outFile.write(line[:-2]+uTag+'\n')
+                    elif r'mkdir OUTPUT' in line:
+                        outFile.write(line)
+                        outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
+                        outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
+                        outFile.write('gunzip OUTPUT/*\n')
+                    else:
+                        outFile.write(line)
 
-        print restartStrings[0],'\n'
+            print restartStrings[0],'\n'
 
-        # my dumb work-around for allowing writing on cluster to finish.
-        time.sleep(5)
+            # my dumb work-around for allowing writing on cluster to finish.
+            time.sleep(5)
 
-        # -----------------------------------------------------------------  
-        # optionally submit jobs
-        if args.submitJobs:
+            # -----------------------------------------------------------------  
+            # optionally submit jobs
+            if args.submitJobs:
 
-            # build submit command
-            submitStuff = 'qsub '+reSubName
-            changeDir = 'cd '+args.targetDir+'/'+seedDirName+' ; '
-            subComm = changeDir+expLibs+expPBSstuff+submitStuff
-           
-            # submit the command
-            stdin, stdout, stderr = ssh.exec_command(subComm)
-            
-            print 'Output: ',stdout.readlines()
-            if stderr.readlines() != []:
-                print 'Error: ',stderr.readlines()
-   
-        sftp.chdir('..')
+                #if restartStrings == []:
+                #    continue
+                #else:
+
+                # build submit command
+                submitStuff = 'qsub '+reSubName
+                changeDir = 'cd '+args.targetDir+'/'+seedDirName+' ; '
+                subComm = changeDir+expLibs+expPBSstuff+submitStuff
+               
+                # submit the command
+                stdin, stdout, stderr = ssh.exec_command(subComm)
+                
+                print 'Output: ',stdout.readlines()
+                if stderr.readlines() != []:
+                    print 'Error: ',stderr.readlines()
+       
+            sftp.chdir('..')
 
     #sftp.close()
     #ssh.close()    # -- closing these breaks the writing for some reason.

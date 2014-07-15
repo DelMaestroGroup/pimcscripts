@@ -10,9 +10,10 @@
 # =============================================================================
 
 import pylab as pl
-import MTG_jkTools as jk
+import jkTools as jk
 import glob,sys,os,random,re
 from matplotlib import rcParams
+import clusterTools as cT
 
 # set up latex fonts
 rcParams['font.family'] = 'serif'
@@ -23,9 +24,10 @@ rcParams['text.latex.preamble'] = [
        r'\sisetup{detect-all}'  # force siunitx to use your fonts
 ]
 
+
 def main():
 
-    omega = False
+    omega = True
     energy = False
     superFrac = True
 
@@ -79,11 +81,15 @@ def main():
         # store bulk separation value
         S = re.search(r'\d+',Sval).group(0)
 
+        print S
+
         # set normalization
         if omega:
             normFactor = 4.0*(float(S)+Ly)**2
         else:
             normFactor = 1.0
+
+        print normFactor
 
         # set label for plot
         if 'distinguishable' in Sval:
@@ -93,6 +99,11 @@ def main():
 
         # get all temperature directory names
         Tdirs = sorted(glob.glob('T*'))
+
+        # build array of norman winding values along with bins, for Lz plotting.
+        windingAverages = pl.array([])
+        windingErrors = pl.array([])
+
 
         Ts = pl.array([])
         Omegas = pl.array([])
@@ -105,52 +116,30 @@ def main():
             
             # build array of temperatures
             Ts = pl.append(Ts, float(Tdir[1:]))
-
-            # get data file name
-            if omega:
-                f = glob.glob('*Ntwind*')[0]
-            elif energy:
-                f = glob.glob('*Estimator*')[0]
-            elif superFrac:
-                f = glob.glob('*Super*')[0]
-
-            n = nCol-1
-
-            avgs,stds,bins = pl.genfromtxt(f, 
-                    usecols=(0+3*n, 1+3*n, 2+3*n), 
-                    unpack=True, delimiter=',')
-
-            # get rid of any items which are not numbers..
-            # this is some beautiful Python juju.
-            bins = bins[pl.logical_not(pl.isnan(bins))]
-            stds = stds[pl.logical_not(pl.isnan(stds))]
-            avgs = avgs[pl.logical_not(pl.isnan(avgs))]
-
-            # normalize data.
-            stds *= normFactor
-            avgs *= normFactor
             
-            weights = bins/pl.sum(bins)
+            # --- angular winding ---
+            f = glob.glob('*Ntwind*')[0]
+            
+            aCol = 3
+            sCol = 4
+            bCol = 5
+            
+            avg,stdErr = cT.crunchZfile(f,aCol,sCol,bCol,normFactor)
+            print avg
+            windingAverages = pl.append(windingAverages, avg)
+            windingErrors = pl.append(windingErrors, stdErr)
 
-            avgs *= weights
-            stds *= weights
-
-            avg = pl.sum(avgs)
-            stdErr = pl.sum(stds)
-
-            Omegas = pl.append(Omegas, avg)
-            Errs = pl.append(Errs, stdErr)
-
-            n += nEst
-
-            os.chdir('..')
         
+            os.chdir('..')
+       
+
+
         # add data to plot for given S value.
-        pl.errorbar(Ts, Omegas, Errs, fmt='-o', color=colors[nS], 
+        pl.errorbar(Ts, windingAverages, windingErrors, fmt='-o', color=colors[nS], 
                 label=labell)
 
         os.chdir('..')
-
+    
     pl.legend()
     pl.savefig('Omega_vs_T_allS.pdf', format='pdf',
             bbox_inches='tight')

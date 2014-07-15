@@ -56,7 +56,7 @@ def main():
         ssh = paramiko.SSHClient() 
         ssh.load_host_keys(os.path.expanduser(
             os.path.join("~", ".ssh", "known_hosts")))
-        ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, 
+        ssh.connect('bluemoon-user1.uvm.edu', username=args.UserName, 
                 password=passwd)
         sftp = ssh.open_sftp()
 
