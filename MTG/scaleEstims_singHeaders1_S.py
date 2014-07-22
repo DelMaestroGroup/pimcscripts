@@ -14,6 +14,7 @@ import jkTools as jk
 import glob,sys,os,random,re
 from matplotlib import rcParams
 import clusterTools as cT
+import natsort
 
 # set up latex fonts
 rcParams['font.family'] = 'serif'
@@ -104,6 +105,8 @@ def main():
     # --- loop over all values of S -------------------------------------------
     os.chdir(direc)
     Svals = glob.glob('S*')
+    Svals = natsort.natsorted(Svals)
+    print Svals
 
     for nS, Sval in enumerate(Svals):
         
@@ -126,7 +129,7 @@ def main():
         if 'distinguishable' in Sval:
             labell = 'S = '+str(S)+', Boltzmannons'
         else:
-            labell = 'S = '+str(S)+', Bosons'
+            labell = 'S = '+str(S)+' '+r'$\si{\angstrom}$'+', Bosons'
 
         # get all temperature directory names
         Tdirs = sorted(glob.glob('T*'))
