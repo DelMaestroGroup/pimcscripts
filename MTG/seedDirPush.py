@@ -5,7 +5,7 @@
 # random number seeds (000-999).
 #
 # Author:           Max Graves
-# Last Revised:     10-FEB-2014
+# Last Revised:     28-JUL-2014
 # =============================================================================
 
 
@@ -16,6 +16,8 @@ import numpy as np
 
 
 def main():
+
+    trestles = True
 
     # set number of equilibration steps
     equilNum = 10000
@@ -32,21 +34,30 @@ def main():
     
     # commands to add directories to path where blitz, boost, pimc sit.
     # not sure why, but this must be done every time for paramiko.
-    expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/users/m/t/mtgraves/local/lib ; '
+    if trestles: 
+        # used for xsede trestles
+        expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/mtgraves/local/lib ; '
+    else: 
+        # used for bluemoon
+        expLibs = 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/users/m/t/mtgraves/local/lib ; '
+    
     expPBSstuff = 'export PATH=/opt/pbs/bin/:$PATH ; '
     # -------------------------------------------------------------------------
 
     # parse cmd line
     args = cT.parseCMD()
 
-    # get username and password for VACC
+    # get username and password
     passwd = cT.Credentials(args.UserName)
 
     # create ssh and sftp instances
     ssh = paramiko.SSHClient() 
     ssh.load_host_keys(os.path.expanduser(
         os.path.join("~", ".ssh", "known_hosts")))
-    ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, password=passwd)
+    if trestles:    # connect to trestles
+        ssh.connect('trestles.sdsc.xsede.org', username=args.UserName, password=passwd)
+    else:           # connect to bluemoon
+        ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, password=passwd)
     sftp = ssh.open_sftp()
 
     # Move to desired directory on cluster from home and if it doesn't 
@@ -76,7 +87,7 @@ def main():
         if not args.restart:
             sftp.mkdir('out')
             sftp.mkdir('OUTPUT')
-
+        
         # change random number seed in submit file -- this defines hacky.
         # NOTE:  Must have submit script in current working directory.
         subFilePath = os.getcwd()

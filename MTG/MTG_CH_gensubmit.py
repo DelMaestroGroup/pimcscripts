@@ -423,6 +423,136 @@ def bluemoon(staticPIMCOps,numOptions,optionValue,outName,run,\
     pbsFile.close();
     print '\nSubmit jobs with: qsub %s\n' % fileName
 
+# -----------------------------------------------------------------------------
+def trestles(staticPIMCOps,numOptions,optionValue,outName,run,\
+             resubIDX,oneD,PIGS,memRequest):
+    ''' 
+    Write a pbs submit script for trestles.
+    '''
+    
+    if PIGS:    
+        if oneD:
+            exeName = 'pimc1DOBDM'
+        else:
+            exeName = 'pigs'
+    else:
+        if oneD:
+            exeName = 'pimc1D'
+        else:
+            exeName = 'pimc'
+
+    jobBase=exeName+outName
+    if run:
+        jobBase += '-'+run
+        
+    jobName=jobBase +'-'+ str(resubIDX)
+
+    # Open the pbs file and write its header
+    if resubIDX > 0:
+        fileName = 'reSubmit-%s.pbs' % jobName
+    else:
+        fileName = 'submit-%s.pbs' % jobBase
+        
+    ''' Local debug.... 
+    'PBS_O_WORKDIR=$PWD\n'+\
+    'PBS_O_HOST=A_HOST\n'+\
+    'PBS_NODEFILE=nodefile.txt\n'+\
+    'PBS_JOBID=my_jobid\n'+\
+    'PBS_ARRAYID=2\n\n'+\    
+    '''    
+    pbsFile = open(fileName,'w')
+    pbsFile.write('#!/bin/bash\n\n'+\
+                  #'#PBS -S /bin/bash\n'+\
+                  #'#PBS -l pmem=%sgb,pvmem=%sgb\n' % (memRequest,memRequest)+\
+                  '#PBS -q shared\n'+\
+                  '#PBS -l nodes=1:ppn=1\n'+\
+                  #'#PBS -l walltime=48:00:00\n'+\
+                  '#PBS -l walltime=00:05:00\n'+\
+                  '#PBS -N %s\n' % jobName+\
+                  '#PBS -A uvm104\n'+\
+                  #'#PBS -V\n'+\
+                  '#PBS -j oe\n'+\
+                  '#PBS -o out/%s-${PBS_JOBID}\n' % jobName +\
+                  #'#PBS -m n\n'+\
+                  
+                  'cd ${PBS_O_WORKDIR}\n\n'+\
+                  #'mkdir /tmp/${PBS_JOBID}_${PBS_ARRAYID}\n' +\
+                  #'cd /tmp/${PBS_JOBID}_${PBS_ARRAYID}\n' +\
+                  'mkdir OUTPUT\n' +\
+                  
+                  'echo "Starting PBS script %s at:`date`" \n' % fileName +\
+                  'echo "\thost:\t\t${PBS_O_HOST}"\n' +\
+                  'echo "\tnode:\t\t`cat ${PBS_NODEFILE}`"\n' +\
+                  'echo "\tjobid:\t\t${PBS_JOBID}"\n' +\
+                  #'echo "\tarray job:\t${PBS_ARRAYID}" \n\n'+\
+                  #'case ${PBS_ARRAYID} in\n'+\
+                  '\n##=============================================='
+                  '===================================================='
+                  '===============================================\n')
+    # Create the command string and make the case structure
+
+    for n in range(numOptions):
+    
+        pimcoutFile='${PBS_O_WORKDIR}/out/%s-%s.out'% (jobBase,n)
+        
+        if resubIDX:
+            command = 'continuePIMC.sh ${PIMCID}'
+        else:
+            if (optionValue.has_key('p') or staticPIMCOps.find('-p') != -1):
+                command = exeName + ' '
+            else:
+                command = exeName + ' -p %d ' % (n)
+            for flag,val in optionValue.iteritems():
+                command += '-%s %s ' % (flag,val[n]) 
+            command += staticPIMCOps
+            
+        command += ' >> ' + pimcoutFile + ' 2>&1'
+                    
+        if resubIDX > 0:
+            pbsFile.write('\n%d)\nsleep %d\n' % (n,2*n))
+            pbsFile.write('PIMCID=`getPIMCID.sh %s`\n' % pimcoutFile)
+            pbsFile.write('echo "Restarting PIMCID: ${PIMCID}..."\n')
+        else:
+            pbsFile.write('\n%d)\nsleep %d\n' % (n,10*n))
+        
+        pbsFile.write('echo "%s" \n' % command )
+        pbsFile.write('%s \n\n' % command )
+        '''# was commented here down
+        if (n == numOptions -1):
+            pbsFile.write('resubmit=0\n')
+            pbsFile.write('for i in {0..%s}\n' % (numOptions-1) )
+            pbsFile.write('do\n')
+            pbsFile.write('\tPIMCID=`getPIMCID.sh out/%s-${i}.out`\n' % jobBase)
+            pbsFile.write('\trem=`remainingBins.sh $PIMCID`\n')
+            pbsFile.write('\tif [ ${rem} -gt 0 ];then\n')
+            pbsFile.write('\t\tresubmit=1\n')
+            pbsFile.write('\t\tbreak\n')
+            pbsFile.write('\tfi\n')
+            pbsFile.write('done\n\n')
+            pbsFile.write('if [ ${resubmit} -eq 1 ];then\n')
+            pbsFile.write('\techo "Job array NOT complete. Resubmitting job..."\n')
+            pbsFile.write('\tjobdep=`jobID2arrayID.sh ${PBS_JOBID}`\n')
+            pbsFile.write('\techo "qsub -W depend=afterokarray:${jobdep} reSubmit-%s-%s.pbs"\n' % (jobBase,resubIDX+1) )
+            pbsFile.write('\tqsub -W depend=afterokarray:${jobdep} reSubmit-%s-%s.pbs\n' % (jobBase,resubIDX+1) )
+            pbsFile.write('\tsleep 30\n')
+            pbsFile.write('else\n')
+            pbsFile.write('\techo "All jobs in %s have completed!"\n' % jobBase)
+            pbsFile.write('fi\n')
+        # end 'was' comment'''
+        pbsFile.write(';;\n##=============================================='
+                      '===================================================='
+                      '===============================================\n')
+    pbsFile.write('esac\n')
+    pbsFile.write('echo "Finished job %s at: `date`" \n\n' % fileName )
+    #pbsFile.write(  'gzip OUTPUT/*\n'                       +\
+    #                'cp OUTPUT/* ${PBS_O_WORKDIR}/OUTPUT\n' +\
+    #                'cd ${PBS_O_WORKDIR}\n'                 +\
+    #                'gunzip ${PBS_O_WORKDIR}/OUTPUT*\n'     +\
+    #                'rm -r /tmp/${PBS_JOBID}_${PBS_ARRAYID}\n\n')
+    pbsFile.close();
+    print '\nSubmit jobs with: qsub %s\n' % fileName
+
+
     # -----------------------------------------------------------------------------
 def mammouth(staticPIMCOps,numOptions,optionValue,outName,run,\
              resubIDX,oneD):
