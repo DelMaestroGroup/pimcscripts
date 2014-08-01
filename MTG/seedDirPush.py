@@ -109,8 +109,13 @@ def main():
 
 
         # run gensubmit to create initial submit script.
-        command = ('python '+genSubPath+' '+subFilePath+\
-                '_temp --cluster=bluemoon '+'-m '+args.memRequest)
+        if trestles:
+            command = ('python '+genSubPath+' '+subFilePath+\
+                    '_temp --cluster=trestles '+'-m '+args.memRequest)
+        else:
+            command = ('python '+genSubPath+' '+subFilePath+\
+                    '_temp --cluster=bluemoon '+'-m '+args.memRequest)
+ 
         subprocess.check_call(command, shell=True)
        
         # store submit file name generated from gensubmit
