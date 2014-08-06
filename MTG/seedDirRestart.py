@@ -26,8 +26,11 @@ import natsort
 
 def main():
 
-    # unique tag
-    uTag = 'S20-T0.75'
+    # is this job converting trestles scripts to bluemoon scripts?
+    tresTOblue = True
+
+    # unique tag for the name of the job to be presented in the scheduler.
+    uTag = 'S05-T0.50'
 
     # set number of equilibration steps
     equilNum = 0
@@ -105,32 +108,78 @@ def main():
         sftp.chdir('..')
         
         # check if no restart string exists, in this case just skip the seed
-        # (hackyyyy)
+        # (hackyyyy -- needs to start it over in an intelligent manner.)
         if restartStrings == []:
             print 'seed number ',str(seedNum),' is empty'
             sftp.chdir('..')
             continue
         else:
+
+            numStr = 0
+            reSubName = 'resubmit-pimc.pbs'
+
+            # determine name of the original submit script.
             for f in sftp.listdir():
                 if 'submit-pimc' in f:
                     subFileName = f
 
-            reSubName = 'resubmit-pimc.pbs'
-            numStr = 0
-            with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
-                for n, line in enumerate(inFile):
-                    if line[:4] == 'pimc':
-                        outFile.write(restartStrings[numStr])
-                        numStr += 1
-                    elif r'#PBS -N' in line:
-                        outFile.write(line[:-2]+uTag+'\n')
-                    elif r'mkdir OUTPUT' in line:
-                        outFile.write(line)
-                        outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
-                        outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
-                        outFile.write('gunzip OUTPUT/*\n')
-                    else:
-                        outFile.write(line)
+            if tresTOblue:
+
+                with sftp.open(reSubName,'w') as outFile:
+
+                    # write beginning statements set up with the appropriate torque
+                    # parameters.  Also, submit to the tmp directory for faster i/o.
+                    outFile.write('#!/bin/bash\n\
+                            \n#PBS -S /bin/bash\
+                            \n#PBS -l pmem=1gb,pvmem=1gb\
+                            \n#PBS -l nodes=1:ppn=1\
+                            \n#PBS -l walltime=30:00:00\
+                            \n#PBS -N pimc-0\
+                            \n#PBS -V\
+                            \n#PBS -j oe\
+                            \n#PBS -o out/pimc-${PBS_JOBID}\
+                            \n#PBS -m n\n\
+                            \nmkdir /tmp/${PBS_JOBID}\
+                            \ncd /tmp/${PBS_JOBID}\
+                            \nmkdir OUTPUT\
+                            \ngzip ${PBS_O_WORKDIR}/OUTPUT/*\
+                            \ncp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\
+                            \ngunzip OUTPUT/*\
+                            \necho "Starting PBS script submit-pimc.pbs at:`date`" \
+                            \necho "  host:       ${PBS_O_HOST}"\
+                            \necho "  node:       `cat ${PBS_NODEFILE}`"\
+                            \necho "  jobid:      ${PBS_JOBID}"\n\n')
+                    
+                    # write out the submit string appropriate to the job.
+                    with sftp.open(subFileName) as inFile:
+                        for n, line in enumerate(inFile):
+                            if line[:4] == 'pimc':
+                                outFile.write(restartStrings[numStr])
+                                numStr += 1
+                            else:
+                                continue
+                    
+                    # write closing statements to bring data back from the node.
+                    outFile.write('\n\ngzip OUTPUT/*\
+                            \ncp OUTPUT/* ${PBS_O_WORKDIR}/OUTPUT\
+                            \ncd ${PBS_O_WORKDIR}\
+                            \ngunzip ${PBS_O_WORKDIR}/OUTPUT\
+                            \nrm -r /tmp/${PBS_JOBID}')
+            else:
+                with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
+                    for n, line in enumerate(inFile):
+                        if line[:4] == 'pimc':
+                            outFile.write(restartStrings[numStr])
+                            numStr += 1
+                        elif r'#PBS -N' in line:
+                            outFile.write(line[:-2]+uTag+'\n')
+                        elif r'mkdir OUTPUT' in line:
+                            outFile.write(line)
+                            outFile.write('gzip ${PBS_O_WORKDIR}/OUTPUT/*\n')
+                            outFile.write('cp -r ${PBS_O_WORKDIR}/OUTPUT/* ./OUTPUT/\n')
+                            outFile.write('gunzip OUTPUT/*\n')
+                        else:
+                            outFile.write(line)
 
             print restartStrings[0],'\n'
 
@@ -156,7 +205,7 @@ def main():
                 print 'Output: ',stdout.readlines()
                 if stderr.readlines() != []:
                     print 'Error: ',stderr.readlines()
-       
+
             sftp.chdir('..')
 
     #sftp.close()
