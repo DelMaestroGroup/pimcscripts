@@ -95,15 +95,28 @@ def main():
         # build array of restart strings from naturally sorted logfiles
         restartStrings = []
 
+        oneLessLine = False
         for logFileName in logFileNames:
             with sftp.open(logFileName) as inFile:
                 for n,line in enumerate(inFile):
+                    if n == 1:
+                        # check if log file 2nd line is blank (some are, some aren't...
+                        # this is caused by bug in converting trestles (xsede) scripts
+                        # over to bluemoon scripts)
+                        if line == '':
+                            oneLessLine = True
+                            continue
+                        else:
+                            restartStrings.append(line[2:-1])
                     if n == 2:
-                        restartStrings.append(line[2:-1])
+                        if not oneLessLine:
+                            restartStrings.append(line[2:-1])
+
         for nr, restartStr in enumerate(restartStrings):
             restartStrings[nr]+=' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
             restartStrings[nr] = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStrings[nr])
             restartStrings[nr] = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStrings[nr])
+            restartStrings[nr] = re.sub(r'-W\s\d+',r'-S '+str(29),restartStrings[nr])
         
         sftp.chdir('..')
         
@@ -134,7 +147,7 @@ def main():
                             \n#PBS -l pmem=1gb,pvmem=1gb\
                             \n#PBS -l nodes=1:ppn=1\
                             \n#PBS -l walltime=30:00:00\
-                            \n#PBS -N pimc-0\
+                            \n#PBS -N pimc-%s\
                             \n#PBS -V\
                             \n#PBS -j oe\
                             \n#PBS -o out/pimc-${PBS_JOBID}\
@@ -148,7 +161,7 @@ def main():
                             \necho "Starting PBS script submit-pimc.pbs at:`date`" \
                             \necho "  host:       ${PBS_O_HOST}"\
                             \necho "  node:       `cat ${PBS_NODEFILE}`"\
-                            \necho "  jobid:      ${PBS_JOBID}"\n\n')
+                            \necho "  jobid:      ${PBS_JOBID}"\n\n' % uTag)
                     
                     # write out the submit string appropriate to the job.
                     with sftp.open(subFileName) as inFile:
