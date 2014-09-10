@@ -11,6 +11,47 @@ import os,sys
 from optparse import OptionParser
 
 # -----------------------------------------------------------------------------
+def vacc(staticPIMCOps,numOptions,optionValue,outName):
+    ''' Write a pbs submit script for westgrid. '''
+
+    # Open the pbs file and write its header
+    fileName = 'submit-pimc%s.pbs' % outName
+    pbsFile = open(fileName,'w')
+    pbsFile.write('''#!/bin/bash
+#PBS -S /bin/bash\n
+#PBS -l walltime=29:00:00
+#PBS -l nodes=1:ppn=1,pmem=1gb
+#PBS -N pimc
+#PBS -V
+#PBS -j oe
+#PBS -o out/ipr-0-${PBS_ARRAYID}-${PBS_JOBID}\n 
+# Do not send email
+#PBS -M adelmaes@uvm.edu
+#PBS -m n\n
+# Start job script
+cd $PBS_O_WORKDIR
+echo \"Starting run at: `date`\"
+
+case ${PBS_ARRAYID} in\n''')
+
+    # Create the command string and make the case structure
+    for n in range(numOptions):
+        if (optionValue.has_key('p') or staticPIMCOps.find('-p') != -1):
+            command = './pimc.e '
+        else:
+            command = './pimc.e -p %d ' % (n)
+
+        for flag,val in optionValue.iteritems():
+            command += '-%s %s ' % (flag,val[n])
+        command += staticPIMCOps
+        pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
+    
+    pbsFile.write('esac\necho \"Finished run at: `date`\"')
+    pbsFile.close();
+    
+    print '\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName)
+
+# -----------------------------------------------------------------------------
 def westgrid(staticPIMCOps,numOptions,optionValue,outName):
     ''' Write a pbs submit script for westgrid. '''
 
@@ -211,6 +252,9 @@ def main():
         sharcnet(staticPIMCOps,numOptions,optionValue,outName)
 
     if options.cluster == 'scinet':
+        scinet(staticPIMCOps,numOptions,optionValue,outName)
+
+    if options.cluster == 'vacc':
         scinet(staticPIMCOps,numOptions,optionValue,outName)
 
 # ----------------------------------------------------------------------
