@@ -17,7 +17,7 @@ import numpy as np
 
 def main():
 
-    trestles = True
+    trestles = False
 
     # set number of equilibration steps
     equilNum = 10000
@@ -57,7 +57,7 @@ def main():
     if trestles:    # connect to trestles
         ssh.connect('trestles.sdsc.xsede.org', username=args.UserName, password=passwd)
     else:           # connect to bluemoon
-        ssh.connect('bluemoon-user2.uvm.edu', username=args.UserName, password=passwd)
+        ssh.connect('bluemoon-user1.uvm.edu', username=args.UserName, password=passwd)
     sftp = ssh.open_sftp()
 
     # Move to desired directory on cluster from home and if it doesn't 

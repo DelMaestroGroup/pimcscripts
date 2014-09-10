@@ -67,7 +67,7 @@ def main():
 
     figg2 = pl.figure(2)
     ax = figg2.add_subplot(111)
-    pl.ylabel(r'$\langle \rho_s/\rho \rangle$', fontsize=20)
+    pl.ylabel(r'$ \rho_s/\rho $', fontsize=20)
     pl.xlabel(r'$T\ [K]$', fontsize=20)
     pl.grid(True)
     pl.xlim([0.4,2.6])
@@ -79,7 +79,7 @@ def main():
  
     figg3 = pl.figure(3)
     ax = figg3.add_subplot(111)
-    pl.ylabel(r'$\langle \rho_{\text{film}} \rangle$', fontsize=20)
+    pl.ylabel(r'$ \rho_{\text{film}}\ [\si{\angstrom}^{-2}] $', fontsize=20)
     pl.xlabel(r'$T\ [K]$', fontsize=20)
     pl.grid(True)
     pl.xlim([0.4,2.6])
@@ -126,8 +126,9 @@ def main():
         print normFactor
 
         # set label for plot
-        if 'distinguishable' in Sval:
-            labell = 'S = '+str(S)+', Boltzmannons'
+        #if 'distinguishable' in Sval:
+        if 'noSwaps' in Sval:
+            labell = 'S = '+str(S)+' '+r'$\si{\angstrom}$'', Boltzmannons'
         else:
             labell = 'S = '+str(S)+' '+r'$\si{\angstrom}$'+', Bosons'
 
@@ -230,17 +231,25 @@ def main():
        
     pl.figure(1)
     pl.legend()
+
+    pl.savefig('Omega_vs_T_allS.pdf', format='pdf',
+            bbox_inches='tight')
     
     pl.figure(2)
     pl.legend()
     
+    pl.savefig('SuperFrac_vs_T_allS.pdf', format='pdf',
+            bbox_inches='tight')
+   
     pl.figure(3)
     pl.legend()
-    
+     
+    pl.savefig('FilmDensities_vs_T_allS.pdf', format='pdf',
+            bbox_inches='tight')
+   
+
     pl.figure(4)
     pl.legend()
-    #pl.savefig('Omega_vs_T_allS.pdf', format='pdf',
-    #        bbox_inches='tight')
     
     pl.show()
     

@@ -112,6 +112,10 @@ def main():
     xticks[0].set_visible(False)
     pl.tight_layout()
 
+    pl.savefig('Omega_vs_inverseLZ_S20.pdf', format='pdf',
+            bbox_inches='tight')
+
+
     figg = pl.figure(2)
     ax = figg.add_subplot(111)
     pl.errorbar(invaz, filmAverages, filmErrors, fmt='o')
@@ -123,9 +127,6 @@ def main():
     xticks = ax.xaxis.get_major_ticks()
     xticks[0].set_visible(False)
     pl.tight_layout()
-
-    #pl.savefig('Omega_vs_inverseLZ.pdf', format='pdf',
-    #        bbox_inches='tight')
 
     pl.show()
     

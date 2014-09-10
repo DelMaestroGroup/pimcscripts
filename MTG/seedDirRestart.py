@@ -27,10 +27,10 @@ import natsort
 def main():
 
     # is this job converting trestles scripts to bluemoon scripts?
-    tresTOblue = True
+    tresTOblue = False
 
     # unique tag for the name of the job to be presented in the scheduler.
-    uTag = 'S05-T0.50'
+    uTag = 'S05-T1.80'
 
     # set number of equilibration steps
     equilNum = 0
@@ -99,6 +99,16 @@ def main():
         for logFileName in logFileNames:
             with sftp.open(logFileName) as inFile:
                 for n,line in enumerate(inFile):
+                    # check for whether the restart string in gce-log has been
+                    # moved up one line.  We want to write this to the resubmit
+                    # script.
+                    lineUp = False
+                    if n == 1:
+                        if len(line) < 10:
+                            lineUp = True
+                            continue
+                        else:
+                            restartStrings.append(line[2:-1])
                     if n == 1:
                         # check if log file 2nd line is blank (some are, some aren't...
                         # this is caused by bug in converting trestles (xsede) scripts
@@ -109,6 +119,8 @@ def main():
                         else:
                             restartStrings.append(line[2:-1])
                     if n == 2:
+                        if not lineUp:
+                            restartStrings.append(line[2:-1])
                         if not oneLessLine:
                             restartStrings.append(line[2:-1])
 
@@ -116,7 +128,7 @@ def main():
             restartStrings[nr]+=' >> ${PBS_O_WORKDIR}/out/pimc-0.out 2>&1'
             restartStrings[nr] = re.sub(r'-E\s\d+',r'-E '+str(equilNum),restartStrings[nr])
             restartStrings[nr] = re.sub(r'-S\s\d+',r'-S '+str(binNum),restartStrings[nr])
-            restartStrings[nr] = re.sub(r'-W\s\d+',r'-S '+str(29),restartStrings[nr])
+            restartStrings[nr] = re.sub(r'-W\s\d+',r'-W '+str(29),restartStrings[nr])
         
         sftp.chdir('..')
         
