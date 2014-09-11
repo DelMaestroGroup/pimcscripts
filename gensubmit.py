@@ -24,7 +24,7 @@ def vacc(staticPIMCOps,numOptions,optionValue,outName):
 #PBS -N pimc
 #PBS -V
 #PBS -j oe
-#PBS -o out/ipr-0-${PBS_ARRAYID}-${PBS_JOBID}\n 
+#PBS -o out/pimc-${PBS_ARRAYID}-${PBS_JOBID}\n 
 # Do not send email
 #PBS -M adelmaes@uvm.edu
 #PBS -m n\n
@@ -162,8 +162,8 @@ def main():
 
     # setup the command line parser options 
     parser = OptionParser() 
-    parser.add_option("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet'],\
-            help="target cluster: [westgrid,sharcnet,scinet]") 
+    parser.add_option("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet','vacc'],\
+            help="target cluster: [westgrid,sharcnet,scinet,vacc]") 
 
     # parse the command line options
     (options, args) = parser.parse_args() 
@@ -255,7 +255,7 @@ def main():
         scinet(staticPIMCOps,numOptions,optionValue,outName)
 
     if options.cluster == 'vacc':
-        scinet(staticPIMCOps,numOptions,optionValue,outName)
+        vacc(staticPIMCOps,numOptions,optionValue,outName)
 
 # ----------------------------------------------------------------------
 if __name__ == "__main__": 
