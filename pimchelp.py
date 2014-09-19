@@ -258,11 +258,11 @@ class PimcHelp:
         # The data file and all output file names
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
-                         'planewind', 'planearea']
+                         'planewind', 'planearea','virial']
         if not canonical:
             self.dataType.append('number')
         self.outType  = ['estimator', 'number', 'obdm', 'pair', 'pcycle', 'super', 
-                         'worm', 'radial', 'log', 'state']
+                         'worm', 'radial', 'log', 'state','virial']
 
     # -----------------------------------------------------------------------------
     def getID(self,fileName): 

@@ -255,13 +255,13 @@ def main():
     
     # Merge all the output files
     print 'Merged data files:'
-    for type in pimc.dataType:
-        mergeData(pimc,type,newID,options.skip,baseDir,idList=options.pimcID)
+    for ftype in pimc.dataType:
+        mergeData(pimc,ftype,newID,options.skip,baseDir,idList=options.pimcID)
 
     # Now perform the merge for possible cumulative average files
     if options.cumulative:
-        for type in ['position','locsuper']:
-            mergeCumulativeData(pimc,type,newID,baseDir,idList=options.pimcID)
+        for ftype in ['position','locsuper']:
+            mergeCumulativeData(pimc,ftype,newID,baseDir,idList=options.pimcID)
 
     # copy over the log file
     oldLogName = pimc.getFileList('log',idList=options.pimcID)[0]
