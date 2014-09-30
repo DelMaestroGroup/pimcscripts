@@ -9,7 +9,7 @@ import os,sys,glob
 import tarfile
 import pimchelp
 from optparse import OptionParser
-import numpy
+import numpy as np
 
 # -----------------------------------------------------------------------------
 def mergeData(pimc,type,newID,skip,baseDir,idList=None):
@@ -73,6 +73,7 @@ def mergeData(pimc,type,newID,skip,baseDir,idList=None):
         cylfileExist = False
         got_header = False
         init = False
+        fileNames = pimc.getFileList(type,idList=idList,cyldir='CYLINDER/')
         for i,fname in enumerate(fileNames):
 
             baseName = os.path.basename(fname)
@@ -160,11 +161,21 @@ def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
                 outFile.write(inLines[0])
                 outFile.write(inLines[1])
 
+                numLines = int(inLines[0].split()[1])**3
+
                 # Get the data from the first file
                 data = np.loadtxt(fname, ndmin=2)
+                # if data.shape[0] == 0:
+                #     data = np.zeros([numLines])
+                # else:
+                #     numMerged += 1
             else:
                 # Accumulate the running average
                 data += np.loadtxt(fname, ndmin=2)
+                # if data.shape[0] > 0:
+                #     print data.shape[0]
+                #     numMerged += 1
+                #     data += tData
 
     if fileExist:
         # write the new average to disk
@@ -270,6 +281,7 @@ def main():
 
     # Do the same if we are merging cylinder files
     if len(glob.glob(baseDir + 'MERGED/CYLINDER')) > 0:
+        print "CYLINDER"
         os.system('cp %s %s' % (oldLogName,baseDir+'MERGED/CYLINDER/'+newLogName))
 
     # We first create the name of the output tar file

@@ -258,7 +258,8 @@ class PimcHelp:
         # The data file and all output file names
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
-                         'planewind', 'planearea','virial']
+                         'planewind', 'planearea','virial', 'linedensity',
+                         'linepotential']
         if not canonical:
             self.dataType.append('number')
         self.outType  = ['estimator', 'number', 'obdm', 'pair', 'pcycle', 'super', 
@@ -332,7 +333,7 @@ class PimcHelp:
     #     return fileNames,numParams,numDataCols
 
     # -----------------------------------------------------------------------------
-    def getFileList(self,type,idList=None):
+    def getFileList(self,type,idList=None,cyldir=""):
         ''' Get a list of input files based on their type, and possibly a number
             of unique ID's'''
 
@@ -340,7 +341,7 @@ class PimcHelp:
 
         # We want all the file names here
         if not idList:
-            fileLoc = '%s%s-%s-%s' % (self.baseDir,self.prefix,type,self.dataName)
+            fileLoc = '%s%s-%s-%s' % (self.baseDir+cyldir,self.prefix,type,self.dataName)
             fileNames = glob.glob(fileLoc)
 
             # Now sort them
@@ -352,10 +353,6 @@ class PimcHelp:
                 fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,type,id)
                 fileNames.extend(glob.glob(fileLoc))
 
-        #for f in sorted(fileNames):
-        #    print f
-
-        #return fileNames
         return sorted(fileNames)
 
     # -----------------------------------------------------------------------------
@@ -727,7 +724,7 @@ class Description:
                                   'V':'Potential Energy [K]',
                                   'E':'Energy [K]',
                                   'Ecv':'Energy [K]',
-                                  'E_th':'Energy [K]',
+                                  'Eth':'Energy [K]',
                                   'E_mu':r'$E - \mu N$',
                                   'K/N':'Kinetic Energy per Particle [K]',
                                   'V/N':'Potential Energy per Particle [K]',
@@ -755,6 +752,8 @@ class Description:
         self.estimatorShortName = {'K':'K [K]',
                                   'V':'V [K]',
                                   'E':'E [K]',
+                                  'Eth':'Eth [K]',
+                                  'Ecv':'Ecv [K]',
                                   'E_mu':r'$E - \mu N$',
                                   'K/N':'K/N [K]',
                                   'V/N':'V/N [K]',

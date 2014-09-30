@@ -103,8 +103,8 @@ def main():
                     cap.set_mew(2.0)
 
             
-        #pl.tight_layout()
-        pl.xlabel(descrip.paramLongName[reduce.reduceLabel])
+        # pl.tight_layout()
+        pl.xlabel(descrip.paramLongName[reduce.reduceLabel],labelpad=16)
         pl.ylabel(descrip.estimatorLongName[est])
         leg = pl.legend(frameon=False, loc='best', prop={'size':18})
         if xLim != []:

@@ -60,7 +60,7 @@ def markersColors(numColors):
     #colors  = loadgmt.getColorList('cb/div','PiYG_07',numColors)
     colors  = loadgmt.getColorList('cb/qual','Set1_09',numColors)
 
-    colors.reverse()
+    # colors.reverse()
     markers = loadgmt.getMarkerList()
 
     return markers,colors
