@@ -19,6 +19,7 @@ Options:
   --nobin                       Don't use the binned errorbars
   --ttest                       Perform a ttest
   --hline=<val>                 Include a horizontal line at <val> in the averaged plot
+  --hlabel=<hl>                 A legend label for the horizontal line.
 """
 
 # pimcplot.py
@@ -108,6 +109,7 @@ def main():
     error = args['--error'] and float(args['--error'])
     val = args['--hline'] and float(args['--hline'])
 
+
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
         leglabel = []
@@ -139,6 +141,13 @@ def main():
         yShort = label.estimatorShortName[estimator]
     except:
         yShort = estimator
+
+    # get a label for a possible horizontal line
+    if args['--hline']:
+        if args['--hlabel']:
+            hlabel = args['--hlabel']
+        else:
+            hlabel = yShort.split()[0] + ' = ' + args['--hline']
 
     # First we load and store all the data 
     data = []
@@ -220,7 +229,7 @@ def main():
 
     # Add a possible horizontal line indicating some value
     if args['--hline']:
-        axhline(y=val,color='gray',linewidth=2.5, label=yShort.split()[0] + ' = ' + args['--hline'])
+        axhline(y=val,color='gray',linewidth=2.5, label=hlabel)
 
     ylabel(yLong)
     xlabel("MC Bin Number")

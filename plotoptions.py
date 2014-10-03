@@ -15,14 +15,14 @@ def plotOptions(plotType):
     pOps = {}
 
     # marker properties
-    pOps['markersize'] = 9
-    pOps['markeredgewidth'] = 1.0
-    pOps['markeredgecolor'] = 'None'
+    pOps['markersize'] = 7
+    pOps['markeredgewidth'] = 0.75
+    pOps['markeredgecolor'] = '#4d4d4d'
     pOps['marker'] = 'o'
 
     # line properties
     pOps['color'] = 'black'
-    pOps['linewidth'] = 1.0
+    pOps['linewidth'] = 0.75
 
     if 'l' in plotType:
         pOps['linestyle'] = '-' 
@@ -33,15 +33,14 @@ def plotOptions(plotType):
         pOps['linestyle'] = 'None'
 
     if plotType == 'l':
-        pOps['linewidth'] = 5.0
+        pOps['linewidth'] = 3.0
         pOps['marker'] = None
         pOps['markeredgewidth'] = 0.0
         pOps['markersize'] = 0.0
         pOps.pop('color')
 
     if 'e' in plotType:
-        pOps['capsize'] = 5
-        pOps['elinewidth'] = 1.0
+        pOps['capsize'] = 4
         
     return pOps
 
