@@ -238,8 +238,8 @@ def main():
     pl.figure(2)
     pl.legend()
     
-    pl.savefig('SuperFrac_vs_T_allS.pdf', format='pdf',
-            bbox_inches='tight')
+    #pl.savefig('SuperFrac_vs_T_allS.pdf', format='pdf',
+    #        bbox_inches='tight')
    
     pl.figure(3)
     pl.legend()

@@ -26,11 +26,8 @@ import natsort
 
 def main():
 
-    # is this job converting trestles scripts to bluemoon scripts?
-    tresTOblue = False
-
     # unique tag for the name of the job to be presented in the scheduler.
-    uTag = 'S05-T1.80'
+    uTag = 'S05-T0.50'
 
     # set number of equilibration steps
     equilNum = 0
@@ -94,7 +91,7 @@ def main():
 
         # build array of restart strings from naturally sorted logfiles
         restartStrings = []
-
+        
         oneLessLine = False
         for logFileName in logFileNames:
             with sftp.open(logFileName) as inFile:
@@ -148,6 +145,16 @@ def main():
                 if 'submit-pimc' in f:
                     subFileName = f
 
+            # determine if original submit script was from trestles or bluemoon
+            tresTOblue = False
+            with sftp.open(subFileName) as inFile:
+                for n, line in enumerate(inFile):
+                    if n == 6:
+                        if 'uvm104' in line:
+                            tresTOblue = True
+
+            # write resubmit script for the case of original submit script being
+            # from trestles.
             if tresTOblue:
 
                 with sftp.open(reSubName,'w') as outFile:
@@ -190,6 +197,9 @@ def main():
                             \ncd ${PBS_O_WORKDIR}\
                             \ngunzip ${PBS_O_WORKDIR}/OUTPUT\
                             \nrm -r /tmp/${PBS_JOBID}')
+            
+            # write resubmit script for the case of original submit script being
+            # from bluemoon.
             else:
                 with sftp.open(subFileName) as inFile, sftp.open(reSubName,'w') as outFile:
                     for n, line in enumerate(inFile):
