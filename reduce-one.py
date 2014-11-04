@@ -298,7 +298,7 @@ def main():
     # possible types of estimators we may want to reduce
     estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea',
-               'planewind','virial']
+               'planewind','virial','linedensity','linepotential']
     estDo = {e:False for e in estList}
 
     # if we specify a single estimator, only do that one
@@ -359,6 +359,13 @@ def main():
 
     if estDo['planedensity']:
         x9,ave9,err9 = getVectorEst('planedensity',pimc,outName,reduceFlag,'n','rho(r)',skip=skip)
+
+    if estDo['linedensity']:
+        x10,ave10,err10 = getVectorEst('linedensity',pimc,outName,reduceFlag,\
+                                       'r [A]','rho1d(r)',skip=skip)
+    if estDo['linepotential']:
+        x11,ave11,err11 = getVectorEst('linepotential',pimc,outName,reduceFlag,\
+                                       'r [A]','V1d(r)',skip=skip)
 
     # Do we show plots?
     if options.plot:
