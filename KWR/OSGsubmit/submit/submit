@@ -1,0 +1,79 @@
+#!/usr/bin/python
+
+import getpass
+import math
+import os
+import subprocess
+import sys
+import time
+
+
+def sh(cmd):
+    # Function that gives direct access to the bash shell. Just type the usual bash command
+    # syntax into the function. 
+    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
+# Create a working directory for the run based an a unique run id. This just 
+# uses the time of submission at the submit node. Alternatively, one could
+# just enter their own name for run_id below.
+run_id = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+work_dir = "/local-scratch/%s/runs/%s" %(getpass.getuser(), run_id)
+
+# Create the working directory, copy all necessary executables and scripts
+# then move into the working directory
+print "Work directory for this run is: %s" %(work_dir)
+os.makedirs(work_dir)
+sh("cp remote-job-wrapper local-post-job pimc.e %s/" %(work_dir))
+os.chdir(work_dir)
+
+# Open master DAG file (Directed Acyclic Graph) responsible for submitting the
+# DAG that manages all the jobs below to the queue and keeps tracks of them for
+# you as the move around to different clusters and nodes. 
+dagfd = open("master.dag", "w")
+
+# Job counter
+count = 0
+# Loops to sweep through parameters. Modify this as needed to perform the sweep you desire.
+# Remember to indent properly below. 
+for T in [ 2.0 ]:
+    for r in [ 9 ]:
+        for L in [ 40 ]:
+            for u in [ 80.0, 100.0, 120.0 ]:
+		        for p in range(1,15):
+			        count += 1
+
+			        # unique job id - used for the output directory
+			        job_id = "T%.1f__r%d__L%d__u%.1f__p%d" %(T, r, L, u,p)
+			        os.makedirs(job_id)
+
+                    # Command line arguments being passed to the pimc.e executable    
+			        args = "-W 22 -T %.1f -n 0.0528 -r %d -b cylinder -L %d -t 0.004 -I aziz -X hex_tube -l 7 -u %.1f -M 8 -S 1000 -E 40000 -p %d --action primitive --relax" %(T, r, L, u, p)
+
+			        # create the job submit file
+			        subfd = open("%s.submit" %(job_id), "w")
+			        subfd.write("universe = vanilla\n")
+			        subfd.write("requirements = (isUndefined(TARGET.GLIDEIN_ResourceName) || ((MY.MachineAttrGLIDEIN_ResourceName1 =!= TARGET.GLIDEIN_ResourceName) && (MY.MachineAttrGLIDEIN_ResourceName2 =!= TARGET.GLIDEIN_ResourceName) && (MY.MachineAttrGLIDEIN_ResourceName3 =!= TARGET.GLIDEIN_ResourceName) && (MY.MachineAttrGLIDEIN_ResourceName4 =!= TARGET.GLIDEIN_ResourceName) && (MY.MachineAttrGLIDEIN_ResourceName5 =!= TARGET.GLIDEIN_ResourceName)))\n")
+			        subfd.write("periodic_release = (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*60))\n")
+			        subfd.write("executable = remote-job-wrapper\n")
+			        subfd.write("arguments = %s %s\n" %(job_id, args))
+			        subfd.write("transfer_input_files = pimc.e, %s\n" %(job_id))
+			        subfd.write("transfer_output_files = %s\n" %(job_id))
+			        subfd.write("output = %s.out\n" %(job_id))
+			        subfd.write("error = %s.err\n" %(job_id))
+			        subfd.write("log = job.log\n")
+			        subfd.write("ShouldTransferFiles = YES\n")
+			        subfd.write("when_to_transfer_output = ON_EXIT\n")
+	        		subfd.write("+projectname = \"TG-DMR140072\"\n")
+			        subfd.write("notification = Never\n")
+			        subfd.write("queue 1\n")
+			        subfd.close()
+	    
+			        # update the dag
+			        dagfd.write("JOB          job_%d %s.submit\n" %(count, job_id))
+			        dagfd.write("SCRIPT POST  job_%d %s/local-post-job %s %s\n" %(count, work_dir, work_dir, job_id))
+			        dagfd.write("RETRY        job_%d 20\n" %(count))
+			        dagfd.write("\n")
+
+print "%d jobs added. Now submitting DAG..." %(count)
+dagfd.close()
+print sh("condor_submit_dag -notification Always -maxidle 500 master.dag")
