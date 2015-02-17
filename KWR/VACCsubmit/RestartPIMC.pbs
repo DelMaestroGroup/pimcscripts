@@ -1,0 +1,72 @@
+cd ${PBS_O_WORKDIR}
+
+echo "Starting restart PBS script at:`date`"
+echo "  host:       ${PBS_O_HOST}"
+echo "  node:       `cat ${PBS_NODEFILE}`"
+echo "  jobid:      ${PBS_JOBID}"
+echo "  array job:  ${PBS_ARRAYID}"
+
+# Grab a standard out file
+outfile=`ls out/pimc-*-${PBS_ARRAYID} | tail -n 1`
+
+# Grab the line containing the last measurement/bin
+binline=`grep "[PIMCID: *]" $outfile | tail -n 3 | head -n 1`
+
+# Move outfile so it doesn't get reused 
+mv -v $outfile old_stdout_files/
+
+# Get the PIMCID from the line in the outfile
+re="PIMCID: ([0-9]*)"
+if [[ $binline =~ $re ]]; then
+    echo "Found PIMCID match"
+    PIMCID="${BASH_REMATCH[1]}"
+fi
+
+echo "Restarting PIMCID $PIMCID"
+
+# Get the bin count
+re="Bin # *([0-9]*)"
+if [[ $binline =~ $re ]]; then
+    bincount="${BASH_REMATCH[1]}"
+    echo "Bins collected in previous run: $bincount" 1>&2
+fi
+
+# Use the unique PIMCID to get the corresponding log file
+logfile=`find ./OUTPUT/ -name "*ce-log-*$PIMCID.dat"`
+
+if [ ! -f $logfile]; then
+    echo "Could not find log file"
+    exit
+fi 
+
+# Grab the restart command from the log file
+CMD=`cat $logfile | grep pimc.e | sed 's/# //'`
+echo "Old command is: $CMD" 1>&2
+
+# Get the original bin request from log file
+binmatch="-S ([0-9]*)"
+if [[ $CMD =~ $binmatch ]]; then
+    binrequest="${BASH_REMATCH[1]}"
+    if [ "$binrequest" == "0" ]; then
+        echo "Code completed, nothing to do. Moving to next job in array" 1>&2
+        exit
+    fi
+    echo "Bins requested by previous run: $binrequest" 1>&2
+fi
+
+# Adjust the bin count and rewrite command
+adjustedbins=$((binrequest-bincount))
+if [ "$adjustbins" == "0" ]; then
+    echo "Code completed, nothing to do. Moving to next job in array" 1>&2
+    exit
+fi
+echo "Adjusted bin request: $adjustedbins" 1>&2
+NEWCMD=`echo $CMD | sed "s/-S [0-9]*/-S $adjustedbins/"`
+echo "Adjusted command: $NEWCMD" 1>&2
+
+# Replace command string in log file for future restarts
+sed -i "s/-S $binrequest/-S $adjustedbins/g" $logfile
+
+# Execute new command
+$NEWCMD
+echo "Finished run at: `date`"
