@@ -381,8 +381,10 @@ def main():
     if not args.f and not args.resume and not args.from_state:
         print "Must specify an input file when first initiating a run" 
         quit()
-    
-    if not args.R:
+   
+    if numrestarts == 0:
+        pass
+    elif not numrestarts:
         print "Need to specify the number of restarts"
         quit()
         
