@@ -298,7 +298,6 @@ def InitiateFromState(numrestarts,binrequest,eqrequest,pids):
                     eqsteps=eqmatch.group(0)
                     command=command.replace(eqsteps,'-E %d'%eqrequest)
                     commands.append(command)
-            print commands
             # Move back to working directory
             os.chdir("..")
             
@@ -331,7 +330,6 @@ case ${PBS_ARRAYID} in\n''')
                 # Make a new command for each PID specified by the user
                 for i in range(1, pids+1):
                     newcommand=command+" -p %d"%i
-                    print newcommand
                     pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,newcommand))
                     n += 1
             pbsFile.write('esac\necho \"Finished run at: `date`\"')
