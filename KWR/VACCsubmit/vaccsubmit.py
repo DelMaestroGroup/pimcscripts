@@ -6,7 +6,7 @@ import re
 import numpy as np
 
 def sh(cmd):
-'''A useful function that allows direct access to the bash shell. Simply type what you usually
+    '''A useful function that allows direct access to the bash shell. Simply type what you usually
     would at the terminal into this function and you can interact with the bash shell'''
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
@@ -205,6 +205,8 @@ def ResumeJobChain(numrestarts):
     # For working every directory in the parent directory
     for workdir in os.listdir(parentdir):
         if os.path.isdir(workdir):
+            # Copy the pimc.e executable to the work dir
+            sh("cp pimc.e %s"%workdir)
             commands=[]
             # Move intothe OUTPUT folder of each working directory and grab the 
             # restart command from the log file to add to the commands list
@@ -267,6 +269,8 @@ def InitiateFromState(numrestarts,binrequest,eqrequest,pids):
     # For working every directory in the parent directory
     for workdir in os.listdir(parentdir):
         if os.path.isdir(workdir):
+            # Copy the pimc.e executable to the work dir
+            sh("cp pimc.e %s"%workdir)
             commands=[]
             # Move into the OUTPUT directory of each working directory
             os.chdir(workdir+"/OUTPUT/")
@@ -346,7 +350,7 @@ case ${PBS_ARRAYID} in\n''')
             chainFile=makeJobChain(subcmd,numrestarts,"RestartPIMC.pbs")
             sh("chmod u+x %s"%chainFile)
             # Send out the job chain
-            print "Resuming job chain for %s"%workdir
+            print "Submittingjob chain for %s from supplied state file"%workdir
             sh("./%s"%chainFile)
             
             os.chdir(parentdir)
