@@ -1,6 +1,7 @@
 ''' PimcHelp - helper methods for analzing pimc output data.
 '''
 import os
+import sys
 import glob
 from operator import itemgetter, attrgetter
 
@@ -24,8 +25,9 @@ def getFileNameParameters(fname):
     We need to be careful due to the problems associated with splitting at the
     '-' character when there are potential minus signs.
     '''
-
+    # Strip off extension and split on dashes
     fileParts  = fname.rstrip('.dat').split('-')
+        
     pIndex = []
     for n,part in enumerate(fileParts):
         if part == '':
@@ -45,6 +47,11 @@ def sortFileNames(fileNames):
     strings.'''
 
     fileTuples = []
+    # If the are supplied a list of files names with the path still attached,
+    # remove the path
+    for i in range(len(fileNames)):
+        fileNames[i] = os.path.basename(fileNames[i])
+        
     for fname in fileNames:
         # break up the parameters in the file name
         fileParts = getFileNameParameters(fname)
@@ -136,7 +143,7 @@ def getParFromPIMCFile(fileName):
 # -----------------------------------------------------------------------------
 def getHeadersFromFile(fileName, skipLines=0): 
     ''' Get the data column headers from a PIMC output file. '''
-
+    
     with open(fileName,'r') as inFile:
         inLines = inFile.readlines();
         n = skipLines
@@ -279,6 +286,7 @@ class PimcHelp:
         # Get the values of all simulation parameters
         paramsMap = {}
         params = False
+        logName = self.baseDir+logName
         with open(logName, 'r') as logFile:
             for line in logFile:
                 if 'Begin Simulation Parameters' in line:

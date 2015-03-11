@@ -1,16 +1,22 @@
 import argparse
 import os
-import pimchelper
+import mergehelper
 import subprocess
 import glob
 import numpy as np
+import itertools
+import shutil
 
 def sh(cmd):
     '''A useful function that allows direct access to the bash shell. Simply type what you usually would at 
     the terminal into this function and you can interact with the bash shell'''
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
-def prepFile(mergedir,prefix,estname,dataName,newID,samplefile):
+def intersperse(delimiter, seq):
+    '''Returns a list with a delimiter inserted between each element of the supplied list'''
+    return list(itertools.islice(itertools.chain.from_iterable(itertools.izip(itertools.repeat(delimiter), seq)), 1, None))
+
+def prepScalarFile(mergedir,prefix,estname,dataName,newID,samplefile):
     filename = "%s-%s-%s-%d.dat"%(prefix,estname,dataName,newID)
     print "New file name is: %s"%filename
 
@@ -19,11 +25,12 @@ def prepFile(mergedir,prefix,estname,dataName,newID,samplefile):
         # Open up the merge file for appending
         mergefile = open(mergedir+filename,'a')
         # Get the necessary headers from the sample file
-        headers = pimchelper.getHeadersFromFile(samplefile)
-        headerstring = '#'
-        for label in headers:
-            headerstring+='%15s'%label
-        headerstring+='%15s'%"bins"
+        headers = mergehelper.getHeadersFromFile(samplefile)
+        # Place a variance header between every data header to accomodate error bars
+        headers = intersperse("variance",headers)
+        headers.append("variance")
+        # Create the full header string from the list of headers
+        headerstring = '#'+''.join('%15s'%label for label in headers)+'%15s'%"bins" 
         # Write PIMCID and header to file
         mergefile.write('# PIMCID: %d\n'%newID)
         mergefile.write(headerstring+'\n')
@@ -33,6 +40,26 @@ def prepFile(mergedir,prefix,estname,dataName,newID,samplefile):
         mergefile=open(filename,'a')
         return mergefile
     
+def prepVectorFile(mergedir,prefix,estname,dataName,newID,samplefile):
+    filename = "%s-%s-%s-%d.dat"%(prefix,estname,dataName,newID)
+    print "New file name is: %s"%filename
+
+    if not (mergedir+filename in os.listdir(mergedir)):
+        print "Merge file has not been created, prepping now"
+        # Open up the merge file for appending
+        mergefile = open(mergedir+filename,'a')
+        # Get the necessary headers from the sample file
+        headers = mergehelper.getHeadersFromFile(samplefile)
+        # Create the full header string from the list of headers
+        headerstring = '#'+''.join('%15s'%label for label in headers)+'%15s'%"bins"
+        # Write PIMCID and header to file
+        mergefile.write('# PIMCID: %d\n'%newID)
+        mergefile.write(headerstring+'\n')
+        return mergefile
+    else:
+        print "Merge file has been made, do not prep file"
+        mergefile=open(filename,'a')
+        return mergefile
 def averageScalarEstimator(estFile,skipnum):
     '''Takes a scalar estimator file and returns the average and standard error of 
     all its measurements'''
@@ -42,9 +69,9 @@ def averageScalarEstimator(estFile,skipnum):
     data = np.loadtxt(estFile,skiprows=skipnum)
     # Crunch data
     aves = np.average(data,axis=0)
-    stdevs = np.std(data,axis=0)
-    bins=data.shape[0]
-    return aves, stdevs, bins
+    var  = np.var(data,axis=0)
+    bins = data.shape[0]
+    return aves, var, bins
 
 def averageVectorEstimator(estFile,skipnum):
     '''Takes a vector estimator file and returns the average and standard error of 
@@ -54,9 +81,9 @@ def averageVectorEstimator(estFile,skipnum):
     data = np.loadtxt(estFile,skiprows=skipnum)
     # Crunch data
     aves = np.average(data,axis=0)
-    stdevs = np.std(data,axis=0)
-    bins=data.shape[0]
-    return aves, stdevs, bins
+    var  = np.var(data,axis=0)
+    bins = data.shape[0]
+    return aves, var, bins
 
 def main(): 
     parser = argparse.ArgumentParser(description='''Averages data from each random number seed in a set of seeds and merges the averages into one file for each estimator. The final 
@@ -126,9 +153,9 @@ def main():
                 print "No regular files in subdirectory, skipping it\n"
                 n+=1
                 continue
-            # Create a pimchelper class that contains all the information about
+            # Create a mergehelper class that contains all the information about
             # this particular set of dat files
-            pimc = pimchelper.PIMCHelp(files,root)
+            pimc = mergehelper.PIMCHelp(files,root)
             # If there are not any dat files in the directory, skip it
             if not pimc.datfiles:
                 print "No data files in subdirectory, skipping it\n"
@@ -154,31 +181,43 @@ def main():
             for estimator in pimc.estimators:
                 print "Assessing %s files"%estimator
                 # Get all the dat files corresponding to this particular estimator
-                estFiles = pimchelper.filterfilesbytype(estimator,pimc.datfiles)
+                estFiles = mergehelper.filterfilesbytype(estimator,pimc.datfiles)
                 # Identify the type of estimator so that the appropriate averaging
                 # procedure can be performed
-                estType = pimchelper.getEstimatorType(estimator)
+                estType = mergehelper.getEstimatorType(estimator)
                 if estType == 'Scalar':
                     # Prep the file in MERGED for receiving data and get the file object
-                    mergefile=prepFile(mergedir,pimc.prefix,estimator,pimc.dataName,newID,root+estFiles[0])
+                    mergefile=prepScalarFile(mergedir,pimc.prefix,estimator,pimc.dataName,newID,root+estFiles[0])
                     # Get the average from each file and write it to the merge file
                     for seedfile in estFiles: 
-                        avrgs, errs, numbins = averageScalarEstimator(root+seedfile,skipnum)
-                        datarow = ' '+''.join('%15E'%avrg for avrg in avrgs)+'%15d\n'%numbins                   
+                        avrgs, variances, numbins = averageScalarEstimator(root+seedfile,skipnum)
+                        # Create a new array with the variances inserted between each average
+                        datavals = []
+                        for i in range(len(avrgs)):
+                            datavals.append(avrgs[i])
+                            datavals.append(variances[i])
+                        # Build a string of the entire row of data and errors
+                        datarow = ' '+''.join('%15E'%val for val in datavals)+'%15d\n'%numbins                   
                         mergefile.write(datarow)
                     mergefile.close()
                 elif estType == 'Vector':
-                    mergefile=prepFile(mergedir,pimc.prefix,estimator,pimc.dataName,newID,root+estFiles[0])
+                    mergefile=prepVectorFile(mergedir,pimc.prefix,estimator,pimc.dataName,newID,root+estFiles[0])
                     for seedfile in estFiles:
-                        avrgs,errs,bins = averageVectorEstimator(root+seedfile,skipnum)
+                        avrgs,var,numbins = averageVectorEstimator(root+seedfile,skipnum)
                         datarow = ' '+''.join('%15E'%avrg for avrg in avrgs)+'%15d\n'%numbins                    
                         mergefile.write(datarow)
                     mergefile.close()
                 elif estimator == 'log':
                     # Copy one log file from each set of parameters over for record keeping
-                    # Is there a way to average worm parameters in log file restart string?
                     logfile = root+estFiles[0]
-                    sh("cp %s %s"%(logfile, mergedir))
+                    # Replace the old log file PIMCID with the new ID when copying
+                    index = logfile.find("gce-log")
+                    newlogfile = logfile[index:-13]+str(newID)+".dat"
+                    newlogfile = mergedir+newlogfile
+                    # Copy it to the MERGE directory
+                    shutil.copy(logfile,newlogfile)
+                elif estType == 'Cumulative':
+                    print "Found a Cumulative estimator. No merging procedure implemented yet"
                 else:
                     None
         n+=1
