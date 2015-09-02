@@ -5,13 +5,11 @@
 # 
 # Plot binning analysis for raw MC data
 
-import matplotlib
-#matplotlib.use('TKAgg')
-
-import os,sys
 import pyutils
-import loadgmt,kevent
-from pylab import *
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 import argparse
 import pimchelp
 import MCstat
@@ -68,10 +66,14 @@ def main():
     # ============================================================================
     # Figure 1 : Error vs. bin level
     # ============================================================================
-    figure(1)
-    connect('key_press_event',kevent.press)
+    plt.figure(1)
     
-    colors  = loadgmt.getColorList('cw/1','cw1-029',max(numFiles,2))
+    colors = ["#688EAF", "#FC991D", "#7DEB74", "#FA6781", "#8B981D", "#BB7548", 
+            "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", 
+            "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", 
+            "#688ECE", "#749DB7"]
+    for i in range(3):
+        colors += colors
     
     n = 0
     for fileName in fileNames:
@@ -81,7 +83,7 @@ def main():
         dataFile.close()
         
         if len(dataLines) > 2:
-            data = loadtxt(fileName,usecols=col)
+            data = np.loadtxt(fileName,usecols=col)
             if not pyutils.isList(data):
                data = list([data])
             
@@ -95,13 +97,13 @@ def main():
     if n > 1:
         if scale:
             for m in range(n):
-                plot(np.arange(len(delta_ar)),delta_ar[m],marker='s',markersize=4,\
+                plt.plot(np.arange(len(delta_ar)),delta_ar[m],marker='s',markersize=4,\
                          linestyle='-',linewidth=1.0,color=colors[m],\
                          markeredgecolor=colors[m])
         else:
             Delta = np.average(delta_ar,0)
             dDelta = np.std(delta_ar,0)/np.sqrt(n)             
-            errorbar(np.arange(len(Delta)),Delta,dDelta,marker='s',markersize=4,\
+            plt.errorbar(np.arange(len(Delta)),Delta,dDelta,marker='s',markersize=4,\
                      linestyle='-',linewidth=1.0,color=colors[0],\
                      markeredgecolor=colors[0])
             bin_ac = MCstat.bin_ac(Delta,dDelta)
@@ -110,16 +112,17 @@ def main():
             print 'autocorrlelation time: %2.1f+/-%2.1f' % \
                                                 (bin_ac['tau'],bin_ac['dtau'])
     else:
-        plot(delta,marker='s',markersize=4,linestyle='-',linewidth=1.0,\
+        plt.plot(delta,marker='s',markersize=4,linestyle='-',linewidth=1.0,\
              color=colors[0],markeredgecolor=colors[0])
         print 'Convergence Ratio: %1.3f' % MCstat.bin_conv(delta)['CF']
         print 'autocorrlelation time: %3.3f' % MCstat.bin_ac(delta)['tau']
     
-    ylabel(r"$\Delta_l$")
-    xlabel("$l$")
-    title("Bin scaling: "+yLong)
+    plt.ylabel(r"$\Delta_l$")
+    plt.xlabel("$l$")
+    plt.title("Bin scaling: "+yLong)
+    plt.tight_layout()
     
-    show()
+    plt.show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 if __name__ == "__main__": 
