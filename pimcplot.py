@@ -28,6 +28,7 @@ Options:
 # 
 # Plot rough estimators vs. MC Bins for files supplied as input
 
+from __future__ import print_function 
 import matplotlib.pyplot as plt
 import numpy as np
 import pimchelp
@@ -199,7 +200,7 @@ def main():
                 cma = cumulativeMovingAverage(cdata[skip:])
                 ave,err = getStats(cdata[skip:])
                 sem = err*np.ones_like(cma)
-                print '%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err) 
+                print('%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err)) 
 
             sma = simpleMovingAverage(50,cdata[skip:])
             x = range(int(0.10*len(cma)),len(cma))
