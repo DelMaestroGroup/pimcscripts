@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 # pimcave.py
 # Adrian Del Maestro
 # 07.20.2009
@@ -6,6 +6,7 @@
 # Reduce and average results for a single PIMC estimator data file
 # supplied as an input
 
+from __future__ import print_function 
 import os,sys
 import pyutils
 from optparse import OptionParser
@@ -57,14 +58,14 @@ def main():
 #           estErr = pyutils.bootstrap(estData,1)
             numData = len(estData)
 
-            print pimcid, '# Number Samples %6d' %  numData
+            print(pimcid, '# Number Samples %6d' %  numData)
             if not normalize:
                 for n,ave in enumerate(estAve):
                     if len(headers) - 1 ==  len(estAve):
                         label = headers[n+1]
                     else:
                         label = 'Col #%02d:' % n
-                    print '%-16s%12.5f\t%12.5f' % (label,estAve[n],estErr[n])
+                    print('%-16s%12.5f\t%12.5f' % (label,estAve[n],estErr[n]))
             else:
                 for n,ave in enumerate(estAve):
                     normAve = estAve[n]/estAve[0]
@@ -77,7 +78,7 @@ def main():
                         label = headers[n+1]
                     else:
                         label = 'Col #%02d:' % n
-                    print '%-16s%12.5f\t%12.5f' % (label,normAve,normErr)
+                    print('%-16s%12.5f\t%12.5f' % (label,normAve,normErr))
     
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
