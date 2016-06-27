@@ -58,7 +58,8 @@ def main():
 #           estErr = pyutils.bootstrap(estData,1)
             numData = len(estData)
 
-            print(pimcid, '# Number Samples %6d' %  numData)
+            print(pimcid,end='')
+            print('# Number Samples %6d' %  numData)
             if not normalize:
                 for n,ave in enumerate(estAve):
                     if len(headers) - 1 ==  len(estAve):
