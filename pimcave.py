@@ -55,7 +55,7 @@ def main():
 
             estAve = pyutils.average(estData,1)
             estErr = pyutils.error(estData,1)
-#           estErr = pyutils.bootstrap(estData,1)
+            # estErr = pyutils.bootstrap(estData,1)
             numData = len(estData)
 
             print(pimcid,end='')

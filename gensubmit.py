@@ -7,7 +7,7 @@
 # Generate a torque submit script for the pimc code which creates
 # a pbs file for various sets of parameters.
 
-import os,sys
+import os,sys,glob
 from optparse import OptionParser
 
 # -----------------------------------------------------------------------------
@@ -256,6 +256,12 @@ def main():
 
     if options.cluster == 'vacc':
         vacc(staticPIMCOps,numOptions,optionValue,outName)
+
+    # create the out directory that qsub will write status files to
+    if not os.path.exists('out'):
+        os.makedirs('out')
+
+
 
 # ----------------------------------------------------------------------
 if __name__ == "__main__": 
