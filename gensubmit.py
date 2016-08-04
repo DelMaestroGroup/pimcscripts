@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#! /usr/bin/env python
 #
 # gensubmit.py
 # Adrian Del Maestro
@@ -7,12 +7,13 @@
 # Generate a torque submit script for the pimc code which creates
 # a pbs file for various sets of parameters.
 
+from __future__ import print_function 
 import os,sys,glob
 from optparse import OptionParser
 
 # -----------------------------------------------------------------------------
 def vacc(staticPIMCOps,numOptions,optionValue,outName):
-    ''' Write a pbs submit script for westgrid. '''
+    ''' Write a pbs submit script for the VACC. '''
 
     # Open the pbs file and write its header
     fileName = 'submit-pimc%s.pbs' % outName
@@ -36,12 +37,12 @@ case ${PBS_ARRAYID} in\n''')
 
     # Create the command string and make the case structure
     for n in range(numOptions):
-        if (optionValue.has_key('p') or staticPIMCOps.find('-p') != -1):
+        if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
             command = './pimc.e '
         else:
             command = './pimc.e -p %d ' % (n)
 
-        for flag,val in optionValue.iteritems():
+        for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
         command += staticPIMCOps
         pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
@@ -49,7 +50,7 @@ case ${PBS_ARRAYID} in\n''')
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
     
-    print '\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName)
+    print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName))
 
 # -----------------------------------------------------------------------------
 def westgrid(staticPIMCOps,numOptions,optionValue,outName):
@@ -76,12 +77,12 @@ case ${PBS_ARRAYID} in\n''')
 
     # Create the command string and make the case structure
     for n in range(numOptions):
-        if (optionValue.has_key('p') or staticPIMCOps.find('-p') != -1):
+        if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
             command = './pimc.e '
         else:
             command = './pimc.e -p %d ' % (n)
 
-        for flag,val in optionValue.iteritems():
+        for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
         command += staticPIMCOps
         pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
@@ -89,7 +90,7 @@ case ${PBS_ARRAYID} in\n''')
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
     
-    print '\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName)
+    print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName))
 
 # -----------------------------------------------------------------------------
 def sharcnet(staticPIMCOps,numOptions,optionValue,outName):
@@ -104,12 +105,12 @@ def sharcnet(staticPIMCOps,numOptions,optionValue,outName):
     # Create the command string and output to submit file
     for n in range(numOptions):
         name = '''out/pimc-%J'''
-        if optionValue.has_key('p'):
+        if 'p' in optionValue:
             command = './pimc.e '
         else:
             command = './pimc.e -p %d ' % (n)
             
-        for flag,val in optionValue.iteritems():
+        for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
         command += staticPIMCOps
         scriptFile.write('sleep %d\nsqsub -q serial -o %s --mpp=1G -r 6d %s\n' % (10,name,command))
@@ -117,11 +118,36 @@ def sharcnet(staticPIMCOps,numOptions,optionValue,outName):
     os.system('chmod u+x %s'%fileName)
 
 # -----------------------------------------------------------------------------
+def local(staticPIMCOps,numOptions,optionValue,outName):
+    ''' Write a submit script for a local machine. '''
+
+    # Open the script file and write its header
+    fileName = 'submit-pimc%s' % outName
+    scriptFile = open(fileName,'w')
+    scriptFile.write('''#!/bin/bash
+# local pimc submit script\n\n''')
+
+    # Create the command string and output to submit file
+    for n in range(numOptions):
+        if 'p' in optionValue:
+            command = './pimc.e '
+        else:
+            command = './pimc.e -p %d ' % (n)
+            
+        for flag,val in optionValue.items():
+            command += '-%s %s ' % (flag,val[n])
+        command += staticPIMCOps
+        scriptFile.write('nohup nice -n 10 %s > out/out_%03d.dat &\n' % (command,n))
+    scriptFile.close();
+    os.system('chmod u+x %s'%fileName)
+    print('Run: ./%s'%fileName)
+
+# -----------------------------------------------------------------------------
 def scinet(staticPIMCOps,numOptions,optionValue,outName):
     ''' Write a pbs submit script for scinet. '''
 
     if numOptions != 8:
-        print 'For scinet, must submit in multiples of 8'
+        print('For scinet, must submit in multiples of 8')
         return
 
     # Open the pbs file and write its header
@@ -147,13 +173,13 @@ echo \"Starting run at: `date`\"\n\n''')
     # Create the command string and output to submit file
     for n in range(numOptions):
         command = './pimc.e '
-        for flag,val in optionValue.iteritems():
+        for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
         command += staticPIMCOps.rstrip('\n')
         pbsFile.write('(sleep %02d; %s) &\n' % (10,command))
     pbsFile.write('wait')
     pbsFile.close();
-    print '\nSubmit job with: qsub %s\n'%fileName
+    print('\nSubmit job with: qsub %s\n'%fileName)
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 
@@ -162,8 +188,8 @@ def main():
 
     # setup the command line parser options 
     parser = OptionParser() 
-    parser.add_option("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet','vacc'],\
-            help="target cluster: [westgrid,sharcnet,scinet,vacc]") 
+    parser.add_option("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet','vacc','local'],\
+            help="target cluster: [westgrid,sharcnet,scinet,vacc,local]") 
 
     # parse the command line options
     (options, args) = parser.parse_args() 
@@ -175,6 +201,11 @@ def main():
     # We open up the input file, and read in all lines.
     inFile = open(inFileName,'r')
     inLines = inFile.readlines();
+
+    # Maps cluster names to functions
+    gen = {'westgrid':westgrid, 'sharcnet':sharcnet, 'scinet':scinet,
+           'vacc':vacc, 'local':local}
+
 
     # The first line of the file contains all static pimc options
     staticPIMCOps = inLines[0].rstrip('\n')
@@ -241,25 +272,16 @@ def main():
     if len(numOptions) > 0:
         for n in numOptions:
             if n != numOptions[0]:
-                print 'Not all parameters have the same number of values!'
+                print('Not all parameters have the same number of values!')
                 sys.exit()
         numOptions = numOptions[0]
-
-    if options.cluster == 'westgrid':
-        westgrid(staticPIMCOps,numOptions,optionValue,outName)
-
-    if options.cluster == 'sharcnet':
-        sharcnet(staticPIMCOps,numOptions,optionValue,outName)
-
-    if options.cluster == 'scinet':
-        scinet(staticPIMCOps,numOptions,optionValue,outName)
-
-    if options.cluster == 'vacc':
-        vacc(staticPIMCOps,numOptions,optionValue,outName)
 
     # create the out directory that qsub will write status files to
     if not os.path.exists('out'):
         os.makedirs('out')
+
+    # Generate the submission script
+    gen[options.cluster](staticPIMCOps,numOptions,optionValue,outName)
 
 
 
