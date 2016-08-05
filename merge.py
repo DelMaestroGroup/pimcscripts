@@ -5,6 +5,7 @@
 # Merge the results of parallel PIMC output files, and move the 
 # originals to an archive
 
+from __future__ import print_function 
 import os,sys,glob
 import tarfile
 import pimchelp
@@ -38,7 +39,7 @@ def mergeData(pimc,type,newID,skip,baseDir,idList=None):
             if not init:
                 outName = os.path.basename(fname).replace(str(pimc.id[0]),str(newID))
                 fileExist = True
-                print '%-80s' % outName,
+                print('%-80s' % outName,end="")
                 outFile = open(baseDir + 'MERGED/' + outName,'w');
                 init = True
 
@@ -65,7 +66,7 @@ def mergeData(pimc,type,newID,skip,baseDir,idList=None):
 
     if fileExist:
         outFile.close() 
-        print '%10d' %numLines
+        print('%10d' %numLines)
 
     # Now we check if a CYLINDER folder is present, if so, we repeat the process
     if len(glob.glob(baseDir + 'CYLINDER')) > 0:
@@ -94,7 +95,7 @@ def mergeData(pimc,type,newID,skip,baseDir,idList=None):
                 if not init:
                     outName = 'CYLINDER/' + baseName.replace(str(pimc.id[0]),str(newID))
                     cylfileExist = True
-                    print '%-80s' % outName,
+                    print('%-80s' % outName,end='')
 
                     # We check if we have a CYLINDER directory, if not create it
                     if len(glob.glob(baseDir + 'MERGED/CYLINDER')) == 0:
@@ -124,7 +125,7 @@ def mergeData(pimc,type,newID,skip,baseDir,idList=None):
     
         if cylfileExist:
             outFile.close() 
-            print '%10d' %numLines
+            print('%10d' %numLines)
 
 # -----------------------------------------------------------------------------
 def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
@@ -150,7 +151,7 @@ def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
                 # get the output file name and open the file for writing
                 outName = os.path.basename(fname).replace(str(pimc.id[0]),str(newID))
                 fileExist = True
-                print '%-80s' % outName,
+                print('%-80s' % outName,end='')
                 outFile = open(baseDir + 'MERGED/' + outName,'w');
 
                 # replace the old ID for the new one
@@ -187,7 +188,7 @@ def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
                 outFile.write('%16.8E'%data[i,j])
             outFile.write('\n')
         outFile.close() 
-        print '%10d' % numMerged
+        print('%10d' % numMerged)
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 
@@ -265,7 +266,7 @@ def main():
         newID += 1
     
     # Merge all the output files
-    print 'Merged data files:'
+    print('Merged data files:')
     for ftype in pimc.dataType:
         mergeData(pimc,ftype,newID,options.skip,baseDir,idList=options.pimcID)
 
@@ -281,7 +282,7 @@ def main():
 
     # Do the same if we are merging cylinder files
     if len(glob.glob(baseDir + 'MERGED/CYLINDER')) > 0:
-        print "CYLINDER"
+        print("CYLINDER")
         os.system('cp %s %s' % (oldLogName,baseDir+'MERGED/CYLINDER/'+newLogName))
 
     # We first create the name of the output tar file

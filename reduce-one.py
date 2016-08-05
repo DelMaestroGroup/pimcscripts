@@ -5,8 +5,9 @@
 # Reduce and average results for a single PIMC run based on a single parameter
 # which varies.  This could be density for fixed system size, etc.
 
+from __future__ import print_function 
 import os,sys,glob
-import loadgmt,kevent
+import loadgmt
 import pimchelp
 import MCstat
 from optparse import OptionParser
@@ -42,7 +43,7 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
-def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
+def getScalarEst(type,pimc,outName,reduceFlag, skip=0, baseDir=''):
     ''' Return the arrays containing the reduced averaged scalar
         estimators in question.'''
 
@@ -76,7 +77,7 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
     #     err = errNew
 
     # output the estimator data to disk
-    outFile = open('%s-%s' % (type,outName),'w');
+    outFile = open(baseDir + '%s-%s' % (type,outName),'w');
 
     # the headers
     outFile.write('#%15s' % reduceFlag[0])
@@ -95,7 +96,7 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0):
     return headers,ave,err;
 
 # -----------------------------------------------------------------------------
-def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0):
+def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
     ''' Return the arrays consisting of the reduec averaged vector 
         estimators. '''
 
@@ -127,7 +128,7 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0):
                 err[i,:] /= norm
 
         # output the vector data to disk
-        outFile = open('%s-%s' % (type,outName),'w');
+        outFile = open(baseDir+'%s-%s' % (type,outName),'w');
 
         # the headers
         lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[0]][reduceFlag[1]]))
@@ -150,12 +151,12 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0):
         return x,ave,err
 
     except:
-        print 'Problem Reducing %s files' % type
+        print('Problem Reducing %s files' % type)
         return 0,0,0
 
 
 # -----------------------------------------------------------------------------
-def getKappa(pimc,outName,reduceFlag,skip=0):
+def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
     ''' Return the arrays containing the reduced averaged compressibility. '''
 
     fileNames = pimc.getFileList('estimator')
@@ -201,7 +202,7 @@ def getKappa(pimc,outName,reduceFlag,skip=0):
         errKappa[i] = sqrt(errN2**2 + 4.0*errN**2*aveN**2 - 4.0*aveN*covNN2)/(T*V)
     
     # output the estimator data to disk
-    outFile = open('%s-%s' % ('kappa',outName),'w');
+    outFile = open(baseDir+'%s-%s' % ('kappa',outName),'w');
 
     # the headers
     outFile.write('#%15s' % reduceFlag[0])
@@ -316,30 +317,37 @@ def main():
 
     # We first reduce the scalar estimators and output them to disk
     if estDo['estimator']:
-        head1,scAve1,scErr1 = getScalarEst('estimator',pimc,outName,reduceFlag,skip=skip)
+        head1,scAve1,scErr1 = getScalarEst('estimator',pimc,outName,reduceFlag,
+                                           skip=skip,baseDir=baseDir)
 
     if estDo['virial']:
-        head1,scAve1,scErr1 = getScalarEst('virial',pimc,outName,reduceFlag,skip=skip)
+        head1,scAve1,scErr1 = getScalarEst('virial',pimc,outName,reduceFlag,
+                                           skip=skip,baseDir=baseDir)
 
     if estDo['super']:
-        head2,scAve2,scErr2 = getScalarEst('super',pimc,outName,reduceFlag,skip=skip)
+        head2,scAve2,scErr2 = getScalarEst('super',pimc,outName,reduceFlag,
+                                           skip=skip,baseDir=baseDir)
 
     # Now we do the normalized one body density matrix
     if estDo['obdm']:
-        x1,ave1,err1 = getVectorEst('obdm',pimc,outName,reduceFlag,'r [A]','n(r)',skip=skip)
+        x1,ave1,err1 = getVectorEst('obdm',pimc,outName,reduceFlag,'r [A]','n(r)',
+                                    skip=skip,baseDir=baseDir)
 
     # Now we do the pair correlation function
     if estDo['pair']:
-        x2,ave2,err2 = getVectorEst('pair',pimc,outName,reduceFlag,'r [A]','g(r)',skip=skip)
+        x2,ave2,err2 = getVectorEst('pair',pimc,outName,reduceFlag,'r [A]','g(r)',
+                                    skip=skip,baseDir=baseDir)
 
     # The radial Density
     if estDo['radial']:
-        x3,ave3,err3 = getVectorEst('radial',pimc,outName,reduceFlag,'r [A]','rho(r)',skip=skip)
+        x3,ave3,err3 = getVectorEst('radial',pimc,outName,reduceFlag,'r [A]','rho(r)',
+                                    skip=skip,baseDir=baseDir)
 
     # Compute the number distribution function and compressibility if we are in
     # the grand canonical ensemble
     if estDo['number']:
-        x4,ave4,err4 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',skip=skip)
+        x4,ave4,err4 = getVectorEst('number',pimc,outName,reduceFlag,'N','P(N)',
+                                    skip=skip,baseDir=baseDir)
 
 # I don't know why this isn't working, MCStat is giving me an error, will
     # return to this later. AGD 
@@ -347,27 +355,32 @@ def main():
 
     # The radially averaged Winding superfluid density
     if estDo['radwind']:
-        x5,ave5,err5 = getVectorEst('radwind',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
+        x5,ave5,err5 = getVectorEst('radwind',pimc,outName,reduceFlag,'r [A]','rho_s(r)',
+                                    skip=skip,baseDir=baseDir)
 
     # The radially averaged area superfliud density
     if estDo['radarea']:
-        x6,ave6,err6 = getVectorEst('radarea',pimc,outName,reduceFlag,'r [A]','rho_s(r)',skip=skip)
+        x6,ave6,err6 = getVectorEst('radarea',pimc,outName,reduceFlag,'r [A]','rho_s(r)',
+                                    skip=skip,baseDir=baseDir)
 
     if estDo['planewind']:
-        x7,ave7,err7 = getVectorEst('planewind',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)
+        x7,ave7,err7 = getVectorEst('planewind',pimc,outName,reduceFlag,'n','rho_s(r)',
+                                    skip=skip,baseDir=baseDir)
 
     if estDo['planearea']:
-        x8,ave8,err8 = getVectorEst('planearea',pimc,outName,reduceFlag,'n','rho_s(r)',skip=skip)
+        x8,ave8,err8 = getVectorEst('planearea',pimc,outName,reduceFlag,'n','rho_s(r)',
+                                    skip=skip,baseDir=baseDir)
 
     if estDo['planedensity']:
-        x9,ave9,err9 = getVectorEst('planedensity',pimc,outName,reduceFlag,'n','rho(r)',skip=skip)
+        x9,ave9,err9 = getVectorEst('planedensity',pimc,outName,reduceFlag,'n','rho(r)',
+                                    skip=skip,baseDir=baseDir)
 
     if estDo['linedensity']:
-        x10,ave10,err10 = getVectorEst('linedensity',pimc,outName,reduceFlag,\
-                                       'r [A]','rho1d(r)',skip=skip)
+        x10,ave10,err10 = getVectorEst('linedensity',pimc,outName,reduceFlag,
+                                       'r [A]','rho1d(r)',skip=skip,baseDir=baseDir)
     if estDo['linepotential']:
-        x11,ave11,err11 = getVectorEst('linepotential',pimc,outName,reduceFlag,\
-                                       'r [A]','V1d(r)',skip=skip)
+        x11,ave11,err11 = getVectorEst('linepotential',pimc,outName,reduceFlag,
+                                       'r [A]','V1d(r)',skip=skip,baseDir=baseDir)
 
     # Do we show plots?
     if options.plot:
@@ -404,7 +417,6 @@ def main():
             # ============================================================================
             for n in range(len(dataCol)):
                 figure(figNum)
-                connect('key_press_event',kevent.press)
         
                 errorbar(param, scAve1[:,dataCol[n]], yerr=scErr1[:,dataCol[n]],\
                         color=colors[n],marker=markers[n],markeredgecolor=colors[n],\
@@ -420,7 +432,6 @@ def main():
         # ============================================================================
         if estDo['super']:
             figure(figNum)
-            connect('key_press_event',kevent.press)
         
             errorbar(param, scAve2[:,0], yerr=scErr2[:,0],\
                     color=colors[0],marker=markers[0],markeredgecolor=colors[0],\
@@ -436,7 +447,6 @@ def main():
         if estDo['obdm']:
             figNum += 1
             figure(figNum)
-            connect('key_press_event',kevent.press)
             ax = subplot(111)
     
             for n in range(numParams):
@@ -456,7 +466,6 @@ def main():
         if estDo['pair']:
             figNum += 1
             figure(figNum)
-            connect('key_press_event',kevent.press)
         
             for n in range(numParams):
                 lab = '%s = %s' % (options.reduce,param[n])
@@ -478,7 +487,6 @@ def main():
             if estDo['number']:
                 figNum += 1
                 figure(figNum)
-                connect('key_press_event',kevent.press) 
 
                 # Find which column contains the average number of particles
                 for hn,h in enumerate(head1):
@@ -503,7 +511,6 @@ def main():
                 # ============================================================================
                 #figNum += 1
                 #figure(figNum)
-                #connect('key_press_event',kevent.press)
 
                 #errorbar(param, kappa, yerr=kappaErr, color=colors[0],marker=markers[0],\
                 #        markeredgecolor=colors[0], markersize=8,linestyle='None',capsize=6)
@@ -518,7 +525,6 @@ def main():
         if len(glob.glob('CYLINDER')) > 0:
             figNum += 1
             figure(figNum)
-            connect('key_press_event',kevent.press)
             ax = subplot(111)
     
             for n in range(numParams):
