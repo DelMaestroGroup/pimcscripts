@@ -22,7 +22,6 @@ Options:
   -s <skip>, --skip=<skip>          How many input lines should we skip? [default: 0]
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   --canonical                       Are we in the canonical ensemble?
-  --cylinder                        Are their cylinder estimators?
   -D <dir>, --working_directory=<dir>   The directory where we perform the merge.  [default: ]
 '''
 
