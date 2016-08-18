@@ -1,289 +1,162 @@
-# merge.py
 # Adrian Del Maestro
 # 10.19.2009
-# 
-# Merge the results of parallel PIMC output files, and move the 
-# originals to an archive
 
-from __future__ import print_function 
-import os,sys,glob
+'''merge.py
+
+Description:
+Merge the results of parallel PIMC output files, (same parameters, different
+seeds) and potentially move the originals to an archive
+
+Usage: merge.py [options]
+
+Options:
+  -h, --help                        Show this help message and exit
+  -T <T>, --temperature=<T>         Simulation temperature in Kelvin
+  -N <N>, --number_particles=<N>    Number of particles
+  -n <n>, --density=<n>             Number density in Angstroms^{-d}
+  -t <t>, --imaginary_time_step=<t> Imaginary time step
+  -P <P>, --number_time_slices=<P>  Number of time slices
+  -u <u>, --chemical_potential=<u>  Chemical potential in Kelvin
+  -V <V>, --volume=<V>              Volume in Angstroms^d
+  -L <L>, --Lz=<L>                  Length in Angstroms
+  -s <skip>, --skip=<skip>          How many input lines should we skip? [default: 0]
+  -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
+  --canonical                       Are we in the canonical ensemble?
+  --cylinder                        Are their cylinder estimators?
+  -D <dir>, --working_directory=<dir>   The directory where we perform the merge.  [default: ]
+'''
+
+from __future__ import print_function
+from optparse import OptionParser
+from docopt import docopt
+import os
+import numpy as np
+import glob
 import tarfile
 import pimchelp
-from optparse import OptionParser
-import numpy as np
 
 # -----------------------------------------------------------------------------
-def mergeData(pimc,type,newID,skip,baseDir,idList=None):
+def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
     ''' Merge the results of the PIMC data files to a single file. '''
 
-    fileNames = pimc.getFileList(type,idList=idList)
+    fileNames = pimc.getFileList(etype,idList=idList,cyldir=cyldir)
+    if not fileNames:
+        return
+    
+    # determine if we are trying to merge a cumulative estimator
+    cumulative= etype in ['position', 'locsuper']
 
-    numLines = 0
-    fileExist = False
-    got_header = False
-    init = False
-    for i,fname in enumerate(fileNames):
+    # Determine if we are considering an off-diagonal estimator
+    diagonalEst = not (etype == 'obdm' or etype == 'worm')
+
+    # we skip comment rows and any data rows
+    skiprows = (skip + 2)*diagonalEst
+
+    # Open and prepare the new file
+    with open(fileNames[0], 'r') as inFile:
+        inLines = inFile.readlines();
+
+        # Get the new header string
+        if '#' in inLines[0]:
+            header = inLines[0][2:].replace(str(pimc.id[0]),str(newID))
+            header += inLines[1][2:-1]
+
+        # get the data from the first file
+        data = np.loadtxt(fileNames[0],ndmin=2,comments='#',skiprows=skiprows)
+
+    # go through all other files and append data
+    for i,fname in enumerate(fileNames[1:]):
 
         # Does the file exist?
         if len(glob.glob(fname)) > 0:
 
-            # Determine if we are considering an off-diagonal estimator
-            diagonalEst = ((fname.find('obdm') == -1) and (fname.find('worm') == -1))
+            cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+            # if we have data, append to the array
+            if cdata.size:
+                data = np.vstack((data,cdata))
 
-            # Open and prepare the new file
-            inFile = open(fname,'r');
-            inLines = inFile.readlines();
-            inFile.close()
+    # Get the name of the new output file
+    outName = os.path.basename(fileNames[0]).replace(str(pimc.id[0]),str(newID))
+    print('%-80s' % outName,end="")
 
-            # get the output file name and open the file for writing
-            if not init:
-                outName = os.path.basename(fname).replace(str(pimc.id[0]),str(newID))
-                fileExist = True
-                print('%-80s' % outName,end="")
-                outFile = open(baseDir + 'MERGED/' + outName,'w');
-                init = True
+    # for cumulative estimators we average
+    if cumulative:
+        data = np.average(data,axis=0)
 
-            if inLines:
-                numLines += (len(inLines)-2) - (diagonalEst)*skip
+    # open the output file for writing
+    np.savetxt(baseDir + 'MERGED/' + cyldir + outName, data, fmt='%16.8E', 
+               header=header, delimiter='')
+    print('%10d' % data.shape[0])
 
-                # replace the old ID for the new one
-                if '#' in inLines[0] and not got_header:
-                    inLines[0] = inLines[0].replace(str(pimc.id[0]),str(newID))
-                    outFile.write(inLines[0])
-                    outFile.write(inLines[1])
-                    got_header = True
-
-                # strip any comment lines
-                while inLines and '#' in inLines[0]:
-                    inLines.pop(0)
-
-                # add to the merged file
-                j = 0
-                for line in inLines:
-                    if ((not diagonalEst) or (diagonalEst and j >= skip)):
-                        outFile.write(line)
-                    j += 1
-
-    if fileExist:
-        outFile.close() 
-        print('%10d' %numLines)
-
-    # Now we check if a CYLINDER folder is present, if so, we repeat the process
-    if len(glob.glob(baseDir + 'CYLINDER')) > 0:
-        numLines = 0
-        cylfileExist = False
-        got_header = False
-        init = False
-        fileNames = pimc.getFileList(type,idList=idList,cyldir='CYLINDER/')
-        for i,fname in enumerate(fileNames):
-
-            baseName = os.path.basename(fname)
-            cylfname = baseDir + 'CYLINDER/' + baseName
-
-            # Does the file exist?
-            if len(glob.glob(cylfname)) > 0:
-    
-                # Determine if we are considering an off-diagonal estimator
-                diagonalEst = ((cylfname.find('obdm') == -1) and (cylfname.find('worm') == -1))
-    
-                # Open and prepare the new file
-                inFile = open(cylfname,'r');
-                inLines = inFile.readlines();
-                inFile.close()
-
-                # get the output file name and open the file for writing
-                if not init:
-                    outName = 'CYLINDER/' + baseName.replace(str(pimc.id[0]),str(newID))
-                    cylfileExist = True
-                    print('%-80s' % outName,end='')
-
-                    # We check if we have a CYLINDER directory, if not create it
-                    if len(glob.glob(baseDir + 'MERGED/CYLINDER')) == 0:
-                        os.system('mkdir %sMERGED/CYLINDER' % baseDir)
-                        os.system('touch %sMERGED/CYLINDER/.donotbackup' % baseDir)
-
-                    outFile = open(baseDir + 'MERGED/' + outName,'w');
-                    init = True
-
-                if inLines:
-                    numLines += (len(inLines)-2) - (diagonalEst)*skip
-        
-                    # replace the old ID for the new one
-                    if '#' in inLines[0] and not got_header:
-                        inLines[0] = inLines[0].replace(str(pimc.id[0]),str(newID))
-                        outFile.write(inLines[0])
-                        outFile.write(inLines[1])
-                        got_header = True
-        
-                    # strip any comment lines
-                    while inLines and '#' in inLines[0]:
-                        inLines.pop(0)
-        
-                    for j,line in enumerate(inLines):
-                        if ((not diagonalEst) or (diagonalEst and j >= skip)):
-                            outFile.write(line)
-    
-        if cylfileExist:
-            outFile.close() 
-            print('%10d' %numLines)
-
-# -----------------------------------------------------------------------------
-def mergeCumulativeData(pimc,type,newID,baseDir,idList=None):
-    '''Perform a cumulative average of estimators written to disk as running
-    averages.  
-    
-    This is not techically OK when the number of measurements is not
-    identical in each cumulative average but is good enough for a qualitative
-    estimator.'''
-
-    fileNames = pimc.getFileList(type,idList=idList)
-
-    numLines = 0
-    fileExist = False
-    numMerged = 0
-    for i,fname in enumerate(fileNames):
-
-        # Does the file exist?
-        if len(glob.glob(fname)) > 0:
-            numMerged += 1
-
-            if i == 0:
-                # get the output file name and open the file for writing
-                outName = os.path.basename(fname).replace(str(pimc.id[0]),str(newID))
-                fileExist = True
-                print('%-80s' % outName,end='')
-                outFile = open(baseDir + 'MERGED/' + outName,'w');
-
-                # replace the old ID for the new one
-                inFile = open(fname,'r');
-                inLines = inFile.readlines();
-                inLines[0] = inLines[0].replace(str(pimc.id[0]),str(newID))
-                inFile.close()
-                outFile.write(inLines[0])
-                outFile.write(inLines[1])
-
-                numLines = int(inLines[0].split()[1])**3
-
-                # Get the data from the first file
-                data = np.loadtxt(fname, ndmin=2)
-                # if data.shape[0] == 0:
-                #     data = np.zeros([numLines])
-                # else:
-                #     numMerged += 1
-            else:
-                # Accumulate the running average
-                data += np.loadtxt(fname, ndmin=2)
-                # if data.shape[0] > 0:
-                #     print data.shape[0]
-                #     numMerged += 1
-                #     data += tData
-
-    if fileExist:
-        # write the new average to disk
-        data /= 1.0*numMerged
-        numRows = data.shape[0]
-        numCols = data.shape[1]
-        for i in range(numRows):
-            for j in range(numCols):
-                outFile.write('%16.8E'%data[i,j])
-            outFile.write('\n')
-        outFile.close() 
-        print('%10d' % numMerged)
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 
 # -----------------------------------------------------------------------------
 def main(): 
 
-    # setup the command line parser options 
-    parser = OptionParser() 
-    parser.add_option("-T", "--temperature", dest="T", type="float",
-                      help="simulation temperature in Kelvin") 
-    parser.add_option("-N", "--number-particles", dest="N", type="int",
-                      help="number of particles") 
-    parser.add_option("-n", "--density", dest="n", type="float",
-                      help="number density in Angstroms^{-d}")
-    parser.add_option("-t", "--imag-time-step", dest="tau", type="float",
-                      help="imaginary time step")
-    parser.add_option("-M", "--number-time-slices", dest="M", type="int",
-                      help="number of time slices")
-    parser.add_option("-u", "--chemical-potential", dest="mu", type="float",
-                      help="chemical potential in Kelvin") 
-    parser.add_option("-V", "--volume", dest="V", type="float",
-                      help="volume in Angstroms^d") 
-    parser.add_option("-L", "--Lz", dest="L", type="float",
-                      help="Length in Angstroms") 
-    parser.add_option("--canonical", action="store_true", dest="canonical",
-                      help="are we in the canonical ensemble?")
-    parser.add_option("-s", "--skip", dest="skip", type="int",
-                      help="how many input lines should we skip?")
-    parser.add_option("--cumulative", action="store_true", dest="cumulative",
-                      help="Merge cumulative estimators?")
-    parser.add_option("-i", "--id", action="append", dest="pimcID", type="int",\
-            help="a list of PIMC ID numbers to include")
-    parser.set_defaults(skip=0)
+    # parse the command line options
+    args = docopt(__doc__)
 
-    parser.set_defaults(canonical=False)
-    parser.set_defaults(cumulative=False)
+    skip = int(args['--skip'])
+    canonical = args['--canonical']
+    pimcID = args['--id']
+    baseDir = args['--working_directory']
+    mergeDir = baseDir + 'MERGED'
 
-    # parse the command line options and get the reduce flag
-    (options, args) = parser.parse_args() 
-
-    # Determine the working directory
-    if args:
-        baseDir = args[0]
-        if baseDir == '.':
-            baseDir = ''
-    else:
-        baseDir = ''
-        
     # We check if we have a MERGED directory, if not create it
-    if len(glob.glob(baseDir + 'MERGED')) == 0:
-        os.system('mkdir %sMERGED' % baseDir)
+    if not os.path.isdir(mergeDir):
+        os.mkdir(mergeDir)
 
     # Create a .donotbackup file
-    os.system('touch %sMERGED/.donotbackup' % baseDir)
+    os.system('touch %s/.donotbackup' % mergeDir)
     
-    # Check that we are in the correct ensemble
-    pimchelp.checkEnsemble(options.canonical)
+    # check if we have any cylinder estimators
+    cylinder = os.path.isdir(mergeDir + 'CYLINDER')
+    
+    # Create any necessary CYLINDER directories
+    if cylinder and not os.path.isdir(mergeDir + '/CYLINDER'):
+        os.mkdir(mergeDir + '/CYLINDER')
+        os.system('touch %s/CYLINDER/.donotbackup' % mergeDir)
 
-    dataName = pimchelp.getFileString(options,reduce=False)
+    # Check that we are in the correct ensemble
+    pimchelp.checkEnsemble(canonical)
+    dataName = pimchelp.getFileString_doc(args,reduce=False)
 
     # Create the PIMC analysis helper and fill up the simulation parameters maps
-    pimc = pimchelp.PimcHelp(dataName,options.canonical,baseDir=baseDir)
-    pimc.getSimulationParameters(idList=options.pimcID)
+    pimc = pimchelp.PimcHelp(dataName,canonical,baseDir=baseDir)
+    pimc.getSimulationParameters(idList=pimcID)
 
     # We try to find a new PIMCID which is the average of the ones to merge, and
     # make sure it doesn't already exist
     newID = 0
-    for id in pimc.id:
-        newID += int(id)
+    for pid in pimc.id:
+        newID += int(pid)
     newID = int(newID/(1.0*len(pimc.id)))
 
     # Now we keep incrementing the ID number until we are sure it is unique
-    while ( (len(glob.glob(baseDir + '*estimator*-%09d*' % newID)) > 0) or
-           (len(glob.glob(baseDir + 'MERGED/*estimator*-%09d*' % newID)) > 0) ):
+    while ((len(glob.glob(baseDir + '*estimator*-%09d*' % newID)) > 0) or
+           (len(glob.glob(baseDir + 'MERGED/*estimator*-%09d*' % newID)) > 0)):
         newID += 1
-    
+
     # Merge all the output files
     print('Merged data files:')
     for ftype in pimc.dataType:
-        mergeData(pimc,ftype,newID,options.skip,baseDir,idList=options.pimcID)
+        mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID) 
 
-    # Now perform the merge for possible cumulative average files
-    if options.cumulative:
-        for ftype in ['position','locsuper']:
-            mergeCumulativeData(pimc,ftype,newID,baseDir,idList=options.pimcID)
+    # Merge cylinder output files
+    if cylinder:
+        mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
+                  cyldir='CYLINDER/')
 
     # copy over the log file
-    oldLogName = pimc.getFileList('log',idList=options.pimcID)[0]
+    oldLogName = pimc.getFileList('log', idList=pimcID)[0]
     newLogName = os.path.basename(oldLogName).replace(str(pimc.id[0]),str(newID))
-    os.system('cp %s %s' % (oldLogName,baseDir+'MERGED/'+newLogName))
+    os.system('cp %s %s' % (oldLogName, mergeDir + os.path.sep + newLogName))
 
     # Do the same if we are merging cylinder files
-    if len(glob.glob(baseDir + 'MERGED/CYLINDER')) > 0:
+    if cylinder:
         print("CYLINDER")
-        os.system('cp %s %s' % (oldLogName,baseDir+'MERGED/CYLINDER/'+newLogName))
+        os.system('cp %s %s' % (oldLogName, mergeDir + '/CYLINDER/' + newLogName))
 
     # We first create the name of the output tar file
 #   mergeName = pimc.getFileList('estimator')[0].rstrip('.dat').replace('estimator','merged')
@@ -292,8 +165,8 @@ def main():
 #
 #   # Archive all the output files  
 #   tar = tarfile.open('MERGED/'+mergeName, "w:gz")
-#   for type in pimc.outType:
-#       fileNames = pimc.getFileList(type)
+#   for etype in pimc.outType:
+#       fileNames = pimc.getFileList(etype)
 #
 #       # We have to exclude the merged file
 #       for i,fname in enumerate(fileNames):
@@ -309,8 +182,10 @@ def main():
 #
 #   tar.close()
 
+
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
+
 if __name__ == "__main__": 
     main()
 

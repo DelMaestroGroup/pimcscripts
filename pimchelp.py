@@ -179,6 +179,67 @@ def checkEnsemble(canonical):
         sys.exit('Need to include --canonical for the canonical ensemble!')
 
 # -------------------------------------------------------------------------------
+def getFileString_doc(options,reduce=True):
+    ''' Using the command line flags, form the input file string that will
+        be used to open all data files. '''
+
+    # we simply go through all possible options and figure out what the
+    # filestring is.
+    out = ""
+    if options['--temperature']:
+        flagT = "%06.3f" % float(options['--temperature'])
+        out += '-T-%s' % flagT
+    else:
+        flagT = "*"
+
+    if options['--number_particles']:
+        flagN = "%04d" % int(options['--number_particles'])
+        out += '-N-%s' % flagN
+    else:
+        flagN = "*"
+
+    if options['--density']:
+        flagn = "%06.3f" % float(options['--density'])
+        out += '-n-%s' % flagn
+    else:
+        flagn = "*"
+
+    if options['--imaginary_time_step']:
+        flagtau = "%7.5f" % float(options['--imaginary_time_step'])
+        out += '-t-%s' % flagtau
+    else:
+        flagtau = "*"
+
+    if options['--chemical_potential']:
+        flagmu = "%+08.3f" % float(options['--chemical_potential'])
+        out += '-u-%s' % flagmu
+    else:
+        flagmu = "*"
+
+    if options['--Lz']:
+        flagL = "%07.3f" % float(options['--Lz'])
+        out += '-L-%s' % flagL
+    else:
+        flagL = "*"
+#
+#    if options.pimcid is not None:
+#        flagpimcid = options.pimcid
+#        out += '-id-%s' % flagpimcid
+#    else:
+    flagpimcid = "*"
+
+    if options['--canonical']:
+        dataName = '%s-%s-%s-%s-%s.dat' % (flagT, flagN, flagn, flagtau, flagpimcid)
+    else:
+        dataName = '%s-%s-%s-%s-%s.dat' % (flagT, flagL, flagmu, flagtau, flagpimcid)
+
+    if reduce:
+        outName = '%s-reduce%s' % (options['--reduce'], out)
+        return dataName, outName
+    
+    return dataName
+
+# -------------------------------------------------------------------------------
 def getFileString(options,reduce=True):
     ''' Using the command line flags, form the input file string that will
         be used to open all data files. '''
@@ -429,7 +490,7 @@ class ScalarReduce:
 
         # Now we find the number of unique values of all the parameters
         self.numParams = {}
-        for parName,parVals in self.param_.iteritems():
+        for parName,parVals in self.param_.items():
             self.numParams[parName] = len(set(parVals))
 
         # create an array with the fixed parameters
@@ -552,7 +613,7 @@ class VectorReduce:
 
         # Now we find the number of unique values of all the parameters
         self.numParams = {}
-        for parName,parVals in self.param_.iteritems():
+        for parName,parVals in self.param_.items():
             self.numParams[parName] = len(set(parVals))
 
         # create an array with the fixed parameters
