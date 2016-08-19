@@ -111,7 +111,7 @@ def main():
     # If we don't choose an estimator, provide a list of possible ones
     if estimator not in headers:
         errorString = "Need to specify one of:\n"
-        for head,index in headers.iteritems():
+        for head,index in headers.items():
             errorString += "\"%s\"" % head + "   "
         parser.error(errorString)
 
@@ -124,11 +124,11 @@ def main():
     try:
         yLong = label.estimatorLongName[estimator]
     except:
-        yLong = estimator
+        yLong = estimator.replace('_', '')
     try:
         yShort = label.estimatorShortName[estimator]
     except:
-        yShort = estimator
+        yShort = estimator.replace('_', '')
 
     # get a label for a possible horizontal line
     if args['--hline']:
