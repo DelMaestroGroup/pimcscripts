@@ -152,7 +152,6 @@ def main():
     # Figure 1 : column vs. MC Steps
     # ============================================================================
     plt.figure(1)
-    # connect('key_press_event',kevent.press)
 
     # colors = ["#70D44A", "#BE5AD4", "#D04537", "#81D0D5", "#393A2E", "#C49ECA", 
     #           "#C5CB7A", "#523767", "#D39139", "#C8488C", "#CB817A", "#73D999", 
@@ -184,12 +183,11 @@ def main():
     # Figure 2 : running average of column vs. MC Bins
     # ============================================================================
     plt.figure(2)
-    # connect('key_press_event',kevent.press)
 
     n = 0
     for n,cdata in enumerate(data):
         if np.size(cdata) > 1:
-            
+
             # Get the cumulative moving average
             if args['--error']:
                 cma = cumulativeMovingAverage(cdata[skip:])
@@ -200,7 +198,7 @@ def main():
                 cma = cumulativeMovingAverage(cdata[skip:])
                 ave,err = getStats(cdata[skip:])
                 sem = err*np.ones_like(cma)
-                print('%s:  %s = %8.4E +- %8.4E' % (leglabel[n],yShort, ave,err)) 
+                print('%s:  %s = %8.4E +- %8.4E' % (leglabel[n], yShort, ave, err)) 
 
             sma = simpleMovingAverage(50,cdata[skip:])
             x = range(int(0.10*len(cma)),len(cma))
@@ -215,7 +213,7 @@ def main():
 
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
-    
+
     leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
     for l in leg.get_lines():
         l.set_linewidth(4.0)
