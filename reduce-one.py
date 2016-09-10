@@ -301,7 +301,7 @@ def main():
     # possible types of estimators we may want to reduce
     estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea',
-               'planewind','virial','linedensity','linepotential']
+               'planewind','virial','linedensity','linepotential','energy']
     estDo = {e:False for e in estList}
 
     # if we specify a single estimator, only do that one
@@ -318,6 +318,9 @@ def main():
     # We first reduce the scalar estimators and output them to disk
     if estDo['estimator']:
         head1,scAve1,scErr1 = getScalarEst('estimator',pimc,outName,reduceFlag,
+                                           skip=skip,baseDir=baseDir)
+    if estDo['energy']:
+        head1,scAve1,scErr1 = getScalarEst('energy',pimc,outName,reduceFlag,
                                            skip=skip,baseDir=baseDir)
 
     if estDo['virial']:

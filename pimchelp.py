@@ -320,11 +320,12 @@ class PimcHelp:
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
-                         'linepotential']
+                         'linepotential','energy']
         if not canonical:
             self.dataType.append('number')
+
         self.outType  = ['estimator', 'number', 'obdm', 'pair', 'pcycle', 'super', 
-                         'worm', 'radial', 'log', 'state','virial']
+                         'worm', 'radial', 'log', 'state','virial','energy']
 
     # -----------------------------------------------------------------------------
     def getID(self,fileName): 
@@ -492,9 +493,10 @@ class ScalarReduce:
         self.numParams = {}
         for parName,parVals in self.param_.items():
             self.numParams[parName] = len(set(parVals))
+        print(self.numParams)
 
         # create an array with the fixed parameters
-        self.fixParNames = self.param_.keys()
+        self.fixParNames = list(self.param_.keys())
         self.fixParNames.remove(self.reduceLabel)
 
         # Find the name/label of the changing parameter, allowing for arbitrary
