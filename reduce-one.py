@@ -224,10 +224,10 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
 def main():
 
     # define the mapping between short names and label names 
-    shortFlags = ['n','T','N','t','u','V','L','W','D']
+    shortFlags = ['n','T','N','t','u','V','L','W','D','q']
     parMap = {'n':'Initial Density', 'T':'Temperature', 'N':'Initial Number Particles',
               't':'Imaginary Time Step', 'u':'Chemical Potential', 'V':'Container Volume',
-              'L':'Container Length', 'W':'Virial Window', 'M':'Update Length'}  #'M':'Update Slices (Mbar)'}
+              'L':'Container Length', 'W':'Virial Window', 'M':'Update Length'}
 
     # setup the command line parser options 
     parser = OptionParser() 

@@ -1,85 +1,66 @@
 #! /usr/bin/env python
-# pimcave.py
+
 # Adrian Del Maestro
 # 07.20.2009
-''' Generates averages from pimc output data. '''
+'''pimcave.py
 
-# Reduce and average results for a single PIMC estimator data file
-# supplied as an input
+Description:
+    Generates averages from pimc output data. 
+
+Usage: pimcave.py [ -s <skip>] (<file>...)
+
+
+Options:
+  -h, --help                Show this help message and exit
+  -s <skip>, --skip=<skip>  How many input lines should we skip? [default: 0]
+
+'''
 
 from __future__ import print_function
-from optparse import OptionParser
-import pyutils
+from docopt import docopt
+import numpy as np
+
+# -----------------------------------------------------------------------------
+def stats(data):
+    '''Return the average and standard error in data. '''
+    ave = np.average(data)
+    ave2 = np.average(data*data)
+    err = np.sqrt(np.abs(ave2-ave**2)/(1.0*data.size-1.0) ) 
+
+    return ave,err
 
 # -----------------------------------------------------------------------------
 # Begin Main Program
 # -----------------------------------------------------------------------------
 def main():
 
-    # setup the command line parser options
-    parser = OptionParser()
-    parser.add_option("-s", "--skip", dest="skip", type="int",\
-            help="how many input lines should we skip?")
-    parser.set_defaults(skip=0)
+    # parse the command line options
+    args = docopt(__doc__)
 
-    # parse the command line options and get the file name
-    (options, args) = parser.parse_args()
-    if len(args) < 1:
-        parser.error("need a file name")
-
-    fileNames = args
+    fileNames = args['<file>']
+    skip = int(args['--skip'])
 
     for fileName in fileNames:
-        normalize = False
+
+        # get the pimcid
+        pimcid = fileName.split('-')[-1].rstrip('.dat')
 
         # We check to see if we are dealing with the one body density matrix
         if fileName.find('obdm') != -1:
             normalize = True
 
-        # We count the number of lines in the estimator file to make sure we have
-        # some data and grab the headers
-        estFile = open(fileName, 'r')
-        estLines = estFile.readlines()
-        numLines = len(estLines) - 2    # We expect two comment lines
-        pimcid = estLines[0]
-        headers = estLines[1].split()
-        estFile.close()
-
+        # open the file and determine how many measurements there are
+        estData = np.genfromtxt(fileName,names=True,skip_header=1, deletechars="")
+        numLines = estData.size
+        
         # If we have data, compute averages and error
-        if numLines-options.skip > 0:
-            estData = pyutils.loadFile(fileName)
-
-            # Now we skip data rows to test for convergence
-            for n in range(options.skip):
-                estData.pop(0)
-
-            estAve = pyutils.average(estData,1)
-            estErr = pyutils.error(estData,1)
-            # estErr = pyutils.bootstrap(estData,1)
-            numData = len(estData)
-
-            print(pimcid,end='')
-            print('# Number Samples %6d' %  numData)
-            if not normalize:
-                for n,ave in enumerate(estAve):
-                    if len(headers) - 1 ==  len(estAve):
-                        label = headers[n+1]
-                    else:
-                        label = 'Col #%02d:' % n
-                    print('%-16s%12.5f\t%12.5f' % (label,estAve[n],estErr[n]))
-            else:
-                for n,ave in enumerate(estAve):
-                    normAve = estAve[n]/estAve[0]
-                    if abs(estAve[n]) > 1E-10:
-                        normErr = (estErr[n] / estAve[n]) * normAve
-                    else:
-                        normErr = 0.0
-
-                    if len(headers) - 1 ==  len(estAve):
-                        label = headers[n+1]
-                    else:
-                        label = 'Col #%02d:' % n
-                    print('%-16s%12.5f\t%12.5f' % (label, normAve, normErr))
+        if numLines-skip > 0:
+            print('# PIMCID %s' % pimcid)
+            print('# Number Samples %6d' % (numLines-skip))
+            for name in estData.dtype.names:
+                ave,err = stats(estData[name][skip:])
+                print('%-16s%12.5f\t%12.5f\t%5.2f' %
+                      (name,ave,err,100.0*np.abs(err/ave)))
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

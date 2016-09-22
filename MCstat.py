@@ -27,8 +27,10 @@ def bin(MC):
     # Resize if 1D array
     if B.ndim == 1:
         B.resize(B.shape[0],1)
+
     # Define number of binning levels
     Nl = int(m.floor(m.log(B.shape[0]/min_bin,2))+1)
+
     # initialize D
     D = np.zeros((Nl,B.shape[1]))
     
