@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
-# Adrian Del Maestro
-# 07.20.2009
+# Author:      2009-07-20 Adrian Del Maestro
+# Modified:    2017-07-17 Nathan Nichols
+# =============================================================================
+
 '''pimcave.py
 
 Description:
@@ -16,8 +18,7 @@ Options:
 
 '''
 
-from __future__ import print_function
-from docopt import docopt
+import argparse
 import numpy as np
 
 # -----------------------------------------------------------------------------
@@ -33,18 +34,21 @@ def stats(data):
 # Begin Main Program
 # -----------------------------------------------------------------------------
 def main():
+    parser = argparse.ArgumentParser(description='Generates averages from pimc output data.')
+    parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, help='How many input lines should we skip? [default: 0]')
+    parser.add_argument('file', type=str, nargs='+',
+                        help='File or files to average.')
 
-    # parse the command line options
-    args = docopt(__doc__)
+    args = parser.parse_args()
 
-    fileNames = args['<file>']
-    skip = int(args['--skip'])
+    fileNames = args.file
+    skip = args.skip
 
     for fileName in fileNames:
 
         # get the pimcid
-        pimcid = fileName.split('-')[-1].rstrip('.dat')
-
+        pimcid = fileName[-40:].rstrip('.dat')
+        
         # We check to see if we are dealing with the one body density matrix
         if fileName.find('obdm') != -1:
             normalize = True

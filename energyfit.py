@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # Calculating specific heat capacitance and entropy based on the energy and particle
 # numbers from the scalar estimator file. First, a fit is performed to the data. It is 
 # done in 2 steps: a polynomial is fit to the superfluid region whose upper bound is 
@@ -6,7 +7,8 @@
 # and plotted based on them. 
 #
 # Author:           Bohdan K.
-# Last Modified:    17-OCT-2013 by Max G.
+# Modified:    2013-10-17 by Max G.
+# Modified:    2017-07-17 by Nathan Nichols
 # =============================================================================
 
 import kevent

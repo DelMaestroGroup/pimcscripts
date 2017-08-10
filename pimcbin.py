@@ -1,14 +1,15 @@
 #!/usr/bin/python
 # pimcbin.py
-# Chris Herdman
-# 11.30.2012
+# Author:      2012-11-30 Chris Herdman
+# Modified:    2017-07-17 Nathan Nichols
+# =============================================================================
 # 
 # Reduce and do binning analysis on results for a single PIMC estimator 
 # data file supplied as an input
 
 import os,sys
 import pyutils
-from optparse import OptionParser
+import argparse
 import numpy as np
 import MCstat
 
@@ -18,17 +19,15 @@ import MCstat
 def main(): 
 
     # setup the command line parser options 
-    parser = OptionParser() 
-    parser.add_option("-s", "--skip", dest="skip", type="int",\
-            help="how many input lines should we skip?")
-    parser.set_defaults(skip=0)
+    parser = argparse.ArgumentParser(description='Reduce and do binning analysis on results for a single PIMC estimator file.')
+    parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, help='How many input lines should we skip? [default: 0]')
+    parser.add_argument('file', type=str, nargs='+',
+                        help='File or files to average.')
 
-    # parse the command line options and get the file name
-    (options, args) = parser.parse_args() 
-    if len(args) < 1: 
-        parser.error("need a file name")
-    
-    fileNames = args
+    args = parser.parse_args()
+
+    fileNames = args.file
+    skip = args.skip
 
     for fileName in fileNames:
         normalize = False;
@@ -43,15 +42,16 @@ def main():
         estLines = estFile.readlines();
         numLines = len(estLines) - 2    # We expect two comment lines
         pimcid = estLines[0]
+        print(pimcid)
         headers = estLines[1].split()
         estFile.close()
 
         # If we have data, compute averages and error
-        if numLines-options.skip > 0:
+        if numLines-args.skip > 0:
             estData = pyutils.loadFile(fileName)
 
             # Now we skip data rows to test for convergence
-            for n in range(options.skip):
+            for n in range(args.skip):
                 estData.pop(0)
 
             estAve = pyutils.average(estData,1)

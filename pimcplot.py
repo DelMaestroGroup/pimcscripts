@@ -17,6 +17,7 @@ Options:
   --legend=<label>, -l <label>  A legend label
   --error=<units>, -d           Size of the error bars
   --nobin                       Don't use the binned errorbars
+  --nolegend                    Turn off the legend
   --ttest                       Perform a ttest
   --hline=<val>                 Include a horizontal line at <val> in the averaged plot
   --hlabel=<hl>                 A legend label for the horizontal line.
@@ -173,7 +174,7 @@ def main():
         colors += colors
 
     for n,cdata in enumerate(data):
-        plt.plot(cdata[skip:],marker='s',color=colors[n],markeredgecolor=colors[n],\
+        plt.plot(cdata[skip:],marker='s',color=colors[n%len(colors)],markeredgecolor=colors[n%len(colors)],\
              markersize=4,linestyle='-',linewidth=1.0)
 
     plt.ylabel(yLong)
@@ -202,9 +203,9 @@ def main():
 
             sma = simpleMovingAverage(50,cdata[skip:])
             x = range(int(0.10*len(cma)),len(cma))
-            plt.plot(x,cma[x],color=colors[n],linewidth=1.0,marker='None',linestyle='-',
+            plt.plot(x,cma[x],color=colors[n%len(colors)],linewidth=1.0,marker='None',linestyle='-',
                 label=leglabel[n])
-            plt.fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n], alpha=0.1)
+            plt.fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n%len(colors)], alpha=0.1)
             n += 1
 
     # Add a possible horizontal line indicating some value
@@ -214,9 +215,10 @@ def main():
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
 
-    leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
-    for l in leg.get_lines():
-        l.set_linewidth(4.0)
+    if not args['--nolegend']:
+        leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+        for l in leg.get_lines():
+            l.set_linewidth(4.0)
 
     # Perform a Welch's t-test
     if args['--ttest']:
@@ -255,7 +257,8 @@ def main():
                          verticalalignment='top', fontsize=12,
                          backgroundcolor='white')
 
-        plt.legend(loc='upper left', fontsize=15, frameon=False)
+        if not args['--nolegend']:
+            plt.legend(loc='upper left', fontsize=15, frameon=False)
         plt.xlabel(yLong)
         plt.ylabel(r'$P($' + estimator + r'$)$')
             
