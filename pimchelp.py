@@ -320,12 +320,9 @@ class PimcHelp:
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
-                         'linepotential','energy']
+                         'linepotential','linedensity','energy','position']
         if not canonical:
             self.dataType.append('number')
-
-        self.outType  = ['estimator', 'number', 'obdm', 'pair', 'pcycle', 'super', 
-                         'worm', 'radial', 'log', 'state','virial','energy']
 
     # -----------------------------------------------------------------------------
     def getID(self,fileName): 

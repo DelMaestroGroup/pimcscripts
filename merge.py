@@ -27,7 +27,7 @@ Options:
 
 from __future__ import print_function
 from docopt import docopt
-import os
+import os,sys
 import numpy as np
 import glob
 import tarfile
@@ -40,9 +40,9 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
     fileNames = pimc.getFileList(etype,idList=idList,cyldir=cyldir)
     if not fileNames:
         return
-    
+
     # determine if we are trying to merge a cumulative estimator
-    cumulative= etype in ['position', 'locsuper']
+    cumulative = etype in ['position', 'locsuper']
 
     # Determine if we are considering an off-diagonal estimator
     diagonalEst = not (etype == 'obdm' or etype == 'worm')
@@ -50,25 +50,45 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
     # we skip comment rows and any data rows
     skiprows = (skip + 2)*diagonalEst
 
-    # Open and prepare the new file
-    with open(fileNames[0], 'r') as inFile:
-        inLines = inFile.readlines();
+    # Open and prepare the first non-empty file
+    n = 0
+    empty = True
+    while empty:
+        with open(fileNames[n], 'r') as inFile:
+
+            numLines = sum(1 for line in inFile)
+             
+            if numLines < 2:
+                n += 1
+                empty = True
+            else:
+                empty = False
+
+    with open(fileNames[n], 'r') as inFile:
+
+        inLines = inFile.readlines()
 
         # Get the new header string
         if '#' in inLines[0]:
-            header = inLines[0][2:].replace(str(pimc.id[0]),str(newID))
+            header = inLines[0][2:].replace(str(pimc.id[n]),str(newID))
             header += inLines[1][2:-1]
 
         # get the data from the first file
-        data = np.loadtxt(fileNames[0],ndmin=2,comments='#',skiprows=skiprows)
+        data = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
 
     # go through all other files and append data
-    for i,fname in enumerate(fileNames[1:]):
+    for i,fname in enumerate(fileNames[n+1:]):
 
         # Does the file exist?
         if len(glob.glob(fname)) > 0:
 
-            cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+            # Does it contain any data?
+            with open(fileNames[n], 'r') as inFile:
+                numLines = sum(1 for line in inFile)
+
+            if numLines > 2:
+                cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+
             # if we have data, append to the array
             if cdata.size:
                 data = np.vstack((data,cdata))
@@ -109,7 +129,7 @@ def main():
     os.system('touch %s/.donotbackup' % mergeDir)
     
     # check if we have any cylinder estimators
-    cylinder = os.path.isdir(mergeDir + 'CYLINDER')
+    cylinder = os.path.isdir(baseDir + 'CYLINDER')
     
     # Create any necessary CYLINDER directories
     if cylinder and not os.path.isdir(mergeDir + '/CYLINDER'):
@@ -143,8 +163,9 @@ def main():
 
     # Merge cylinder output files
     if cylinder:
-        mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
-                  cyldir='CYLINDER/')
+        for ftype in pimc.dataType:
+            mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
+                      cyldir='CYLINDER/')
 
     # copy over the log file
     oldLogName = pimc.getFileList('log', idList=pimcID)[0]
@@ -153,7 +174,6 @@ def main():
 
     # Do the same if we are merging cylinder files
     if cylinder:
-        print("CYLINDER")
         os.system('cp %s %s' % (oldLogName, mergeDir + '/CYLINDER/' + newLogName))
 
     # We first create the name of the output tar file
