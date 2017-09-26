@@ -320,7 +320,7 @@ class PimcHelp:
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
-                         'linepotential','linedensity','energy','position']
+                         'linepotential','energy','position']
         if not canonical:
             self.dataType.append('number')
 

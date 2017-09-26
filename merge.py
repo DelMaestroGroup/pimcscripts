@@ -21,6 +21,7 @@ Options:
   -L <L>, --Lz=<L>                  Length in Angstroms
   -s <skip>, --skip=<skip>          How many input lines should we skip? [default: 0]
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
+  -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --canonical                       Are we in the canonical ensemble?
   -D <dir>, --working_directory=<dir>   The directory where we perform the merge.  [default: ]
 '''
@@ -74,7 +75,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
             header += inLines[1][2:-1]
 
         # get the data from the first file
-        data = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
+        data = [np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)]
 
     # go through all other files and append data
     for i,fname in enumerate(fileNames[n+1:]):
@@ -91,15 +92,19 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
             # if we have data, append to the array
             if cdata.size:
-                data = np.vstack((data,cdata))
+                #data = np.vstack((data,cdata))
+                data.append(cdata)
 
     # Get the name of the new output file
     outName = os.path.basename(fileNames[0]).replace(str(pimc.id[0]),str(newID))
     print('%-80s' % outName,end="")
 
-    # for cumulative estimators we average
+    # for cumulative estimators we average, for all others we stack
     if cumulative:
-        data = np.average(data,axis=0)
+        data = np.hstack(data)
+        data = np.average(data,axis=1)
+    else:
+        data = np.vstack(data)
 
     # open the output file for writing
     np.savetxt(baseDir + 'MERGED/' + cyldir + outName, data, fmt='%16.8E', 
@@ -120,6 +125,7 @@ def main():
     pimcID = args['--id']
     baseDir = args['--working_directory']
     mergeDir = baseDir + 'MERGED'
+    exclude_estimators = args['--exclude']
 
     # We check if we have a MERGED directory, if not create it
     if not os.path.isdir(mergeDir):
@@ -159,13 +165,15 @@ def main():
     # Merge all the output files
     print('Merged data files:')
     for ftype in pimc.dataType:
-        mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID) 
+        if ftype not in exclude_estimators:
+            mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID) 
 
     # Merge cylinder output files
     if cylinder:
         for ftype in pimc.dataType:
-            mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
-                      cyldir='CYLINDER/')
+            if ftype not in exclude_estimators:
+                mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
+                          cyldir='CYLINDER/')
 
     # copy over the log file
     oldLogName = pimc.getFileList('log', idList=pimcID)[0]
