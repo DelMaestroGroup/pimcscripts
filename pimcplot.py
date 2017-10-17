@@ -14,7 +14,9 @@ Options:
   --estimator=<name>, -e <name> The estimator to be plotted.
   --skip=<n>, -s <n>            Number of measurements to be skipped [default: 0].
   --period=<m>, -p <m>          The period of the average window [default: 50].
+  --truncateid=<t>, -t <t>      Truncate PIMCID to last <t> characters [default: 0].
   --legend=<label>, -l <label>  A legend label
+  --period=<m>, -p <m>          The period of the average window [default: 50].
   --error=<units>, -d           Size of the error bars
   --nobin                       Don't use the binned errorbars
   --nolegend                    Turn off the legend
@@ -36,6 +38,7 @@ import pimchelp
 from docopt import docopt
 from scipy import stats
 import MCstat
+import re
 
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
@@ -97,13 +100,14 @@ def main():
     leglabel = args['--legend'] and args['--legend']
     error = args['--error'] and float(args['--error'])
     val = args['--hline'] and float(args['--hline'])
-
+    trunc = int(args['--truncateid']) 
 
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
         leglabel = []
         for n,fileName in enumerate(fileNames):
-            leglabel.append(fileName[-13:-4])
+            pimcid = "-".join(re.split(r'(?<!-)-',fileName)[6:]).split('.')[0] # Look back to avoid splitting negatives and take last portion to get id and strip extension (ask NSN)
+            leglabel.append(pimcid[-trunc:])
 
     # We count the number of lines in the estimator file to make sure we have
     # some data and grab the headers
@@ -175,10 +179,16 @@ def main():
 
     for n,cdata in enumerate(data):
         plt.plot(cdata[skip:],marker='s',color=colors[n%len(colors)],markeredgecolor=colors[n%len(colors)],\
-             markersize=4,linestyle='-',linewidth=1.0)
+             markersize=4,linestyle='-',linewidth=1.0,label=leglabel[n])
 
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
+
+    if not args['--nolegend']:
+        leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+        for l in leg.get_lines():
+            l.set_linewidth(4.0)
+
 
     # ============================================================================
     # Figure 2 : running average of column vs. MC Bins
@@ -261,7 +271,7 @@ def main():
             plt.legend(loc='upper left', fontsize=15, frameon=False)
         plt.xlabel(yLong)
         plt.ylabel(r'$P($' + estimator + r'$)$')
-            
+
     plt.show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
