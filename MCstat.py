@@ -28,8 +28,13 @@ def bin(MC):
     if B.ndim == 1:
         B.resize(B.shape[0],1)
 
-    # Define number of binning levels
-    Nl = int(m.floor(m.log(B.shape[0]/min_bin,2))+1)
+    try:
+        # Define number of binning levels
+        Nl = int(m.floor(m.log(B.shape[0]/min_bin,2))+1)
+
+    except:
+        print("Not enough bins. Need {} bins and have {} bins. Setting binning level to 1.".format(min_bin,B.shape[0]))
+        Nl = 1
 
     # initialize D
     D = np.zeros((Nl,B.shape[1]))
