@@ -127,6 +127,9 @@ def main():
     mergeDir = baseDir + 'MERGED'
     exclude_estimators = args['--exclude']
 
+    if not exclude_estimators:
+        exclude_estimators = []
+
     # We check if we have a MERGED directory, if not create it
     if not os.path.isdir(mergeDir):
         os.mkdir(mergeDir)
