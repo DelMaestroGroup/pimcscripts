@@ -19,7 +19,7 @@ Options:
   -u <u>, --chemical_potential=<u>  Chemical potential in Kelvin
   -V <V>, --volume=<V>              Volume in Angstroms^d
   -L <L>, --Lz=<L>                  Length in Angstroms
-  -s <skip>, --skip=<skip>          How many input lines should we skip? [default: 0]
+  -s <skip>, --skip=<skip>          How many input lines should we skip?  [default: 0]
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --canonical                       Are we in the canonical ensemble?
@@ -57,9 +57,9 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
     while empty:
         with open(fileNames[n], 'r') as inFile:
 
-            numLines = sum(1 for line in inFile)
+            numLines = sum(1 for line in inFile) - 2
              
-            if numLines < 2:
+            if not numLines:
                 n += 1
                 empty = True
             else:
@@ -75,6 +75,11 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
             header += inLines[1][2:-1]
 
         # get the data from the first file
+        if isinstance(skip,int):
+            skiprows=(skip+2)*diagonalEst
+        else:
+            skiprows=(int(skip*numLines)+2)*diagonalEst
+
         data = [np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)]
 
     # go through all other files and append data
@@ -84,15 +89,21 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         if len(glob.glob(fname)) > 0:
 
             # Does it contain any data?
-            with open(fileNames[n], 'r') as inFile:
-                numLines = sum(1 for line in inFile)
+            with open(fname, 'r') as inFile:
+                numLines = sum(1 for line in inFile) - 2
 
-            if numLines > 2:
+            # if yes, figure out if we are skipping any rows
+            if numLines:
+                if isinstance(skip,int):
+                    skiprows=(skip+2)*diagonalEst
+                else:
+                    skiprows=(int(skip*numLines)+2)*diagonalEst
+
+                # load the data
                 cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
 
             # if we have data, append to the array
             if cdata.size:
-                #data = np.vstack((data,cdata))
                 data.append(cdata)
 
     # Get the name of the new output file
@@ -120,7 +131,12 @@ def main():
     # parse the command line options
     args = docopt(__doc__)
 
-    skip = int(args['--skip'])
+    if args['--skip']:
+        if '.' in args['--skip']:
+            skip = float(args['--skip'])
+        else:
+            skip = int(args['--skip'])
+
     canonical = args['--canonical']
     pimcID = args['--id']
     baseDir = args['--working_directory']
