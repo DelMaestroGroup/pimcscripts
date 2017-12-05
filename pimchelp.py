@@ -782,6 +782,8 @@ class Description:
 
         self.estimatorLongName = {'K':'Kinetic Energy [K]',
                                   'V':'Potential Energy [K]',
+                                  'V_op':'Potential Energy [K]',
+                                  'Vcv':'Potential Energy [K]',
                                   'E':'Energy [K]',
                                   'Ecv':'Energy [K]',
                                   'Eth':'Energy [K]',
