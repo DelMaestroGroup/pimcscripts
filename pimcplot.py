@@ -114,12 +114,13 @@ def main():
     headers = pimchelp.getHeadersDict(fileNames[0])
 
     # If we don't choose an estimator, provide a list of possible ones
-    if estimator not in headers:
-        errorString = "Need to specify one of:\n"
-        for head,index in headers.items():
-            errorString += "\"%s\"" % head + "   "
-        parser.error(errorString)
+    # if estimator not in headers:
+    #     errorString = "Need to specify one of:\n"
+    #     for head,index in headers.items():
+    #         errorString += "\"%s\"" % head + "   "
+    #     parser.error(errorString)
 
+    print(headers)
     numFiles = len(fileNames)
     col = list([headers[estimator]])
 
