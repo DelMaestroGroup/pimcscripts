@@ -94,7 +94,12 @@ def main():
     args = docopt(__doc__)
 
     fileNames = args['<file>']
-    skip = int(args['--skip'])
+    if args['--skip']:
+        if '.' in args['--skip']:
+            raw_skip = float(args['--skip'])
+        else:
+            raw_skip = int(args['--skip'])
+    
     period = int(args['--period'])
     estimator = args['--estimator']
     leglabel = args['--legend'] and args['--legend']
@@ -120,7 +125,6 @@ def main():
     #         errorString += "\"%s\"" % head + "   "
     #     parser.error(errorString)
 
-    print(headers)
     numFiles = len(fileNames)
     col = list([headers[estimator]])
 
@@ -179,6 +183,11 @@ def main():
         colors += colors
 
     for n,cdata in enumerate(data):
+
+        # get the number of lines to skip
+        if not isinstance(raw_skip,int):
+            skip = int(raw_skip*cdata.shape[0])
+
         plt.plot(cdata[skip:],marker='s',color=colors[n%len(colors)],markeredgecolor=colors[n%len(colors)],\
              markersize=4,linestyle='-',linewidth=1.0,label=leglabel[n])
 
@@ -199,6 +208,10 @@ def main():
     n = 0
     for n,cdata in enumerate(data):
         if np.size(cdata) > 1:
+
+            # get the number of lines to skip
+            if not isinstance(raw_skip,int):
+                skip = int(raw_skip*cdata.shape[0])
 
             # Get the cumulative moving average
             if args['--error']:
@@ -241,6 +254,11 @@ def main():
             p = np.zeros([N,N])
 
             for i in range(N):
+
+                # get the number of lines to skip
+                if not isinstance(raw_skip,int):
+                    skip = int(raw_skip*data[i].shape[0])
+
                 for j in range(i+1,N):
                     tval[i,j],p[i,j] = stats.ttest_ind(data[i][skip:], data[j][skip:], 
                                                equal_var=False)

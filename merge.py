@@ -48,9 +48,6 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
     # Determine if we are considering an off-diagonal estimator
     diagonalEst = not (etype == 'obdm' or etype == 'worm')
 
-    # we skip comment rows and any data rows
-    skiprows = (skip + 2)*diagonalEst
-
     # Open and prepare the first non-empty file
     n = 0
     empty = True
@@ -76,9 +73,9 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
         # get the data from the first file
         if isinstance(skip,int):
-            skiprows=(skip+2)*diagonalEst
+            skiprows=(1-cumulative)*(skip+2)*diagonalEst
         else:
-            skiprows=(int(skip*numLines)+2)*diagonalEst
+            skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
 
         data = [np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)]
 
@@ -95,9 +92,9 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
             # if yes, figure out if we are skipping any rows
             if numLines:
                 if isinstance(skip,int):
-                    skiprows=(skip+2)*diagonalEst
+                    skiprows=(1-cumulative)*(skip+2)*diagonalEst
                 else:
-                    skiprows=(int(skip*numLines)+2)*diagonalEst
+                    skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
 
                 # load the data
                 cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
