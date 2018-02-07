@@ -23,6 +23,8 @@ Options:
   --ttest                       Perform a ttest
   --hline=<val>                 Include a horizontal line at <val> in the averaged plot
   --hlabel=<hl>                 A legend label for the horizontal line.
+  --title=<title>               A title for the plots.
+  --savefig=<figure>            A filename for saved plots.
 """
 
 # pimcplot.py
@@ -98,14 +100,16 @@ def main():
         if '.' in args['--skip']:
             raw_skip = float(args['--skip'])
         else:
-            raw_skip = int(args['--skip'])
-    
+           raw_skip = int(args['--skip'])
+           skip=raw_skip
+
     period = int(args['--period'])
     estimator = args['--estimator']
     leglabel = args['--legend'] and args['--legend']
     error = args['--error'] and float(args['--error'])
     val = args['--hline'] and float(args['--hline'])
-    trunc = int(args['--truncateid']) 
+    plttitle = args['--title']
+    trunc = int(args['--truncateid'])
 
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
@@ -183,22 +187,24 @@ def main():
         colors += colors
 
     for n,cdata in enumerate(data):
-
+        
         # get the number of lines to skip
         if not isinstance(raw_skip,int):
             skip = int(raw_skip*cdata.shape[0])
 
         plt.plot(cdata[skip:],marker='s',color=colors[n%len(colors)],markeredgecolor=colors[n%len(colors)],\
-             markersize=4,linestyle='-',linewidth=1.0,label=leglabel[n])
+                         markersize=4,linestyle='-',linewidth=1.0,label=leglabel[n])
 
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
-
+    if plttitle:
+        plt.title(plttitle)
     if not args['--nolegend']:
         leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
-
+    if args['--savefig']:
+        plt.savefig('1-' + args['--savefig'],bbox_inches='tight')
 
     # ============================================================================
     # Figure 2 : running average of column vs. MC Bins
@@ -238,11 +244,16 @@ def main():
 
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
+    if plttitle:
+        plt.title(plttitle)
 
     if not args['--nolegend']:
         leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
+
+    if args['--savefig']:
+        plt.savefig('2-' + args['--savefig'],bbox_inches='tight')
 
     # Perform a Welch's t-test
     if args['--ttest']:
@@ -290,8 +301,13 @@ def main():
             plt.legend(loc='upper left', fontsize=15, frameon=False)
         plt.xlabel(yLong)
         plt.ylabel(r'$P($' + estimator + r'$)$')
-
-    plt.show()
+        if plttitle:
+            plt.title(plttitle)
+        if args['--savefig']:
+            plt.savefig('3-' + args['--savefig'],bbox_inches='tight')
+    if not args['--savefig']:
+        plt.show()
+    
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 if __name__ == "__main__": 
