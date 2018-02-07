@@ -24,7 +24,8 @@ Options:
   --hline=<val>                 Include a horizontal line at <val> in the averaged plot
   --hlabel=<hl>                 A legend label for the horizontal line.
   --title=<title>               A title for the plots.
-  --savefig=<figure>            A filename for saved plots.
+  --savefig=<figure>            A filename for saved plots (extensions supported by active matplotlib backend).
+  --quiet                       Suppress output.
 """
 
 # pimcplot.py
@@ -41,6 +42,7 @@ from docopt import docopt
 from scipy import stats
 import MCstat
 import re
+from os import path
 
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
@@ -115,7 +117,8 @@ def main():
     if not leglabel:
         leglabel = []
         for n,fileName in enumerate(fileNames):
-            pimcid = "-".join(re.split(r'(?<!-)-',fileName)[6:]).split('.')[0] # Look back to avoid splitting negatives and take last portion to get id and strip extension (ask NSN)
+            fn1,fn2 = path.split(fileName)
+            pimcid = "-".join(re.split(r'(?<!-)-',fn2)[6:]).split('.')[0] # Look back to avoid splitting negatives and take last portion to get id and strip extension (ask NSN)
             leglabel.append(pimcid[-trunc:])
 
     # We count the number of lines in the estimator file to make sure we have
@@ -229,7 +232,8 @@ def main():
                 cma = cumulativeMovingAverage(cdata[skip:])
                 ave,err = getStats(cdata[skip:])
                 sem = err*np.ones_like(cma)
-                print('%s:  %s = %8.4E +- %8.4E' % (leglabel[n], yShort, ave, err)) 
+                if not args['--quiet']:
+                    print('%s:  %s = %8.4E +- %8.4E' % (leglabel[n], yShort, ave, err)) 
 
             sma = simpleMovingAverage(50,cdata[skip:])
             x = range(int(0.10*len(cma)),len(cma))
