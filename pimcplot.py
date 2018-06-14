@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """pimcplot
 
 Description:
@@ -35,7 +35,6 @@ Options:
 # Plot rough estimators vs. MC Bins for files supplied as input
 
 from __future__ import print_function 
-import matplotlib.pyplot as plt
 import numpy as np
 import pimchelp
 from docopt import docopt
@@ -112,6 +111,11 @@ def main():
     val = args['--hline'] and float(args['--hline'])
     plttitle = args['--title']
     trunc = int(args['--truncateid'])
+    if args['--savefig']:
+        #FIXME need headless usage
+        import matplotlib
+        matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
     # if labels are not assigned, we default to the PIMCID
     if not leglabel:
