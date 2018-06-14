@@ -1,6 +1,7 @@
 ''' PimcHelp - helper methods for analzing pimc output data.
 '''
 import os
+import re
 import glob
 from operator import itemgetter, attrgetter
 
@@ -19,22 +20,8 @@ def getVectorEstimatorName(fileName):
 
 # ----------------------------------------------------------------------------
 def getFileNameParameters(fname):
-    '''Get the parameters from the output filename.  
-    
-    We need to be careful due to the problems associated with splitting at the
-    '-' character when there are potential minus signs.
-    '''
-
-    fileParts  = fname.rstrip('.dat').split('-')
-    pIndex = []
-    for n,part in enumerate(fileParts):
-        if part == '':
-            fileParts[n+1] = '-' + fileParts[n+1]
-            pIndex.append(n)
-    for n in pIndex:
-        fileParts.pop(n)
-
-    return fileParts
+    '''Get the parameters from the output filename.'''
+    return re.split(r'(?<=[a-zA-Z0-9_])-',fname.rstrip('.dat'))
 
 # -----------------------------------------------------------------------------
 # !!! BROKEN FOR CANONICAL ENSEMBLE
@@ -46,14 +33,20 @@ def sortFileNames(fileNames):
 
     fileTuples = []
     for fname in fileNames:
+        fileParts = getFileNameParameters(fname);
         # break up the parameters in the file name
-        fileParts = getFileNameParameters(fname)
-
-        # get the tuple
-        tup = (fname, fileParts[0], fileParts[1], float(fileParts[2]),
-               float(fileParts[3]), float(fileParts[4]), float(fileParts[5]),
-               int(fileParts[6]))
-        fileTuples.append(tup)
+        if len(fileParts) > 7:
+            # get the tuple
+            tup = (fname, fileParts[0], fileParts[1], float(fileParts[2]),
+                   float(fileParts[3]), float(fileParts[4]), float(fileParts[5]),
+                   '-'.join(fileParts[6:]))
+            fileTuples.append(tup)
+        else:
+            # get the tuple
+            tup = (fname, fileParts[0], fileParts[1], float(fileParts[2]),
+                   float(fileParts[3]), float(fileParts[4]), float(fileParts[5]),
+                   int(fileParts[6]))
+            fileTuples.append(tup)
 
     # sort by keys for each column from left to right
     for n in range(1,7):
@@ -327,8 +320,11 @@ class PimcHelp:
     # -----------------------------------------------------------------------------
     def getID(self,fileName): 
         ''' Return the ID number corresponding to a given filename. '''
-        #ID = int(fileName.rstrip('.dat').split('-')[-1])
-        ID = int(fileName[-13:-4])
+        fParts = re.split(r'(?<=[a-zA-Z0-9_])-',fileName.rstrip('.dat'))
+        if len(fParts) > 7:
+            ID = '-'.join(fParts[6:])
+        else:
+            ID = int(fileName[-13:-4])
         return ID
 
     # ----------------------------------------------------------------------

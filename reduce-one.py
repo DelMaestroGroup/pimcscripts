@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # reduce-one.py
 # Adrian Del Maestro
 # 09.03.2009
@@ -5,27 +6,27 @@
 # Reduce and average results for a single PIMC run based on a single parameter
 # which varies.  This could be density for fixed system size, etc.
 
-from __future__ import print_function 
 import os,sys,glob
-import loadgmt
+import numpy as np
+#import loadgmt FIXME Make this optional
 import pimchelp
 import MCstat
 from optparse import OptionParser
-from pylab import *
-
+#from pylab import *
+from matplotlib.pyplot import *
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
     ''' Get the average and error of all columns in the data matrix. '''
 
-    if ndim(data) > dim:
-        numBins  = size(data,dim) 
-        dataAve  = average(data,dim) 
-        dataAve2 = average(data*data,dim) 
+    if data.ndim > dim:
+        numBins  = np.size(data,dim) 
+        dataAve  = np.average(data,dim) 
+        dataAve2 = np.average(data*data,dim) 
         try:
             bins = MCstat.bin(data) 
-            dataErr = amax(bins,axis=0)
+            dataErr = np.amax(bins,axis=0)
         except:
-            dataErr = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+            dataErr = np.sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
 
 #        for n,d in enumerate(dataErr):
 #            if d > 2.0*dataErr2[n]:
@@ -50,18 +51,18 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0, baseDir=''):
     fileNames = pimc.getFileList(type)
     headers   = pimchelp.getHeadersFromFile(fileNames[0])
 
-    ave = zeros([len(fileNames),len(headers)],float)
-    err = zeros([len(fileNames),len(headers)],float)
+    ave = np.zeros([len(fileNames),len(headers)],float)
+    err = np.zeros([len(fileNames),len(headers)],float)
     for i,fname in enumerate(fileNames):
         # Compute the averages and error
-        data = loadtxt(fname,ndmin=2)[skip:,:]
+        data = np.loadtxt(fname,ndmin=2)[skip:,:]
         ave[i,:],err[i,:] = getStats(data)
     
     # compute single centroid virial specific heat if possible
     # if 'dEdB' in headers:
     #     Cv = ave[:,headers.index('EEcv*Beta^2')] - ave[:,headers.index('Ecv*Beta')]**2 - ave[:,headers.index('dEdB')]
-    #     aveNew = zeros([len(fileNames),len(headers)+1],float)
-    #     errNew = zeros([len(fileNames),len(headers)+1],float)
+    #     aveNew = np.zeros([len(fileNames),len(headers)+1],float)
+    #     errNew = np.zeros([len(fileNames),len(headers)+1],float)
     #     for i,a in enumerate(ave):
     #         a = append(a, ave[:,headers.index('EEcv*Beta^2')][i] \
     #                 - ave[:,headers.index('Ecv*Beta')][i]**2 \
@@ -107,15 +108,15 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
         numParams = len(fileNames)
         Nx = len(headers)
 
-        x   = zeros([numParams,Nx],float)
-        ave = zeros([numParams,Nx],float)
-        err = zeros([numParams,Nx],float)
+        x   = np.zeros([numParams,Nx],float)
+        ave = np.zeros([numParams,Nx],float)
+        err = np.zeros([numParams,Nx],float)
 
         
         for i,fname in enumerate(fileNames):
 
             # Get the estimator data and compute averages
-            data = loadtxt(fname,ndmin=2)[skip:,:]
+            data = np.loadtxt(fname,ndmin=2)[skip:,:]
             ave[i,:],err[i,:] = getStats(data)
 
             # get the headers
@@ -162,8 +163,8 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
     fileNames = pimc.getFileList('estimator')
     headers   = pimchelp.getHeadersFromFile(fileNames[0])
 
-    aveKappa = zeros([len(fileNames)],float)
-    errKappa = zeros([len(fileNames)],float)
+    aveKappa = np.zeros([len(fileNames)],float)
+    errKappa = np.zeros([len(fileNames)],float)
 
     for i,fname in enumerate(fileNames):
 
@@ -179,7 +180,7 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
             V = float(pimc.params[ID]['Container Volume'])
 
         # Compute the average compressibility and its error
-        estData = loadtxt(fname,ndmin=2)
+        estData = np.loadtxt(fname,ndmin=2)
 
         N     = estData[:,headers.index('N')]
         N2    = estData[:,headers.index('N^2')] 
@@ -199,7 +200,7 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
 
         # Get the value of rho^2 * kappa and the error
         aveKappa[i] = (aveN2-aveN**2)/(T*V)
-        errKappa[i] = sqrt(errN2**2 + 4.0*errN**2*aveN**2 - 4.0*aveN*covNN2)/(T*V)
+        errKappa[i] = np.sqrt(errN2**2 + 4.0*errN**2*aveN**2 - 4.0*aveN*covNN2)/(T*V)
     
     # output the estimator data to disk
     outFile = open(baseDir+'%s-%s' % ('kappa',outName),'w');
