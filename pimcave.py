@@ -15,7 +15,8 @@ Usage: pimcave.py [ -s <skip> -r] (<file>...)
 Options:
   -h, --help                Show this help message and exit
   -s <skip>, --skip=<skip>  How many input lines should we skip? [default: 0]
-  -r, --repeated_header       Deal with repeated headers
+  -r, --repeated_header     Deal with repeated headers
+  -l, --header_lines        Number of header lines [default: 1]
 
 '''
 
@@ -36,14 +37,20 @@ def stats(data):
 # -----------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description='Generates averages from pimc output data.')
-    parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, help='How many input lines should we skip? [default: 0]')
-    parser.add_argument('file', type=str, nargs='+', help='File or files to average.')
-    parser.add_argument('-r','--repeated_header', help='deal with duplicate headers', action='store_true')
+    parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, 
+                        help='How many input lines should we skip? [default: 0]')
+    parser.add_argument('-l', '--header_lines', type=int, dest='header_lines', 
+                        default = 1, help='How many header lines to skip? [default: 1]')
+    parser.add_argument('file', type=str, nargs='+', 
+                        help='File or files to average.')
+    parser.add_argument('-r','--repeated_header', 
+                        help='deal with duplicate headers', action='store_true')
 
     args = parser.parse_args()
 
     fileNames = args.file
     skip = args.skip
+    header_lines = args.header_lines
 
     for fileName in fileNames:
 
@@ -55,7 +62,7 @@ def main():
             normalize = True
 
         # open the file and determine how many measurements there are
-        estData = np.genfromtxt(fileName,names=True,skip_header=1, deletechars="")
+        estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
         numLines = estData.size
         
         # If we have data, compute averages and error
