@@ -198,6 +198,8 @@ def main():
         # get the number of lines to skip
         if not isinstance(raw_skip,int):
             skip = int(raw_skip*cdata.shape[0])
+        else: 
+            skip = raw_skip
 
         plt.plot(cdata[skip:],marker='s',color=colors[n%len(colors)],markeredgecolor=colors[n%len(colors)],\
                          markersize=4,linestyle='-',linewidth=1.0,label=leglabel[n])
@@ -225,6 +227,8 @@ def main():
             # get the number of lines to skip
             if not isinstance(raw_skip,int):
                 skip = int(raw_skip*cdata.shape[0])
+            else: 
+                skip = raw_skip
 
             # Get the cumulative moving average
             if args['--error']:
@@ -277,6 +281,8 @@ def main():
                 # get the number of lines to skip
                 if not isinstance(raw_skip,int):
                     skip = int(raw_skip*data[i].shape[0])
+                else: 
+                    skip = raw_skip
 
                 for j in range(i+1,N):
                     tval[i,j],p[i,j] = stats.ttest_ind(data[i][skip:], data[j][skip:], 

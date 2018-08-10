@@ -9,12 +9,13 @@
 Description:
     Generates averages from pimc output data. 
 
-Usage: pimcave.py [ -s <skip>] (<file>...)
+Usage: pimcave.py [ -s <skip> -r] (<file>...)
 
 
 Options:
   -h, --help                Show this help message and exit
   -s <skip>, --skip=<skip>  How many input lines should we skip? [default: 0]
+  -r, --repeated_header       Deal with repeated headers
 
 '''
 
@@ -36,8 +37,8 @@ def stats(data):
 def main():
     parser = argparse.ArgumentParser(description='Generates averages from pimc output data.')
     parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, help='How many input lines should we skip? [default: 0]')
-    parser.add_argument('file', type=str, nargs='+',
-                        help='File or files to average.')
+    parser.add_argument('file', type=str, nargs='+', help='File or files to average.')
+    parser.add_argument('-r','--repeated_header', help='deal with duplicate headers', action='store_true')
 
     args = parser.parse_args()
 
@@ -63,8 +64,12 @@ def main():
             print('# Number Samples %6d' % (numLines-skip))
             for name in estData.dtype.names:
                 ave,err = stats(estData[name][skip:])
+                if args.repeated_header:
+                    cname = name.partition("_")[0]
+                else:
+                    cname = name
                 print('%-16s%12.5f\t%12.5f\t%5.2f' %
-                      (name,ave,err,100.0*np.abs(err/ave)))
+                      (cname,ave,err,100.0*np.abs(err/ave)))
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
