@@ -99,6 +99,7 @@ def main():
             try:
             	delta_ar[n,:] = delta.T
             except:
+                #FIXME THIS SECTION COULD USE SOME WORK
                 print("could not perform delta_ar[n,:] = delta.T (line 100). Performing workaround.")
                 tmplen = len(delta_ar[n,:])
                 if len(delta) > tmplen:
