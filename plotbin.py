@@ -7,7 +7,6 @@
 
 import pyutils
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import argparse
@@ -29,11 +28,19 @@ def main():
                         skipped in the binning analysis.', type=int, default=0)
     parser.add_argument('--scale', help='Option to compare binning results \
                         for different parameters', action='store_true')
+    parser.add_argument('--savefig', help='Save the figures (disables displaying)', action='store_true')
     args = parser.parse_args()
     
     fileNames = args.fileNames
     scale = args.scale
-    
+    savefig = args.savefig
+
+    if savefig:
+        import time
+	import matplotlib
+        matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
     if len(fileNames) < 1:
         parser.error("Need to specify at least one scalar estimator file")
     
@@ -77,7 +84,6 @@ def main():
     
     n = 0
     for fileName in fileNames:
-        
         dataFile = open(fileName,'r');
         dataLines = dataFile.readlines();
         dataFile.close()
@@ -90,8 +96,17 @@ def main():
             delta = MCstat.bin(data[args.skip:])
             if n == 0:
                 delta_ar = np.zeros((numFiles,delta.shape[0]))
-            delta_ar[n,:] = delta.T
-            #delta_ar[n,:len(delta)] = delta.T
+            try:
+            	delta_ar[n,:] = delta.T
+            except:
+                print("could not perform delta_ar[n,:] = delta.T (line 100). Performing workaround.")
+                tmplen = len(delta_ar[n,:])
+                if len(delta) > tmplen:
+                    print("Data truncated: delta_ar[n,:] = delta[0:{}].T".format(tmplen))
+                    delta_ar[n,:] = delta[0:tmplen].T
+                else:
+                    print("Data paded with zeros: delta_ar[n,0:len(delta.T)] = delta.T")
+                    delta_ar[n,0:len(delta)] = delta.T
             n += 1
     
     if n > 1:
@@ -121,8 +136,11 @@ def main():
     plt.xlabel("$l$")
     plt.title("Bin scaling: "+yLong)
     plt.tight_layout()
-    
-    plt.show()
+    if savefig:
+        plt.savefig('plotbin-{}.png'.format(int(time.time())),dpi=400,bbox_inches="tight")
+        plt.savefig('plotbin-{}.svg'.format(int(time.time())),bbox_inches="tight")
+    else: 
+        plt.show()
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 if __name__ == "__main__": 
