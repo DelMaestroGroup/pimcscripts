@@ -37,7 +37,7 @@ def main():
 
     if savefig:
         import time
-	import matplotlib
+        import matplotlib
         matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
@@ -97,7 +97,7 @@ def main():
             if n == 0:
                 delta_ar = np.zeros((numFiles,delta.shape[0]))
             try:
-            	delta_ar[n,:] = delta.T
+                delta_ar[n,:] = delta.T
             except:
                 #FIXME THIS SECTION COULD USE SOME WORK
                 print("could not perform delta_ar[n,:] = delta.T (line 100). Performing workaround.")
@@ -124,14 +124,14 @@ def main():
                      markeredgecolor=colors[0])
             bin_ac = MCstat.bin_ac(Delta,dDelta)
             bin_conv = MCstat.bin_conv(Delta,dDelta)
-            print 'Convergence Ratio: %1.2f+/-%1.2f'%(bin_conv['CF'],bin_conv['dCF'])
-            print 'autocorrlelation time: %2.1f+/-%2.1f' % \
-                                                (bin_ac['tau'],bin_ac['dtau'])
+            print('Convergence Ratio: %1.2f+/-%1.2f'%(bin_conv['CF'],bin_conv['dCF']))
+            print('autocorrlelation time: %2.1f+/-%2.1f' % \
+                                                (bin_ac['tau'],bin_ac['dtau']))
     else:
         plt.plot(delta,marker='s',markersize=4,linestyle='-',linewidth=1.0,\
              color=colors[0],markeredgecolor=colors[0])
-        print 'Convergence Ratio: %1.3f' % MCstat.bin_conv(delta)['CF']
-        print 'autocorrlelation time: %3.3f' % MCstat.bin_ac(delta)['tau']
+        print('Convergence Ratio: %1.3f' % MCstat.bin_conv(delta)['CF'])
+        print('autocorrlelation time: %3.3f' % MCstat.bin_ac(delta)['tau'])
     
     plt.ylabel(r"$\Delta_l$")
     plt.xlabel("$l$")

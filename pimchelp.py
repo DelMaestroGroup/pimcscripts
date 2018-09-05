@@ -388,7 +388,7 @@ class PimcHelp:
     #     return fileNames,numParams,numDataCols
 
     # -----------------------------------------------------------------------------
-    def getFileList(self,type,idList=None,cyldir=""):
+    def getFileList(self,ftype,idList=None,cyldir=""):
         ''' Get a list of input files based on their type, and possibly a number
             of unique ID's'''
 
@@ -396,7 +396,7 @@ class PimcHelp:
 
         # We want all the file names here
         if not idList:
-            fileLoc = '%s%s-%s-%s' % (self.baseDir+cyldir,self.prefix,type,self.dataName)
+            fileLoc = '%s%s-%s-%s' % (self.baseDir+cyldir,self.prefix,ftype,self.dataName)
             fileNames = glob.glob(fileLoc)
 
             # Now sort them
@@ -405,7 +405,7 @@ class PimcHelp:
         # Otherwise we just go through and get the ID's we need
         else:
             for id in idList: 
-                fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,type,id)
+                fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,ftype,id)
                 fileNames.extend(glob.glob(fileLoc))
 
         return sorted(fileNames)
