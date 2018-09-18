@@ -7,7 +7,7 @@ Description:
 Merge the results of parallel PIMC output files, (same parameters, different
 seeds) and potentially move the originals to an archive
 
-Usage: merge.py [options]
+Usage: merge.py [options] <base_dir>
 
 Options:
   -h, --help                        Show this help message and exit
@@ -23,7 +23,6 @@ Options:
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --canonical                       Are we in the canonical ensemble?
-  -D <dir>, --working_directory=<dir>   The directory where we perform the merge.  [default: ]
 '''
 
 from __future__ import print_function
@@ -69,7 +68,11 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         # Get the new header string
         if '#' in inLines[0]:
             header = inLines[0][2:].replace(str(pimc.id[n]),str(newID))
-            header += inLines[1][2:-1]
+            if inLines[2][0] == '#':
+                header += inLines[1][2:]
+                header += inLines[2][2:-1]
+            else:
+                header += inLines[1][2:-1]
 
         # get the data from the first file
         if isinstance(skip,int):
@@ -136,7 +139,7 @@ def main():
 
     canonical = args['--canonical']
     pimcID = args['--id']
-    baseDir = args['--working_directory']
+    baseDir = args['<base_dir>']
     mergeDir = baseDir + 'MERGED'
     exclude_estimators = args['--exclude']
 

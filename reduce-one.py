@@ -14,6 +14,8 @@ import MCstat
 from optparse import OptionParser
 #from pylab import *
 from matplotlib.pyplot import *
+from collections import defaultdict
+
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
     ''' Get the average and error of all columns in the data matrix. '''
@@ -97,13 +99,15 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0, baseDir=''):
     return headers,ave,err;
 
 # -----------------------------------------------------------------------------
-def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
+def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
     ''' Return the arrays consisting of the reduec averaged vector 
         estimators. '''
 
-    fileNames = pimc.getFileList(type)
+    fileNames = pimc.getFileList(etype)
     try:
         headers   = pimchelp.getHeadersFromFile(fileNames[0])
+
+        print(headers)
 
         numParams = len(fileNames)
         Nx = len(headers)
@@ -111,7 +115,6 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
         x   = np.zeros([numParams,Nx],float)
         ave = np.zeros([numParams,Nx],float)
         err = np.zeros([numParams,Nx],float)
-
         
         for i,fname in enumerate(fileNames):
 
@@ -123,13 +126,13 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
             x[i,:] = pimchelp.getHeadersFromFile(fname)
 
             # Compute the normalized averages and error for the OBDM
-            if type == 'obdm':
+            if etype == 'obdm':
                 norm = ave[i,0]
                 ave[i,:] /= norm
                 err[i,:] /= norm
 
         # output the vector data to disk
-        outFile = open(baseDir+'%s-%s' % (type,outName),'w');
+        outFile = open(baseDir+'%s-%s' % (etype,outName),'w');
 
         # the headers
         lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[0]][reduceFlag[1]]))
@@ -152,7 +155,7 @@ def getVectorEst(type,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
         return x,ave,err
 
     except:
-        print('Problem Reducing %s files' % type)
+        print('Problem Reducing %s files' % etype)
         return 0,0,0
 
 
@@ -217,6 +220,82 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
     outFile.close()
 
     return aveKappa,errKappa
+
+# -----------------------------------------------------------------------------
+def getISFEst(pimc,outName,reduceFlag,xlab,ylab,skip=0,baseDir=''):
+    ''' Return the arrays consisting of the reduced averaged intermediate
+        scattering function. '''
+
+    try:    
+        fileNames = pimc.getFileList('isf')
+
+        # get the number of time slices
+        pimcID = pimc.getID(fileNames[0])
+        numTimeSlices = int(pimc.params[pimcID]['Number Time Slices'])
+
+        # get information on the q-values from the header
+        with open(fileNames[0],'r') as inFile:
+            lines = inFile.readlines()
+            qvals = lines[1].lstrip('#').rstrip('\n').split()
+            tvals = lines[2].lstrip('#').rstrip('\n').split()
+
+        numParams = len(fileNames)
+
+        Nq = len(qvals)
+        Nx = int(len(tvals)/Nq) + 1
+
+        ave = np.zeros([Nq,numParams,Nx],float)
+        err = np.zeros([Nq,numParams,Nx],float)
+
+        for i,fname in enumerate(fileNames):
+
+            # load all the data
+            isf_data = np.loadtxt(fname)
+
+            # break into pieces corresonding to each q
+            isf = {}
+            τ = {}
+            for j,cq in enumerate(qvals):
+                isf[cq] = isf_data[skip:,numTimeSlices*j:(j+1)*numTimeSlices]
+                τ[cq] = np.array([float(cτ) for cτ in tvals[numTimeSlices*j:(j+1)*numTimeSlices]])
+            
+            # add duplicate entry for tau = 1/T and get the averages and error
+            for j,cq in enumerate(qvals):
+                isf[cq] = np.hstack((isf[cq],isf[cq][:,:1]))
+                τ[cq] = np.append(τ[cq],τ[cq][1] + τ[cq][-1])
+
+                # Get the estimator data and compute averages
+                ave[j,i,:],err[j,i,:] = getStats(isf[cq])
+
+        # output the vector data to disk
+        outFileName = baseDir+'%s-%s' % ('isf',outName)
+
+        # the param and data headers
+        header_q = ''
+        header_p = ''
+        header_d = ''
+        for cq in qvals:
+            header_q += '{:^48}'.format('q = {:s}'.format(cq))
+            for j in range(numParams):
+                lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j]][reduceFlag[1]]))
+                header_p += '{:^48s}'.format(lab)
+                header_d += '{:>16s}{:>16s}{:>16s}'.format(xlab,ylab,'Δ'+ylab)
+
+        header = '# ' + header_q[2:] + '\n' + '# ' + header_p[2:] + '\n' + '# ' + header_d[2:]
+
+        # collapse the data
+        out_data = []
+        for i,cq in enumerate(qvals):
+            for j in range(numParams):
+                out_data.append(np.vstack((τ[cq],ave[i,j,:],err[i,j,:])).T)
+
+        out_data = np.hstack(out_data)
+        np.savetxt(outFileName,out_data,delimiter='',comments='', header=header,fmt='% 16.8E')
+        return 0,0,0
+
+    except:
+        print('Problem Reducing %s files' % 'isf')
+        return 0,0,0
 
 
 # -----------------------------------------------------------------------------
@@ -302,7 +381,7 @@ def main():
     # possible types of estimators we may want to reduce
     estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea',
-               'planewind','virial','linedensity','linepotential','energy']
+               'planewind','virial','linedensity','linepotential','energy','isf']
     estDo = {e:False for e in estList}
 
     # if we specify a single estimator, only do that one
@@ -385,6 +464,9 @@ def main():
     if estDo['linepotential']:
         x11,ave11,err11 = getVectorEst('linepotential',pimc,outName,reduceFlag,
                                        'r [A]','V1d(r)',skip=skip,baseDir=baseDir)
+    if estDo['isf']:
+        x11,ave11,err11 = getISFEst(pimc,outName,reduceFlag,
+                                       'τ [1/K]','F(q,τ)',skip=skip,baseDir=baseDir)
 
     # Do we show plots?
     if options.plot:

@@ -69,7 +69,7 @@ def splitISF(pimc,idList,baseDir,cyldir=''):
 
         # write to separate files
         for i,cq in enumerate(qvals):
-            outFile = fileName.replace('isf','isf-q-{:s}'.format(cq))
+            outFile = fileName.replace('isf','isfq{:s}'.format(cq))
             header = 'PIMCID: {:d}\n'.format(pimcID)
             header += '{:>14}'.format(tau[cq][0]) 
             for ctau in tau[cq][1:]:

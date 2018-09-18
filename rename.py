@@ -23,6 +23,8 @@ def main():
         
         fileName = args[0]
 
+        dirName = os.path.dirname(fileName)
+
         # The output file types
         fileType = ['estimator','log','obdm','pair','pcycle','state',
                     'super','worm','number','energy']
@@ -36,12 +38,11 @@ def main():
         dataParts = dataName.split('-')
 
         # Get the ID number
-        print(dataParts[-1])
         oldID = int(dataParts[-1])
         newID = oldID
 
         # Now we keep incrementing the ID number until we are sure it is unique
-        while len(glob.glob('*log*-%09d*' % newID)) > 0:
+        while len(glob.glob(os.path.join(dirName,'*log*-%09d*' % newID))) > 0:
             newID += 1
 
         # Create the new data name
