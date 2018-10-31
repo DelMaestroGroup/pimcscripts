@@ -234,7 +234,7 @@ def main():
             if args['--error']:
                 cma = cumulativeMovingAverage(cdata[skip:])
                 sem = error*np.ones_like(cma)
-            elif args['--nobin']:
+            elif args['--nobin'] or np.size(cdata)-skip < 32:
                 cma,sem = cumulativeMovingAverageWithError(cdata[skip:])
             else:
                 cma = cumulativeMovingAverage(cdata[skip:])

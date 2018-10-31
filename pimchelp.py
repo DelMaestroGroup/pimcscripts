@@ -324,7 +324,7 @@ class PimcHelp:
         if len(fParts) > 7:
             ID = '-'.join(fParts[6:])
         else:
-            ID = int(fileName[-13:-4])
+            ID = fileName[-13:-4]
         return ID
 
     # ----------------------------------------------------------------------

@@ -7,7 +7,7 @@ Description:
 Merge the results of parallel PIMC output files, (same parameters, different
 seeds) and potentially move the originals to an archive
 
-Usage: merge.py [options] <base_dir>
+Usage: merge.py [options] [<base_dir>]
 
 Options:
   -h, --help                        Show this help message and exit
@@ -32,6 +32,8 @@ import numpy as np
 import glob
 import tarfile
 import pimchelp
+import uuid
+import re
 
 # -----------------------------------------------------------------------------
 def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
@@ -67,7 +69,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
         # Get the new header string
         if '#' in inLines[0]:
-            header = inLines[0][2:].replace(str(pimc.id[n]),str(newID))
+            header = inLines[0][2:].replace(pimc.id[n],newID)
             if inLines[2][0] == '#':
                 header += inLines[1][2:]
                 header += inLines[2][2:-1]
@@ -107,7 +109,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
                 data.append(cdata)
 
     # Get the name of the new output file
-    outName = os.path.basename(fileNames[0]).replace(str(pimc.id[0]),str(newID))
+    outName = os.path.basename(fileNames[0]).replace(pimc.id[0],newID)
     print('%-80s' % outName,end="")
 
     # for cumulative estimators we average, for all others we stack
@@ -140,6 +142,8 @@ def main():
     canonical = args['--canonical']
     pimcID = args['--id']
     baseDir = args['<base_dir>']
+    if not baseDir:
+        baseDir = './'
     mergeDir = baseDir + 'MERGED'
     exclude_estimators = args['--exclude']
 
@@ -169,17 +173,8 @@ def main():
     pimc = pimchelp.PimcHelp(dataName,canonical,baseDir=baseDir)
     pimc.getSimulationParameters(idList=pimcID)
 
-    # We try to find a new PIMCID which is the average of the ones to merge, and
-    # make sure it doesn't already exist
-    newID = 0
-    for pid in pimc.id:
-        newID += int(pid)
-    newID = int(newID/(1.0*len(pimc.id)))
-
-    # Now we keep incrementing the ID number until we are sure it is unique
-    while ((len(glob.glob(baseDir + '*estimator*-%09d*' % newID)) > 0) or
-           (len(glob.glob(baseDir + 'MERGED/*estimator*-%09d*' % newID)) > 0)):
-        newID += 1
+    # get a new unique uuid
+    newID = str(uuid.uuid4())
 
     # Merge all the output files
     print('Merged data files:')
@@ -194,14 +189,22 @@ def main():
                 mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
                           cyldir='CYLINDER/')
 
-    # copy over the log file
+    # Prepare the new log file
     oldLogName = pimc.getFileList('log', idList=pimcID)[0]
-    newLogName = os.path.basename(oldLogName).replace(str(pimc.id[0]),str(newID))
-    os.system('cp %s %s' % (oldLogName, mergeDir + os.path.sep + newLogName))
+    newLogName = os.path.basename(oldLogName).replace(pimc.id[0],newID)
+
+    # write the new log file to disk
+    with open(oldLogName,'r') as oldLogFile:
+        logData = oldLogFile.read().replace(pimc.id[0],newID)
+        with open(mergeDir + os.path.sep + newLogName,'w') as newLogFile:
+            newLogFile.write(logData)
 
     # Do the same if we are merging cylinder files
     if cylinder:
-        os.system('cp %s %s' % (oldLogName, mergeDir + '/CYLINDER/' + newLogName))
+        with open(oldLogName,'r') as oldLogFile:
+            logData = oldLogFile.read().replace(pimc.id[0],newID)
+            with open(mergeDir + '/CYLINDER/' + newLogName,'w') as newLogFile:
+                newLogFile.write(logData)
 
     # We first create the name of the output tar file
 #   mergeName = pimc.getFileList('estimator')[0].rstrip('.dat').replace('estimator','merged')

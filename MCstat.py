@@ -21,6 +21,7 @@ def bin(MC):
     
     # minimum number of MC bins required
     min_bin = 32
+
     # initialize B to MC data
     B = MC
 
