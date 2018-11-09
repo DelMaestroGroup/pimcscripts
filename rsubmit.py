@@ -60,10 +60,10 @@ echo \"Starting run at: `date`\"\n''')
     
     if numID > 1:
         pbsFile.write('esac\necho \"Finished run at: `date`\"')
-        print '\nSubmit jobs with: qsub -t 0-%d %s\n' % (numID-1,fileName)
+        print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numID-1,fileName))
     else:
         pbsFile.write('echo \"Finished run at: `date`\"')
-        print '\nSubmit jobs with: qsub %s\n' % fileName
+        print('\nSubmit jobs with: qsub %s\n' % fileName)
     pbsFile.close();
 
 # -----------------------------------------------------------------------------
@@ -114,7 +114,7 @@ echo \"Starting run at: `date`\"\n\n''')
         pbsFile.write('(%s) &\n' % command)
     pbsFile.write('wait')
     pbsFile.close();
-    print '\nSubmit job with: qsub %s\n' % fileName
+    print('\nSubmit job with: qsub %s\n' % fileName)
 
 # -----------------------------------------------------------------------------
 # Begin Main Program
