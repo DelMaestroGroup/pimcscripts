@@ -5,7 +5,7 @@
 # Plot possibly many vector estimators
 
 import os,sys
-import loadgmt,kevent
+# import loadgmt
 import argparse
 import pyutils
 import pimchelp
@@ -62,7 +62,7 @@ def main():
 
     # Analyze the imput files
     estimatorName = pimchelp.getVectorEstimatorName(fileNames[0])
-    print estimatorName
+    print(estimatorName)
     reduce = pimchelp.VectorReduce(fileNames,estimatorName,varLabel)
 
     # Get a color scheme and marker list

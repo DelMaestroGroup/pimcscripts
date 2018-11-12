@@ -294,6 +294,142 @@ def getFileString(options,reduce=True):
         return dataName
 
 # -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+class PimcResults:
+
+    ''' Helper methods for plotting PIMC reduced data in a notebook setting.'''
+    
+    # ----------------------------------------------------------------------
+    def __init__(self,results_file_name):
+
+        import numpy as np
+        ''' Extract and label scalar or vector data. '''
+        
+        # the raw data
+        self.rdata = np.loadtxt(results_file_name)
+    
+        # determine now many header lines we have to determine if we have
+        # scalar, vector, q-vector of matrix data
+        with open(results_file_name) as results_file:
+            lines = results_file.readlines()
+            num_header_lines = 0
+            for line in lines:
+                if line[0] == '#':
+                    num_header_lines += 1
+                else:
+                    break
+
+        # simple scalar estimator 
+        if num_header_lines == 1:
+            self.data = np.genfromtxt(results_file_name, deletechars='',names=True)
+            self.headers = self.data.dtype.names
+
+        # simple vector estimator
+        elif num_header_lines == 2:
+            self.params = [j for j in re.split(r'[ ]{2,}',lines[0][1:-1]) if j != '']
+            cheaders = re.split(r'[ ]{2,}',lines[1][1:-1])
+            self.headers = [cheaders[j] for j in range(1,4)] 
+            self.data = {}
+            for i,param in enumerate(self.params):
+                for j,header in enumerate(self.headers):
+                    self.data['{:s} -- {:s}'.format(param,header)] = self.rdata[:,len(self.headers)*i+j]
+
+            # get the correct key formatting
+            self.pwidth,self.pprecision,self.pformat = self.key_format(self.params[0])
+                    
+        # scattering vector estimator
+        elif num_header_lines == 3:
+            self.qparams = [j for j in re.split(r'[ ]{2,}',lines[0][1:-1]) if j != '']
+            self.params = [p for p in set([j for j in re.split(r'[ ]{2,}',lines[1][1:-1]) if j != ''])]
+            cheaders = re.split(r'[ ]{2,}',lines[2][1:-1])
+            self.headers = [cheaders[j] for j in range(1,4)] 
+
+            self.data = {}
+            for i,qparam in enumerate(self.qparams):
+                for j,param in enumerate(self.params):
+                    for k,header in enumerate(self.headers):
+                        idx = i*len(self.params)*len(self.headers) + j*len(self.headers) + k
+                        self.data['{:s} -- {:s} -- {:s}'.format(qparam,param,header)] = self.rdata[:,idx]
+
+            # get the actual q-values as floats
+            self.qvals = []
+            for qparam in self.qparams:
+                self.qvals.append(float(qparam.split('=')[-1]))
+            self.qvals = np.array(self.qvals)
+
+            # get the correct key formatting
+            self.qwidth,self.qprecision,self.qformat = self.key_format(self.qparams[0])
+            self.pwidth,self.pprecision,self.pformat = self.key_format(self.params[0])
+                    
+    # ----------------------------------------------------------------------
+    def key_format(self,key):
+        ''' Determine how lookup keys are formatted. '''
+        val = key.split('=')[-1].lstrip()
+        width = len(val)
+
+        # check if we have scientific notation
+        if 'e' in val or 'E' in val:
+            sformat = 'E'
+            prec = len(val.split('.')[-1][:-4])
+        # check for float
+        elif '.' in val:
+            prec = len(val.split('.')[-1])
+            sformat = 'f'
+        # otherwise assume integer
+        else:
+            sformat = 'd'
+            prec = 0
+
+        return width,prec,sformat
+
+    # ----------------------------------------------------------------------
+    def qkey(self,qval):
+        return 'q = {:{width}.{precision}{sformat}}'.format(qval,width=self.qwidth,\
+                                                  precision=self.qprecision,sformat=self.qformat)
+
+    # ----------------------------------------------------------------------
+    def pkey(self,pval):
+        # get the parmeter name
+        pname = self.params[0].split('=')[0].rstrip()
+        if self.pformat == 'd':
+            return '{:s} = {:{width}{sformat}}'.format(pname,pval,width=self.pwidth,sformat=self.pformat)
+        else:
+            return '{:s} = {:{width}.{precision}{sformat}}'.format(pname,pval,width=self.pwidth,\
+                                                      precision=self.pprecision, sformat=self.pformat)
+
+    # ----------------------------------------------------------------------
+    def x(self,*param):
+        if len(param) == 1:
+            return self.data['{:s} -- {:s}'.format(param[0],self.headers[0])]
+        elif len(param) == 2:
+            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[0])]
+
+    # ----------------------------------------------------------------------
+    def y(self,*param):
+        if len(param) == 1:
+            return self.data['{:s} -- {:s}'.format(param[0],self.headers[1])]
+        elif len(param) == 2:
+            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[1])]
+
+    # ----------------------------------------------------------------------
+    def Δy(self,*param):
+        if len(param) == 1:
+            return self.data['{:s} -- {:s}'.format(param[0],self.headers[2])]
+        elif len(param) == 2:
+            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[2])]
+    
+    # ----------------------------------------------------------------------
+    def pdata(self,*param):
+        return self.x(*param),self.y(*param)
+    
+    # ----------------------------------------------------------------------
+    def epdata(self,*param):
+        return self.x(*param),self.y(*param),self.Δy(*param)
+    
+# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 class PimcHelp:
     ''' Helper methods for analzing pimc output data. '''
 

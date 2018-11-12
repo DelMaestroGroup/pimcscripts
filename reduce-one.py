@@ -46,11 +46,11 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
-def getScalarEst(type,pimc,outName,reduceFlag, skip=0, baseDir=''):
+def getScalarEst(etype,pimc,outName,reduceFlag, skip=0, baseDir=''):
     ''' Return the arrays containing the reduced averaged scalar
         estimators in question.'''
 
-    fileNames = pimc.getFileList(type)
+    fileNames = pimc.getFileList(etype)
     headers   = pimchelp.getHeadersFromFile(fileNames[0])
 
     ave = np.zeros([len(fileNames),len(headers)],float)
@@ -80,12 +80,12 @@ def getScalarEst(type,pimc,outName,reduceFlag, skip=0, baseDir=''):
     #     err = errNew
 
     # output the estimator data to disk
-    outFile = open(baseDir + '%s-%s' % (type,outName),'w');
+    outFile = open(baseDir + '%s-%s' % (etype,outName),'w');
 
-    # the headers
-    outFile.write('#%15s' % reduceFlag[0])
+    # the param and data headers
+    outFile.write('#{:>15s}'.format(reduceFlag[0]))
     for head in headers:
-        outFile.write('%16s%16s' % (head,'+/-'))
+        outFile.write('{:>16s}{:>16s}'.format(head,'Δ{:s}'.format(head)))
     outFile.write('\n')
 
     # the data
@@ -106,8 +106,6 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
     fileNames = pimc.getFileList(etype)
     try:
         headers   = pimchelp.getHeadersFromFile(fileNames[0])
-
-        print(headers)
 
         numParams = len(fileNames)
         Nx = len(headers)
@@ -131,27 +129,22 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
                 ave[i,:] /= norm
                 err[i,:] /= norm
 
+        # the param and data headers
+        header_p = ''
+        header_d = ''
+        for j in range(numParams):
+            lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j]][reduceFlag[1]]))
+            header_p += '{:^48s}'.format(lab)
+            header_d += '{:>16s}{:>16s}{:>16s}'.format(xlab,ylab,'Δ'+ylab)
+        header = '# ' + header_p[2:] + '\n' + '# ' + header_d[2:]
+
+        # collapse the data
+        out_data = [np.vstack((x[i,:],ave[i,:],err[i,:])).T for i in range (numParams)]
+
         # output the vector data to disk
-        outFile = open(baseDir+'%s-%s' % (etype,outName),'w');
-
-        # the headers
-        lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[0]][reduceFlag[1]]))
-        outFile.write('#%15s%16s%16s' % ('',lab,''))
-        for j in range(numParams-1):
-            lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j+1]][reduceFlag[1]]))
-            outFile.write('%16s%16s%16s' % ('',lab,''))
-        outFile.write('\n')
-        outFile.write('#%15s%16s%16s' % (xlab,ylab,'+/-'))
-        for j in range(numParams-1):
-            outFile.write('%16s%16s%16s' % (xlab,ylab,'+/-'))
-        outFile.write('\n')
-
-        # the data
-        for i,h in enumerate(headers):
-            for j in range(numParams):
-                outFile.write('%16.8E%16.8E%16.8E' % (x[j,i],ave[j,i],err[j,i]))
-            outFile.write('\n')
-        outFile.close()
+        outFileName = baseDir+'%s-%s' % (etype,outName)
+        np.savetxt(outFileName,np.hstack(out_data),delimiter='',comments='', 
+                   header=header,fmt='% 16.8E')
         return x,ave,err
 
     except:
