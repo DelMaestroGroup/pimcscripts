@@ -60,7 +60,6 @@ def sortFileNames(fileNames):
     for ft in fileTuples:
         sortedFileNames.append(ft[0])
 
-
     # return the sorted file names
     return sortedFileNames
 
@@ -296,7 +295,7 @@ def getFileString(options,reduce=True):
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
-class PimcResults:
+class PIMCResults:
 
     ''' Helper methods for plotting PIMC reduced data in a notebook setting.'''
     
@@ -385,39 +384,37 @@ class PimcResults:
 
     # ----------------------------------------------------------------------
     def qkey(self,qval):
-        return 'q = {:{width}.{precision}{sformat}}'.format(qval,width=self.qwidth,\
-                                                  precision=self.qprecision,sformat=self.qformat)
+        return f'q = {qval:{self.qwidth}.{self.qprecision}{self.qformat}}'
 
     # ----------------------------------------------------------------------
     def pkey(self,pval):
         # get the parmeter name
         pname = self.params[0].split('=')[0].rstrip()
         if self.pformat == 'd':
-            return '{:s} = {:{width}{sformat}}'.format(pname,pval,width=self.pwidth,sformat=self.pformat)
+            return f'{pname} = {pval:{self.pwidth}{self.pformat}}'
         else:
-            return '{:s} = {:{width}.{precision}{sformat}}'.format(pname,pval,width=self.pwidth,\
-                                                      precision=self.pprecision, sformat=self.pformat)
+            return f'{pname} = {pval:{self.pwidth}.{self.pprecision}{self.pformat}}'
 
     # ----------------------------------------------------------------------
     def x(self,*param):
         if len(param) == 1:
-            return self.data['{:s} -- {:s}'.format(param[0],self.headers[0])]
+            return self.data[f'{param[0]} -- {self.headers[0]}']
         elif len(param) == 2:
-            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[0])]
+            return self.data[f'{param[0]} -- {param[1]} -- {self.headers[0]}']
 
     # ----------------------------------------------------------------------
     def y(self,*param):
         if len(param) == 1:
-            return self.data['{:s} -- {:s}'.format(param[0],self.headers[1])]
+            return self.data[f'{param[0]} -- {self.headers[1]}']
         elif len(param) == 2:
-            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[1])]
+            return self.data[f'{param[0]} -- {param[1]} -- {self.headers[1]}']
 
     # ----------------------------------------------------------------------
     def Δy(self,*param):
         if len(param) == 1:
-            return self.data['{:s} -- {:s}'.format(param[0],self.headers[2])]
+            return self.data[f'{param[0]} -- {self.headers[2]}']
         elif len(param) == 2:
-            return self.data['{:s} -- {:s} -- {:s}'.format(param[0],param[1],self.headers[2])]
+            return self.data[f'{param[0]} -- {param[1]} -- {self.headers[2]}']
     
     # ----------------------------------------------------------------------
     def pdata(self,*param):
