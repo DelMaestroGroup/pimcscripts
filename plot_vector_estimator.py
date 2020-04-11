@@ -5,7 +5,6 @@
 # Plot possibly many vector estimators
 
 import os,sys
-# import loadgmt
 import argparse
 import pyutils
 import pimchelp
@@ -60,13 +59,13 @@ def main():
     if len(fileNames) < 1:
         parser.error("Need to specify at least one vector estimator file")
 
-    # Analyze the imput files
+    # Analyze the input files
     estimatorName = pimchelp.getVectorEstimatorName(fileNames[0])
     print(estimatorName)
-    reduce = pimchelp.VectorReduce(fileNames,estimatorName,varLabel)
+    reduceVec = pimchelp.VectorReduce(fileNames,estimatorName,varLabel)
 
     # Get a color scheme and marker list
-    numColors = reduce.getNumReduceParams()
+    numColors = reduceVec.getNumReduceParams()
     markers,colors  = plotoptions.markersColors(numColors)
 
     # get the plot options
@@ -76,17 +75,17 @@ def main():
     descrip = pimchelp.Description(NDIM)
 
     # Plot each estimator
-    for varIndex in range(reduce.getNumVarParams()):
+    for varIndex in range(reduceVec.getNumVarParams()):
         pl.figure(varIndex+1)
         #ax = pl.subplot(111)
 
-        for reduceIndex in range(reduce.getNumReduceParams()):
-            lab = reduce.getReduceLabel(reduceIndex)
+        for reduceIndex in range(reduceVec.getNumReduceParams()):
+            lab = reduceVec.getReduceLabel(reduceIndex)
             pOptions['color'] = colors[reduceIndex]
             if 'e' in plotType:
-                eb = pl.errorbar(reduce.x(varIndex,reduceIndex),
-                                 reduce.estimator(varIndex,reduceIndex),
-                                 yerr=reduce.estimatorError(varIndex,reduceIndex), 
+                eb = pl.errorbar(reduceVec.x(varIndex,reduceIndex),
+                                 reduceVec.estimator(varIndex,reduceIndex),
+                                 yerr=reduceVec.estimatorError(varIndex,reduceIndex), 
                                  markerfacecolor=colors[reduceIndex],
                                  ecolor=colors[reduceIndex], label=lab, 
                                  **pOptions)
@@ -95,8 +94,8 @@ def main():
                 for cap in eb[1]:
                     cap.set_mew(1.0)
             else:
-                pl.plot(reduce.x(varIndex,reduceIndex),
-                        reduce.estimator(varIndex,reduceIndex),
+                pl.plot(reduceVec.x(varIndex,reduceIndex),
+                        reduceVec.estimator(varIndex,reduceIndex),
                         label=lab, **pOptions)
 
 
@@ -106,7 +105,7 @@ def main():
 
 #        # Add a colorbar
 #        cmap = loadgmt.getcmap('cb/div','Spectral_08')
-#        T = reduce.param()[::2]
+#        T = reduceVec.param()[::2]
 #        cb = pl.colorbar(loadgmt.getMap(cmap,T),ax=ax,ticks=T)
 #        cb.ax.set_ylabel('Temperature',rotation=-90)
 
@@ -125,20 +124,20 @@ def main():
     # Plot a possible subplot matrix
     if subplot != None:
         f, ax = pl.subplots(subplot[0], subplot[1], sharex=True, squeeze=False, sharey=True)
-        numReduce = reduce.getNumReduceParams()
+        numReduce = reduceVec.getNumReduceParams()
 
-        for reduceIndex in range(reduce.getNumReduceParams()):
+        for reduceIndex in range(reduceVec.getNumReduceParams()):
             id = getIndex(reduceIndex,subplot,2)
             pOptions['color'] = colors[reduceIndex]
-            lab = reduce.getReduceLabel(reduceIndex)
+            lab = reduceVec.getReduceLabel(reduceIndex)
 
-            for varIndex in range(reduce.getNumVarParams()):
+            for varIndex in range(reduceVec.getNumVarParams()):
                 pOptions['marker'] = markers[varIndex]
 
                 if 'e' in plotType:
-                    eb = ax[id[0],id[1]].errorbar(reduce.x(varIndex,reduceIndex),
-                                                  reduce.estimator(varIndex,reduceIndex),
-                                                  yerr=reduce.estimatorError(0,reduceIndex), 
+                    eb = ax[id[0],id[1]].errorbar(reduceVec.x(varIndex,reduceIndex),
+                                                  reduceVec.estimator(varIndex,reduceIndex),
+                                                  yerr=reduceVec.estimatorError(0,reduceIndex), 
                                                   markerfacecolor=colors[reduceIndex],
                                                   ecolor=colors[reduceIndex], label=lab, 
                                                   **pOptions)
@@ -147,8 +146,8 @@ def main():
                     for cap in eb[1]:
                         cap.set_mew(1.0)
                 else:
-                    ax[id[0],id[1]].plot(reduce.x(varIndex,reduceIndex),
-                                         reduce.estimator(varIndex,reduceIndex),
+                    ax[id[0],id[1]].plot(reduceVec.x(varIndex,reduceIndex),
+                                         reduceVec.estimator(varIndex,reduceIndex),
                                          label=lab, **pOptions)
 
             ax[id[0],id[1]].legend(frameon=False, loc='upper left', prop={'size':18})

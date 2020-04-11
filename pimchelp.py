@@ -126,17 +126,28 @@ def getParFromPIMCFile(fileName):
     return dataMap
 
 # -----------------------------------------------------------------------------
-def getHeadersFromFile(fileName, skipLines=0): 
+def getHeadersFromFile(fileName, skipLines=0, getEstimatorInfo=False): 
     ''' Get the data column headers from a PIMC output file. '''
 
     with open(fileName,'r') as inFile:
         inLines = inFile.readlines();
         n = skipLines
         if 'PIMCID' in inLines[n]:
-            headers = inLines[n+1].split()
+            n += 1
+
+        if 'ESTINF' in inLines[n]:
+            # determine if we want to extract the header information
+            if getEstimatorInfo:
+                headers = []
+                headers.append(inLines[n])
+                headers.append(inLines[n+1].split())
+                headers[1].pop(0)
+            else:
+                headers = inLines[n+1].split()
+                headers.pop(0)
         else:
             headers = inLines[n].split()
-        headers.pop(0)
+            headers.pop(0)
 
     return headers
 
@@ -745,7 +756,7 @@ class VectorReduce:
             self.numParams[parName] = len(set(parVals))
 
         # create an array with the fixed parameters
-        self.fixParNames = self.param_.keys()
+        self.fixParNames = list(self.param_.keys())
         self.fixParNames.remove(self.reduceLabel)
         
         # find the name/label of the changing parameter
@@ -829,10 +840,10 @@ class VectorReduce:
     def getReduceLabel(self,reduceIndex):
         '''Construct a label for the reduce parameter.'''
 
-        labName = self.descrip.paramShortName(self.reduceLabel)
-        labFormat = self.descrip.paramFormat(self.reduceLabel)
+        labName = self.descrip.paramShortName[self.reduceLabel]
+        labFormat = self.descrip.paramFormat[self.reduceLabel]
         labValue = self.param_[self.reduceLabel][reduceIndex]
-        labUnit = self.descrip.paramUnit(self.reduceLabel)
+        labUnit = self.descrip.paramUnit[self.reduceLabel]
 
         return labName + ' = ' + labFormat % labValue + ' ' + labUnit
 
@@ -931,6 +942,7 @@ class Description:
                                   'pair':'Pair Correlation Function [units]',
                                   'radial':r'Radial Density $[\mathrm{\AA}^{-3}]$',
                                   'number':'Number Distribution',
+                                  'planedensity':'Density $[\mathrm{\AA}^{-3}]$',
                                   'obdm':'One Body Density Matrix',
                                   'rho_s/rho':'Superfluid Fraction',
                                   'Area_rho_s':'Area Superfluid Fraction',
@@ -966,6 +978,7 @@ class Description:
         self.estimatorXLongName = {'number':'Number of Particles',
                                    'pair':'r  %s' % lengthTUnit,
                                    'obdm':'r  %s' % lengthTUnit,
+                                   'planedensity': 'Gridbox Number',
                                    'radial':'r  %s' % lengthTUnit,
                                    'radwind':'r  %s' % lengthTUnit,
                                    'radarea':'r  %s' % lengthTUnit}

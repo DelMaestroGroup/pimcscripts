@@ -8,11 +8,9 @@
 
 import os,sys,glob
 import numpy as np
-#import loadgmt FIXME Make this optional
 import pimchelp
 import MCstat
 from optparse import OptionParser
-#from pylab import *
 from matplotlib.pyplot import *
 from collections import defaultdict
 
@@ -105,7 +103,14 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
 
     fileNames = pimc.getFileList(etype)
     try:
-        headers   = pimchelp.getHeadersFromFile(fileNames[0])
+        headers = pimchelp.getHeadersFromFile(fileNames[0],getEstimatorInfo=True)
+
+        # We need to check if any information has been included in the header
+        # i.e. is header a list of lists
+        estInfo = ''
+        if any(isinstance(h, list) for h in headers):
+            estInfo = headers[0]
+            headers = headers[1]
 
         numParams = len(fileNames)
         Nx = len(headers)
@@ -115,6 +120,7 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
         err = np.zeros([numParams,Nx],float)
         
         for i,fname in enumerate(fileNames):
+            print(fname)
 
             # Get the estimator data and compute averages
             data = np.loadtxt(fname,ndmin=2)[skip:,:]
@@ -129,6 +135,7 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
                 ave[i,:] /= norm
                 err[i,:] /= norm
 
+
         # the param and data headers
         header_p = ''
         header_d = ''
@@ -136,7 +143,7 @@ def getVectorEst(etype,pimc,outName,reduceFlag,xlab,ylab, skip=0, baseDir=''):
             lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j]][reduceFlag[1]]))
             header_p += '{:^48s}'.format(lab)
             header_d += '{:>16s}{:>16s}{:>16s}'.format(xlab,ylab,'Δ'+ylab)
-        header = '# ' + header_p[2:] + '\n' + '# ' + header_d[2:]
+        header = estInfo + '# ' + header_p[2:] + '\n' + '# ' + header_d[2:]
 
         # collapse the data
         out_data = [np.vstack((x[i,:],ave[i,:],err[i,:])).T for i in range (numParams)]

@@ -4,7 +4,9 @@
 # 
 # Options that will be used when plotting vector and scalar estimators
 
-import loadgmt
+from matplotlib import cm
+from matplotlib import colors as mplcolors
+import numpy as np
 
 # -----------------------------------------------------------------------------
 def plotOptions(plotType):
@@ -55,12 +57,16 @@ def markersColors(numColors):
     # http://www.graphviz.org/content/color-names
     if numColors == 1:
         numColors+=1;
-    #colors  = loadgmt.getColorList('cb/div','Spectral_08',numColors)
-    #colors  = loadgmt.getColorList('cb/div','PiYG_07',numColors)
-    colors  = loadgmt.getColorList('cb/qual','Set1_09',numColors)
 
-    # colors.reverse()
-    markers = loadgmt.getMarkerList()
+    color_map = 'Spectral_r'
+    cmap = cm.get_cmap(color_map)
+
+    colors = []
+    for n in np.linspace(0,1.0,numColors):
+        colors.append(mplcolors.to_hex(cmap(n)))
+
+    markers = ['o','s','^','v','>','<','p','d','*','H','$\clubsuit$',
+           '$\spadesuit$', 'x','$\otimes$','1','2','3','4']
 
     return markers,colors
 
