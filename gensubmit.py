@@ -12,23 +12,28 @@ import os,sys,glob
 from optparse import OptionParser
 
 # -----------------------------------------------------------------------------
-def vacc(staticPIMCOps,numOptions,optionValue,outName):
+def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False):
     ''' Write a pbs submit script for the VACC. '''
+
+    # determine if we are adding external timing
+    time_cmd = ''
+    if time:
+        time_cmd = '/bin/time -v '
 
     # Open the pbs file and write its header
     fileName = 'submit-pimc%s.pbs' % outName
     pbsFile = open(fileName,'w')
     pbsFile.write('''#!/bin/bash
-#PBS -S /bin/bash\n
-#PBS -l walltime=29:00:00
-#PBS -l nodes=1:ppn=1,pmem=1gb
+#PBS -S /bin/bash\n\n''')
+    pbsFile.write(f'#PBS -l walltime={walltime}\n')
+    pbsFile.write('''#PBS -l nodes=1:ppn=1,pmem=1gb
 #PBS -N pimc
 #PBS -V
 #PBS -j oe
 #PBS -o out/pimc-${PBS_ARRAYID}-${PBS_JOBID}\n 
-# Do not send email
-#PBS -M adelmaes@uvm.edu
-#PBS -m n\n
+# Do not send email\n''')
+    pbsFile.write(f'#PBS -M {os.environ["USER"]}@uvm.edu\n')
+    pbsFile.write('''#PBS -m n\n
 # Start job script
 cd $PBS_O_WORKDIR
 echo \"Starting run at: `date`\"
@@ -38,9 +43,10 @@ case ${PBS_ARRAYID} in\n''')
     # Create the command string and make the case structure
     for n in range(numOptions):
         if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
-            command = './pimc.e '
+            command = time_cmd + './pimc.e '
+
         else:
-            command = './pimc.e -p %d ' % (n)
+            command = time_cmd + './pimc.e -p %d ' % (n)
 
         for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
@@ -53,7 +59,7 @@ case ${PBS_ARRAYID} in\n''')
     print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName))
 
 # -----------------------------------------------------------------------------
-def westgrid(staticPIMCOps,numOptions,optionValue,outName):
+def westgrid(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False):
     ''' Write a pbs submit script for westgrid. '''
 
     # Open the pbs file and write its header
@@ -93,7 +99,7 @@ case ${PBS_ARRAYID} in\n''')
     print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName))
 
 # -----------------------------------------------------------------------------
-def sharcnet(staticPIMCOps,numOptions,optionValue,outName):
+def sharcnet(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False):
     ''' Write a submit script for sharcnet. '''
 
     # Open the script file and write its header
@@ -118,7 +124,7 @@ def sharcnet(staticPIMCOps,numOptions,optionValue,outName):
     os.system('chmod u+x %s'%fileName)
 
 # -----------------------------------------------------------------------------
-def local(staticPIMCOps,numOptions,optionValue,outName):
+def local(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False):
     ''' Write a submit script for a local machine. '''
 
     # Open the script file and write its header
@@ -143,7 +149,7 @@ def local(staticPIMCOps,numOptions,optionValue,outName):
     print('Run: ./%s'%fileName)
 
 # -----------------------------------------------------------------------------
-def scinet(staticPIMCOps,numOptions,optionValue,outName):
+def scinet(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False):
     ''' Write a pbs submit script for scinet. '''
 
     if numOptions != 8:
@@ -190,6 +196,10 @@ def main():
     parser = OptionParser() 
     parser.add_option("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet','vacc','local'],\
             help="target cluster: [westgrid,sharcnet,scinet,vacc,local]") 
+    parser.add_option("-t", "--time", action="store_true", dest="time", 
+                      help="Prefix the binary with a timing command?") 
+    parser.add_option("-W", "--walltime", dest="walltime", type="str", 
+                      help="Specify the walltime in the format HHH:MM:SS.") 
 
     # parse the command line options
     (options, args) = parser.parse_args() 
@@ -206,6 +216,11 @@ def main():
     gen = {'westgrid':westgrid, 'sharcnet':sharcnet, 'scinet':scinet,
            'vacc':vacc, 'local':local}
 
+    # setup the default and user specified walltime
+    wtime = {'westgrid':'00:00:00', 'sharcnet':'00:00:00', 'scinet':'00:00:00',
+             'vacc':'29:00:00', 'local':'00:00:00'}
+    if options.walltime:
+        wtime[options.cluster] = options.walltime
 
     # The first line of the file contains all static pimc options
     staticPIMCOps = inLines[0].rstrip('\n')
@@ -281,7 +296,8 @@ def main():
         os.makedirs('out')
 
     # Generate the submission script
-    gen[options.cluster](staticPIMCOps,numOptions,optionValue,outName)
+    gen[options.cluster](staticPIMCOps,numOptions,optionValue,wtime[options.cluster],
+                         outName,time=options.time)
 
 
 

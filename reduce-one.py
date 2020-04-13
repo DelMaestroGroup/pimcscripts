@@ -19,13 +19,14 @@ def getStats(data,dim=0):
     ''' Get the average and error of all columns in the data matrix. '''
 
     if data.ndim > dim:
-        numBins  = np.size(data,dim) 
+        numBins  = data.shape[dim]
         dataAve  = np.average(data,dim) 
-        dataAve2 = np.average(data*data,dim) 
         try:
+            print()
             bins = MCstat.bin(data) 
             dataErr = np.amax(bins,axis=0)
         except:
+            dataAve2 = np.average(data*data,dim) 
             dataErr = np.sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
 
 #        for n,d in enumerate(dataErr):
@@ -381,7 +382,8 @@ def main():
     # possible types of estimators we may want to reduce
     estList = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea',
-               'planewind','virial','linedensity','linepotential','energy','isf']
+               'lineardensity', 'planewind','virial','linedensity',
+               'linepotential','energy','isf']
     estDo = {e:False for e in estList}
 
     # if we specify a single estimator, only do that one
@@ -467,6 +469,9 @@ def main():
     if estDo['isf']:
         x11,ave11,err11 = getISFEst(pimc,outName,reduceFlag,
                                        'τ [1/K]','F(q,τ)',skip=skip,baseDir=baseDir)
+    if estDo['lineardensity']:
+        x12,ave12,err12 = getVectorEst('lineardensity',pimc,outName,reduceFlag,'r [A]','rho(r)',
+                                    skip=skip,baseDir=baseDir)
 
     # Do we show plots?
     if options.plot:

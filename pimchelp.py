@@ -435,6 +435,29 @@ class PIMCResults:
     def epdata(self,*param):
         return self.x(*param),self.y(*param),self.Δy(*param)
     
+def getParameterMap(logName): 
+    '''Given a log file name, return the parameter map. '''
+
+    # Get the values of all simulation parameters
+    paramsMap = {}
+    params = False
+    with open(logName, 'r') as logFile:
+        for line in logFile:
+            if 'Begin Simulation Parameters' in line:
+                params = True
+            elif 'End Simulation Parameters' in line:
+                break
+
+            if params and ':' in line:
+                keyVal = line.split(':')
+                paramsMap[keyVal[0].strip()] = keyVal[1].strip()
+
+    # Add an element to the parameter map for the linear dimension (Lz) of
+    # the container
+    paramsMap['Container Length'] = paramsMap['Container Dimensions'].split('x')[-1]
+
+    return paramsMap
+
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------

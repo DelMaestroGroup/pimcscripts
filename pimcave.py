@@ -16,7 +16,7 @@ Options:
   -h, --help                Show this help message and exit
   -s <skip>, --skip=<skip>  How many input lines should we skip? [default: 0]
   -r, --repeated_header     Deal with repeated headers
-  -l, --header_lines        Number of header lines [default: 1]
+  -l, --header_lines        Number of header lines to skip
 
 '''
 
@@ -40,7 +40,7 @@ def main():
     parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, 
                         help='How many input lines should we skip? [default: 0]')
     parser.add_argument('-l', '--header_lines', type=int, dest='header_lines', 
-                        default = 1, help='How many header lines to skip? [default: 1]')
+                        help='How many header lines to skip?')
     parser.add_argument('file', type=str, nargs='+', 
                         help='File or files to average.')
     parser.add_argument('-r','--repeated_header', 
@@ -50,7 +50,6 @@ def main():
 
     fileNames = args.file
     skip = args.skip
-    header_lines = args.header_lines
 
     for fileName in fileNames:
 
@@ -60,6 +59,18 @@ def main():
         # We check to see if we are dealing with the one body density matrix
         if fileName.find('obdm') != -1:
             normalize = True
+
+        # We peak into the file and determine how many header lines to skip
+        header_lines = 0;
+        if args.header_lines:
+            header_lines = args.header_lines
+        else:
+            with open(fileName,'r') as inFile:
+                line = inFile.readline()
+                while line[0] == '#':
+                    if ('PIMCID' in line) or ('ESTINF' in line):
+                        header_lines += 1
+                    line = inFile.readline()
 
         # open the file and determine how many measurements there are
         estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
