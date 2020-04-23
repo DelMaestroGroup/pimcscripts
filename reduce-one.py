@@ -14,6 +14,7 @@ from optparse import OptionParser
 from matplotlib.pyplot import *
 from collections import defaultdict
 
+
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
     ''' Get the average and error of all columns in the data matrix. '''
@@ -22,7 +23,6 @@ def getStats(data,dim=0):
         numBins  = data.shape[dim]
         dataAve  = np.average(data,dim) 
         try:
-            print()
             bins = MCstat.bin(data) 
             dataErr = np.amax(bins,axis=0)
         except:
@@ -55,6 +55,9 @@ def getScalarEst(etype,pimc,outName,reduceFlag, skip=0, baseDir=''):
     ave = np.zeros([len(fileNames),len(headers)],float)
     err = np.zeros([len(fileNames),len(headers)],float)
     for i,fname in enumerate(fileNames):
+
+        print(fname)
+
         # Compute the averages and error
         data = np.loadtxt(fname,ndmin=2)[skip:,:]
         ave[i,:],err[i,:] = getStats(data)
