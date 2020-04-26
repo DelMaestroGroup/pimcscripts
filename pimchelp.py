@@ -571,8 +571,8 @@ class PimcHelp:
 
         # Otherwise we just go through and get the ID's we need
         else:
-            for id in idList: 
-                fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,ftype,id)
+            for cid in idList: 
+                fileLoc = '%s%s-%s-*%s.dat' % (self.baseDir,self.prefix,ftype,cid)
                 fileNames.extend(glob.glob(fileLoc))
 
         return sorted(fileNames)
