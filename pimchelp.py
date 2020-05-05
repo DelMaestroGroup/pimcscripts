@@ -577,30 +577,6 @@ class PimcHelp:
 
         return sorted(fileNames)
 
-    # -----------------------------------------------------------------------------
-    # def getFileList(self,type,idList=None):
-    #     ''' Get a list of input files based on their type, and possibly a number
-    #         of unique ID's'''
-
-    #     fileNames = []
-
-    #     # We want all the file names here
-    #     if not idList:
-    #         lsCommand = 'ls -1 %s%s-%s-%s' % (self.baseDir,self.prefix,type,self.dataName)
-    #         fileNames = os.popen(lsCommand).read().split('\n')
-    #         fileNames.pop()
-
-    #         # Now sort them
-    #         fileNames  = sortFileNames(fileNames) 
-
-    #     # Otherwise we just go through and get the ID's we need
-    #     else:
-    #         for id in idList: 
-    #             lsCommand = 'ls -1 %s%s-log-*%s.dat' % (self.baseDir,self.prefix,id)
-    #             fileNames.append(os.popen(lsCommand).read().rstrip('\n'))
-
-    #     return fileNames
-
 # -------------------------------------------------------------------------------
 # CLASS SCALAR REDUCE
 # -------------------------------------------------------------------------------
@@ -706,7 +682,11 @@ class ScalarReduce:
     # ----------------------------------------------------------------------
     def estimatorError(self,estLabel,ivar):
         '''Return a dependent estimator error with a given var number.'''
-        return 1.0*self.estimator_[ivar,:,self.estIndex['d_' + estLabel]]
+        key = 'd_' + estLabel
+        if key not in self.estIndex:
+            key = 'Δ' + estLabel
+
+        return 1.0*self.estimator_[ivar,:,self.estIndex[key]]
 
     # ----------------------------------------------------------------------
     def getVarLabel(self,varIndex):
