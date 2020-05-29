@@ -348,7 +348,7 @@ def main():
     parser.add_argument("-s", "--skip", dest="skip", type=int, default=0,
                help="number of measurements to skip") 
     parser.add_argument("-e", "--estimator", dest="estimator", type=str,
-               help="specify a single estimator to reduce") 
+                        nargs='*', help="specify a single estimator to reduce") 
     parser.add_argument("-i", "--pimcid", dest="pimcid", type=str, nargs='*',
                       help="specify a single pimcid") 
     parser.add_argument("base_dir", help='The base directory\
@@ -359,11 +359,9 @@ def main():
 
     # parse the command line arguments
     args = parser.parse_args()
-    
+
     # Determine the working directory
-    baseDir = args.base_dir
-    if baseDir == '.':
-        baseDir = './'
+    baseDir = os.path.join(args.base_dir,'')
 
     skip = args.skip
     
@@ -422,7 +420,8 @@ def main():
     # if we specify a single estimator, only do that one
     est_do = []
     if args.estimator is not None:
-        est_do.append(args.estimator)
+        for est in args.estimator:
+            est_do.append(est)
     else:
     # otherwise do any that exist
         for est in est_list:
