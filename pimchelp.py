@@ -6,6 +6,81 @@ import glob
 from operator import itemgetter, attrgetter
 
 # ----------------------------------------------------------------------
+def get_reduce_name(par_map,est_name,pimcid=None,base_dir=None):
+    cL = [float(Lj) for Lj in par_map['Container Dimensions'].split('x')]
+    
+    τ_key = 'Specified Imaginary Time Step'
+    if τ_key not in par_map:
+        τ_key = 'Imaginary Time Step'
+    cτ = float(par_map[τ_key])
+    
+    if pimcid is not None:
+        pimcid = '-' + pimcid
+    
+    red_name = ''
+    if 'grand' in par_map['Ensemble']:
+        red_name = f"{est_name}-T-reduce-t-{cτ:7.5f}-u-{float(par_map['Chemical Potential']):+08.3f}-L-{cL[2]:07.3f}{pimcid}.dat"
+    else:
+        red_name = f"{est_name}-T-reduce-N-{int(par_map['Initial Number Particles']):04d}-n-{float(par_map['Initial Density']):06.3f}-t-{cτ:7.5f}{pimcid}.dat"
+
+    red_name = (base_dir + os.path.sep + red_name if base_dir is not None else red_name)
+    return red_name
+
+# -------------------------------------------------------------------------------
+def get_parameter_map(logName): 
+    '''Given a log file name, return the parameter map. '''
+
+    # Get the values of all simulation parameters
+    paramsMap = {}
+    params = False
+    with open(logName, 'r') as logFile:
+        for line in logFile:
+            if 'Begin Simulation Parameters' in line:
+                params = True
+            elif 'End Simulation Parameters' in line:
+                break
+
+            if params and ':' in line:
+                keyVal = line.split(':')
+                paramsMap[keyVal[0].strip()] = keyVal[1].strip()
+
+    # Add an element to the parameter map for the linear dimension (Lz) of
+    # the container
+    paramsMap['Container Length'] = paramsMap['Container Dimensions'].split('x')[-1]
+
+    # fix a spelling error in some old log files
+    if 'Ensenble' in paramsMap:
+        paramsMap['Ensemble'] = dictionary.pop('Ensenble')
+
+    # add a new key if it doesn't exist
+    if 'Specified Imaginary Time Step' not in paramsMap:
+        paramsMap['Specified Imaginary Time Step'] = paramsMap['Imaginary Time Step']
+
+    return paramsMap
+
+def getParameterMap(logName): 
+    return get_parameter_map(logName)
+
+# ----------------------------------------------------------------------
+def get_estimator_names(base_dir,pimcid,verbose=False):
+    '''Return a list of estimator and log file names.'''
+    est_name = ['log', 'estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
+                'radial', 'radwind', 'radarea', 'planedensity',
+                'planewind', 'planearea','virial', 'linedensity',
+                'linepotential','energy','position','ssf','isf', 'planeavedensity']
+
+    file_names = {}
+    for est in est_name:
+        name = f"{base_dir}/*-{est}-*-{pimcid}.dat" 
+        file_name = glob.glob(name)
+        if file_name:
+            file_names[est] = file_name[0]
+        else:
+            if verbose:
+                print(f"{name} doesn't exist")
+    return file_names
+
+# ----------------------------------------------------------------------
 def getVectorEstimatorName(fileName):
     '''Determine the name of a reduced estimator.'''
 
@@ -435,29 +510,6 @@ class PIMCResults:
     def epdata(self,*param):
         return self.x(*param),self.y(*param),self.Δy(*param)
     
-def getParameterMap(logName): 
-    '''Given a log file name, return the parameter map. '''
-
-    # Get the values of all simulation parameters
-    paramsMap = {}
-    params = False
-    with open(logName, 'r') as logFile:
-        for line in logFile:
-            if 'Begin Simulation Parameters' in line:
-                params = True
-            elif 'End Simulation Parameters' in line:
-                break
-
-            if params and ':' in line:
-                keyVal = line.split(':')
-                paramsMap[keyVal[0].strip()] = keyVal[1].strip()
-
-    # Add an element to the parameter map for the linear dimension (Lz) of
-    # the container
-    paramsMap['Container Length'] = paramsMap['Container Dimensions'].split('x')[-1]
-
-    return paramsMap
-
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
@@ -480,7 +532,8 @@ class PimcHelp:
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
-                         'linepotential','energy','position','ssf','isf']
+                         'linepotential','energy','position','ssf','isf',
+                        'planeavedensity']
         if not canonical:
             self.dataType.append('number')
 
@@ -515,6 +568,14 @@ class PimcHelp:
         # Add an element to the parameter map for the linear dimension (Lz) of
         # the container
         paramsMap['Container Length'] = paramsMap['Container Dimensions'].split('x')[-1]
+
+        # fix a spelling error in some old log files
+        if 'Ensenble' in paramsMap: 
+            paramsMap['Ensemble'] = dictionary.pop('Ensenble')
+
+        # add a new key if it doesn't exist
+        if 'Specified Imaginary Time Step' not in paramsMap:
+            paramsMap['Specified Imaginary Time Step'] = paramsMap['Imaginary Time Step']
 
         return paramsMap
 
