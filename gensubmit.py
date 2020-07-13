@@ -96,7 +96,10 @@ case ${SLURM_ARRAY_TASK_ID} in
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
     
-    print(f'\nSubmit jobs with: sbatch --array=0-{numOptions-1:d} {fileName}\n')
+    if queue == 'torque':
+        print(f'\nSubmit jobs with: qsub -t 0-{numOptions-1:d} {fileName}\n')
+    else:
+        print(f'\nSubmit jobs with: sbatch --array=0-{numOptions-1:d} {fileName}\n')
 
 # -----------------------------------------------------------------------------
 def westgrid(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
