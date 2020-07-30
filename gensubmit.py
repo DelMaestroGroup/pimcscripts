@@ -8,7 +8,7 @@
 # a pbs file for various sets of parameters.
 
 from __future__ import print_function 
-import os,sys,glob
+import os,sys,glob,stat
 import argparse
 
 # -----------------------------------------------------------------------------
@@ -21,34 +21,54 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
     if time:
         time_cmd = '/bin/time -v '
 
+    # determine how many nodes we need
+    num_cpus = {'broadwell':28}
+    num_nodes = numOptions // num_cpus['broadwell'] + 1
+    cpu_type = 'broadwell'
+
     # Open the pbs file and write its header
-    filename = ''
     fileName = f'submit-pimc{outName}.pbs'
     pbsFile = open(fileName,'w')
     pbsFile.write('''#!/bin/bash
 #PBS -S /bin/bash\n\n''')
     pbsFile.write(f'#PBS -l walltime={walltime}\n')
-    pbsFile.write('''#PBS -q long
-#PBS -l select=1:ncpus=1:model=bro
-#PBS -N PIMC
+    pbsFile.write('#PBS -q long\n')
+    pbsFile.write(f'#PBS -l select={num_nodes}:ncpus={num_cpus[cpu_type]}:model=bro\n')
+    pbsFile.write('''#PBS -N PIMC
 #PBS -V
-#PBS -j oe\n
-# Do not send email\n''')
-    pbsFile.write(f'#PBS -M adelmaes@uvm.edu\n')
-    pbsFile.write('''#PBS -m n\n
-# Start job script\n
+#PBS -j oe
+#PBS -o ./out/
+
+# Do not send email
+#PBS -M adelmaes@uvm.edu
+#PBS -m n
+
+# Start job script
+
 # Check if the out directory exists, if not, create it
 if [ ! -d "./out" ]; then
   mkdir out
 fi
 
-export jobid=`echo $PBS_JOBID | awk -F . '{print $1}'`
-
+# Change into submission directory
 cd $PBS_O_WORKDIR
+
+# Calling parallel jobs\n''')
+    pbsFile.write(f'seq 0 {numOptions-1} | parallel -j {num_cpus[cpu_type]} -u \
+--sshloginfile $PBS_NODEFILE "cd $PWD; ./input-pimc{outName}.sh {{}}"')
+    pbsFile.close();
+
+    # Now we create the case-file structure to submit the jobs
+    fileName = f'input-pimc{outName}.sh'
+    pbsFile = open(fileName,'w')
+    pbsFile.write('''#!/bin/bash
+
 echo \"Starting run at: `date`\"
 
-case ${PBS_ARRAY_INDEX} in\n''')
+# get the jobid
+jobid=$1
 
+case ${jobid} in\n''')
     # Create the command string and make the case structure
     for n in range(numOptions):
         if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
@@ -58,13 +78,17 @@ case ${PBS_ARRAY_INDEX} in\n''')
             command = time_cmd + './pimc.e -p %d ' % (n)
 
         for flag,val in optionValue.items():
-            command += '-%s %s ' % (flag,val[n])
-        command += staticPIMCOps #'$opts'
-        command += ' > out/output.$jobid.PBS_ARRAY_INDEX 2>&1'
-        pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
+            if len(flag) == 1:
+                command += f"-{flag} {val[n]} "
+            else:
+                command += f"--{flag}={val[n]} "
+        command += staticPIMCOps 
+        command += ' > out/output.$jobid 2>&1'
+        pbsFile.write(f'{n})\n{command}\n;;\n')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
+    os.chmod(fileName,0o744)
     
     print(f'\nSubmit jobs with: qsub -J 0-{numOptions-1:d} {fileName}\n')
 

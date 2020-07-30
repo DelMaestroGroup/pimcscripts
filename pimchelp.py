@@ -204,6 +204,7 @@ def getParFromPIMCFile(fileName):
 def getHeadersFromFile(fileName, skipLines=0, getEstimatorInfo=False): 
     ''' Get the data column headers from a PIMC output file. '''
 
+    print(fileName)
     with open(fileName,'r') as inFile:
         inLines = inFile.readlines();
         n = skipLines
