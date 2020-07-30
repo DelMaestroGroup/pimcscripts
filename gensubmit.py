@@ -12,6 +12,63 @@ import os,sys,glob
 import argparse
 
 # -----------------------------------------------------------------------------
+def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+         queue=None):
+    ''' Write a submit script for nasa Pleides. '''
+
+    # determine if we are adding external timing
+    time_cmd = ''
+    if time:
+        time_cmd = '/bin/time -v '
+
+    # Open the pbs file and write its header
+    filename = ''
+    fileName = f'submit-pimc{outName}.pbs'
+    pbsFile = open(fileName,'w')
+    pbsFile.write('''#!/bin/bash
+#PBS -S /bin/bash\n\n''')
+    pbsFile.write(f'#PBS -l walltime={walltime}\n')
+    pbsFile.write('''#PBS -q long
+#PBS -l select=1:ncpus=1:model=bro
+#PBS -N PIMC
+#PBS -V
+#PBS -j oe\n
+# Do not send email\n''')
+    pbsFile.write(f'#PBS -M adelmaes@uvm.edu\n')
+    pbsFile.write('''#PBS -m n\n
+# Start job script\n
+# Check if the out directory exists, if not, create it
+if [ ! -d "./out" ]; then
+  mkdir out
+fi
+
+export jobid=`echo $PBS_JOBID | awk -F . '{print $1}'`
+
+cd $PBS_O_WORKDIR
+echo \"Starting run at: `date`\"
+
+case ${PBS_ARRAY_INDEX} in\n''')
+
+    # Create the command string and make the case structure
+    for n in range(numOptions):
+        if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
+            command = time_cmd + './pimc.e '
+
+        else:
+            command = time_cmd + './pimc.e -p %d ' % (n)
+
+        for flag,val in optionValue.items():
+            command += '-%s %s ' % (flag,val[n])
+        command += staticPIMCOps #'$opts'
+        command += ' > out/output.$jobid.PBS_ARRAY_INDEX 2>&1'
+        pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
+    
+    pbsFile.write('esac\necho \"Finished run at: `date`\"')
+    pbsFile.close();
+    
+    print(f'\nSubmit jobs with: qsub -J 0-{numOptions-1:d} {fileName}\n')
+
+# -----------------------------------------------------------------------------
 def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
          queue=None):
     ''' Write a submit script for the VACC. '''
@@ -242,7 +299,8 @@ def main():
     # setup the command line parser options 
     parser = argparse.ArgumentParser(description='Generate a batch submission\
                                      script from input file')
-    parser.add_argument("-c", "--cluster", dest="cluster", choices=['westgrid','sharcnet','scinet','vacc','local'],\
+    parser.add_argument("-c", "--cluster", dest="cluster",\
+                        choices=['westgrid','sharcnet','scinet','vacc','local','nasa'],\
             help="target cluster: [westgrid,sharcnet,scinet,vacc,local]",required=True) 
     parser.add_argument("-t", "--time", action="store_true", dest="time", 
                       help="Prefix the binary with a timing command?") 
@@ -264,11 +322,11 @@ def main():
 
     # Maps cluster names to functions
     gen = {'westgrid':westgrid, 'sharcnet':sharcnet, 'scinet':scinet,
-           'vacc':vacc, 'local':local}
+           'vacc':vacc, 'local':local, 'nasa':nasa}
 
     # setup the default and user specified walltime
     wtime = {'westgrid':'00:00:00', 'sharcnet':'00:00:00', 'scinet':'00:00:00',
-             'vacc':'30:00:00', 'local':'00:00:00'}
+             'vacc':'30:00:00', 'local':'00:00:00', 'nasa':'10:00:00'}
     if args.walltime:
         wtime[args.cluster] = args.walltime
 
