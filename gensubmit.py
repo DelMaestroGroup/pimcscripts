@@ -13,7 +13,7 @@ import argparse
 
 # -----------------------------------------------------------------------------
 def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
-         queue=None):
+         queue='broadwell'):
     ''' Write a submit script for nasa Pleides. '''
 
     # determine if we are adding external timing
@@ -22,9 +22,20 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
         time_cmd = '/bin/time -v '
 
     # determine how many nodes we need
-    num_cpus = {'broadwell':28}
-    num_nodes = numOptions // num_cpus['broadwell'] + 1
-    cpu_type = 'broadwell'
+    cpu_type = queue
+    num_cpus = {'broadwell':28, 'skylake':40, 'cascade lake':40, 
+                'haswell':24, 'ivy bridge':20, 'sandy bridge':16,
+                'broadwell electra':28}
+    model = {'broadwell':'bro', 'skylake':'sky_ele', 'cascade lake':'cas_ait', 
+                'haswell':'has', 'ivy bridge':'ivy', 'sandy bridge':'san', 
+             'broadwell electra':'bro_ele'}
+
+    # make sure we have a valid model type
+    if queue not in num_cpus:
+        print(f'model {queue} does not exist!')
+        sys.exit(1)
+
+    num_nodes = numOptions // num_cpus[cpu_type] + 1
 
     # Open the pbs file and write its header
     fileName = f'submit-pimc{outName}.pbs'
@@ -33,7 +44,7 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
 #PBS -S /bin/bash\n\n''')
     pbsFile.write(f'#PBS -l walltime={walltime}\n')
     pbsFile.write('#PBS -q long\n')
-    pbsFile.write(f'#PBS -l select={num_nodes}:ncpus={num_cpus[cpu_type]}:model=bro\n')
+    pbsFile.write(f'#PBS -l select={num_nodes}:ncpus={num_cpus[cpu_type]}:model={model[cpu_type]}\n')
     pbsFile.write('''#PBS -N PIMC
 #PBS -V
 #PBS -j oe
@@ -57,6 +68,8 @@ cd $PBS_O_WORKDIR
     pbsFile.write(f'seq 0 {numOptions-1} | parallel -j {num_cpus[cpu_type]} -u \
 --sshloginfile $PBS_NODEFILE "cd $PWD; ./input-pimc{outName}.sh {{}}"')
     pbsFile.close();
+
+    print(f'\nSubmit jobs with: qsub {fileName}\n')
 
     # Now we create the case-file structure to submit the jobs
     fileName = f'input-pimc{outName}.sh'
@@ -90,7 +103,6 @@ case ${jobid} in\n''')
     pbsFile.close();
     os.chmod(fileName,0o744)
     
-    print(f'\nSubmit jobs with: qsub -J 0-{numOptions-1:d} {fileName}\n')
 
 # -----------------------------------------------------------------------------
 def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
@@ -320,6 +332,10 @@ echo \"Starting run at: `date`\"\n\n''')
 # -----------------------------------------------------------------------------
 def main(): 
 
+    # nasa processer resources
+    nasa_cpus = ['broadwell', 'skylake', 'cascade lake', 'haswell', 'ivy bridge', 
+                 'sandy bridge', 'broadwell electra']
+
     # setup the command line parser options 
     parser = argparse.ArgumentParser(description='Generate a batch submission\
                                      script from input file')
@@ -332,6 +348,8 @@ def main():
                       help="Specify the walltime in the format HHH:MM:SS.") 
     parser.add_argument("-q", "--queue", dest="queue", choices=['torque','slurm'],
                       help="Batch system: [torque,slurm]",default='torque') 
+    parser.add_argument("-m", "--model", dest="model", choices=nasa_cpus,
+                      help="NASA CPU types.") 
     parser.add_argument("-l", "--label", dest="label", help="An optional label\
                        for the submission script")
     parser.add_argument("input", help="the input file")
@@ -429,9 +447,15 @@ def main():
     if not os.path.exists('out'):
         os.makedirs('out')
 
+    queue = args.queue
+    if args.cluster == 'nasa' and args.model:
+        queue = args.model
+    elif args.cluster == 'nasa' and not args.model:
+        queue = 'broadwell'
+
     # Generate the submission script
     gen[args.cluster](staticPIMCOps,numOptions,optionValue,wtime[args.cluster],
-                         outName,time=args.time,queue=args.queue)
+                         outName,time=args.time,queue=queue)
 
 
 # ----------------------------------------------------------------------
