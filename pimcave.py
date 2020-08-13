@@ -60,34 +60,44 @@ def main():
         if fileName.find('obdm') != -1:
             normalize = True
 
-        # We peak into the file and determine how many header lines to skip
-        header_lines = 0;
-        if args.header_lines:
-            header_lines = args.header_lines
-        else:
-            with open(fileName,'r') as inFile:
-                line = inFile.readline()
-                while line[0] == '#':
-                    if ('PIMCID' in line) or ('ESTINF' in line):
-                        header_lines += 1
+        try:
+            print('hello')
+            # We peak into the file and determine how many header lines to skip
+            header_lines = 0;
+            if args.header_lines:
+                header_lines = args.header_lines
+            else:
+                with open(fileName,'r') as inFile:
                     line = inFile.readline()
+                    while line[0] == '#':
+                        if ('PIMCID' in line) or ('ESTINF' in line):
+                            header_lines += 1
+                        line = inFile.readline()
 
-        # open the file and determine how many measurements there are
-        estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
-        numLines = estData.size
-        
-        # If we have data, compute averages and error
-        if numLines-skip > 0:
-            print('# PIMCID %s' % pimcid)
-            print('# Number Samples %6d' % (numLines-skip))
-            for name in estData.dtype.names:
-                ave,err = stats(estData[name][skip:])
-                if args.repeated_header:
-                    cname = name.partition("_")[0]
-                else:
-                    cname = name
-                print('%-16s%12.5f\t%12.5f\t%5.2f' %
-                      (cname,ave,err,100.0*np.abs(err/ave)))
+            # open the file and determine how many measurements there are
+            estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
+            numLines = estData.size
+            
+            # If we have data, compute averages and error
+            if numLines-skip > 0:
+                print('# PIMCID %s' % pimcid)
+                print('# Number Samples %6d' % (numLines-skip))
+                for name in estData.dtype.names:
+                    ave,err = stats(estData[name][skip:])
+
+                    if err != 0.0:
+                        rel_err = 100*np.abs(err/ave)
+                    else:
+                        rel_err = 0.0
+
+                    if args.repeated_header:
+                        cname = name.partition("_")[0]
+                    else:
+                        cname = name
+                    print('%-16s%12.5f\t%12.5f\t%5.2f' % (cname,ave,err,rel_err))
+
+        except:
+          print(f"Couldn't Average File {fileName}")
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
