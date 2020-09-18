@@ -12,7 +12,7 @@ import os,sys,glob,stat
 import argparse
 
 # -----------------------------------------------------------------------------
-def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
          queue='broadwell'):
     ''' Write a submit script for nasa Pleides. '''
 
@@ -20,6 +20,13 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
     time_cmd = ''
     if time:
         time_cmd = '/bin/time -v '
+
+    # determine if we can run in the normal queue
+    num_hours = int(walltime.split(':')[0])
+    if num_hours <= 8:
+        qname = 'normal'
+    else:
+        qname = 'long'
 
     # determine how many nodes we need
     cpu_type = queue
@@ -38,15 +45,20 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
     num_nodes = numOptions // num_cpus[cpu_type] + 1
 
     # Open the pbs file and write its header
-    fileName = f'submit-pimc{outName}.pbs'
+    if 'pigs' in cmd:
+        lab = 'pigs'
+    else:
+        lab = 'pimc'
+
+    fileName = f'submit-{lab}{outName}.pbs'
     pbsFile = open(fileName,'w')
     pbsFile.write('''#!/bin/bash
 #PBS -S /bin/bash\n\n''')
     pbsFile.write(f'#PBS -l walltime={walltime}\n')
-    pbsFile.write('#PBS -q long\n')
+    pbsFile.write(f'#PBS -q {qname}\n')
     pbsFile.write(f'#PBS -l select={num_nodes}:ncpus={num_cpus[cpu_type]}:model={model[cpu_type]}\n')
-    pbsFile.write('''#PBS -N PIMC
-#PBS -V
+    pbsFile.write(f'#PBS -N {lab.upper()}{outName}\n')
+    pbsFile.write('''#PBS -V
 #PBS -j oe
 #PBS -o ./out/
 
@@ -66,13 +78,13 @@ cd $PBS_O_WORKDIR
 
 # Calling parallel jobs\n''')
     pbsFile.write(f'seq 0 {numOptions-1} | parallel -j {num_cpus[cpu_type]} -u \
---sshloginfile $PBS_NODEFILE "cd $PWD; ./input-pimc{outName}.sh {{}}"')
+--sshloginfile $PBS_NODEFILE "cd $PWD; ./input-{lab}{outName}.sh {{}}"')
     pbsFile.close();
 
     print(f'\nSubmit jobs with: qsub {fileName}\n')
 
     # Now we create the case-file structure to submit the jobs
-    fileName = f'input-pimc{outName}.sh'
+    fileName = f'input-{lab}{outName}.sh'
     pbsFile = open(fileName,'w')
     pbsFile.write('''#!/bin/bash
 
@@ -85,10 +97,10 @@ case ${jobid} in\n''')
     # Create the command string and make the case structure
     for n in range(numOptions):
         if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
-            command = time_cmd + './pimc.e '
+            command = time_cmd + f'./{cmd} '
 
         else:
-            command = time_cmd + './pimc.e -p %d ' % (n)
+            command = time_cmd + f'./{cmd} -p %d ' % (n)
 
         for flag,val in optionValue.items():
             if len(flag) == 1:
@@ -105,7 +117,7 @@ case ${jobid} in\n''')
     
 
 # -----------------------------------------------------------------------------
-def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
          queue=None):
     ''' Write a submit script for the VACC. '''
 
@@ -176,10 +188,10 @@ case ${SLURM_ARRAY_TASK_ID} in
     # Create the command string and make the case structure
     for n in range(numOptions):
         if ('p' in optionValue or staticPIMCOps.find('-p') != -1):
-            command = time_cmd + './pimc.e '
+            command = time_cmd + f'./{cmd} '
 
         else:
-            command = time_cmd + './pimc.e -p %d ' % (n)
+            command = time_cmd + './{cmd} -p %d ' % (n)
 
         for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
@@ -195,7 +207,7 @@ case ${SLURM_ARRAY_TASK_ID} in
         print(f'\nSubmit jobs with: sbatch --array=0-{numOptions-1:d} {fileName}\n')
 
 # -----------------------------------------------------------------------------
-def westgrid(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def westgrid(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
              queue=None):
     ''' Write a pbs submit script for westgrid. '''
 
@@ -236,7 +248,7 @@ case ${PBS_ARRAYID} in\n''')
     print('\nSubmit jobs with: qsub -t 0-%d %s\n' % (numOptions-1,fileName))
 
 # -----------------------------------------------------------------------------
-def sharcnet(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def sharcnet(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
             queue=None):
     ''' Write a submit script for sharcnet. '''
 
@@ -262,7 +274,7 @@ def sharcnet(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
     os.system('chmod u+x %s'%fileName)
 
 # -----------------------------------------------------------------------------
-def local(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def local(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
           queue=None):
     ''' Write a submit script for a local machine. '''
 
@@ -288,7 +300,7 @@ def local(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
     print('Run: ./%s'%fileName)
 
 # -----------------------------------------------------------------------------
-def scinet(staticPIMCOps,numOptions,optionValue,walltime,outName,time=False,
+def scinet(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
            queue=None):
     ''' Write a pbs submit script for scinet. '''
 
@@ -352,11 +364,19 @@ def main():
                       help="NASA CPU types.") 
     parser.add_argument("-l", "--label", dest="label", help="An optional label\
                        for the submission script")
+    parser.add_argument("--pigs", help="Is this a pigs simulation?",
+                        action="store_true")
     parser.add_argument("input", help="the input file")
 
     # parse the command line options
     args = parser.parse_args() 
     inFileName = args.input
+
+    # is this a pigs or pimc simulation?
+    if args.pigs:
+        cmd = 'pigs.e'
+    else:
+        cmd = 'pimc.e'
 
     # We open up the input file, and read in all lines.
     inFile = open(inFileName,'r')
@@ -428,6 +448,12 @@ def main():
         n += 1
     n = 0
     for input in findInput:
+        if input == '-N':
+            outName += '-%04d' % float(findInput[n+1])
+            break
+        n += 1
+    n = 0
+    for input in findInput:
         if input == '-t':
             outName += '-%07.5f' % float(findInput[n+1])
             break
@@ -455,7 +481,7 @@ def main():
 
     # Generate the submission script
     gen[args.cluster](staticPIMCOps,numOptions,optionValue,wtime[args.cluster],
-                         outName,time=args.time,queue=queue)
+                         outName,cmd,time=args.time,queue=queue)
 
 
 # ----------------------------------------------------------------------
