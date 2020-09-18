@@ -61,7 +61,6 @@ def main():
             normalize = True
 
         try:
-            print('hello')
             # We peak into the file and determine how many header lines to skip
             header_lines = 0;
             if args.header_lines:

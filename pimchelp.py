@@ -30,6 +30,57 @@ def get_reduce_name(par_map,est_name,pimcid=None,base_dir=None):
 def get_parameter_map(logName): 
     '''Given a log file name, return the parameter map. '''
 
+    # As of 2020-08-11 this is a list of keys and their expected 
+    # types
+    par_convert = {}
+    par_convert['Command String'] = str
+    par_convert['Ensemble'] = str
+    par_convert['Simulation Type'] = str
+    par_convert['Action Type'] = str
+    par_convert['Number of paths'] = int
+    par_convert['Interaction Potential'] = str
+    par_convert['External Potential'] = str
+    par_convert['Carbon Carbon Distance'] = float
+    par_convert['Graphene Strain %'] = float
+    par_convert['Graphene Poission Ratio %'] = float
+    par_convert['Graphene-Carbon LJ Sigma'] = float
+    par_convert['Graphene-Carbon LJ Epsilon'] = float
+    par_convert['Temperature'] = float
+    par_convert['Chemical Potential'] = float
+    par_convert['Particle Mass'] = float
+    par_convert['Number Time Slices'] = int
+    par_convert['Specified Imaginary Time Step'] = float
+    par_convert['Imaginary Time Step'] = float
+    par_convert['Imaginary Time Length'] = float
+    par_convert['Initial Number Particles'] = int
+    par_convert['Initial Density'] = float
+    par_convert['Num. Broken World-lines'] = int
+    par_convert['Container Type'] = str
+    par_convert['Container Dimensions'] = str
+    par_convert['Container Volume'] = float
+    par_convert['Lookup Table'] = str
+    par_convert['Maximum Winding Sector'] = int
+    par_convert['Initial Worm Constant'] = float
+    par_convert['Worm Constant'] = float
+    par_convert['Inital CoM Delta'] = float
+    par_convert['CoM Delta'] = float
+    par_convert['Bisection Parameter'] = int
+    par_convert['Update Length'] = int
+    par_convert['Potential Cutoff Length'] = float
+    par_convert['Bin Size'] = int
+    par_convert['Number EQ Steps'] = int
+    par_convert['Number Bins Stored'] = int
+    par_convert['Random Number Seed'] = int 
+    par_convert['Virial Window'] = int
+    par_convert['Wavefunction Type'] = str
+    par_convert['End Factor'] = float
+    par_convert['Initial Displace Delta'] = float
+    par_convert['Inital Displace Delta'] = float
+    par_convert['Displace Delta'] = float
+    par_convert['Initial CoM Delta'] = float
+    par_convert['Inital CoM Delta'] = float
+    par_convert['CoM Delta'] = float
+
     # Get the values of all simulation parameters
     paramsMap = {}
     params = False
@@ -41,12 +92,18 @@ def get_parameter_map(logName):
                 break
 
             if params and ':' in line:
-                keyVal = line.split(':')
-                paramsMap[keyVal[0].strip()] = keyVal[1].strip()
+                key,val = line.split(':')
+                key = key.strip()
+                val = par_convert[key](val.strip())
+                paramsMap[key] = val
+
+    # reformat the container dimensions and lookup table
+    paramsMap['Container Dimensions'] = [float(Lj) for Lj in paramsMap['Container Dimensions'].split('x')]
+    paramsMap['Lookup Table'] = [int(Lj) for Lj in paramsMap['Lookup Table'].split('x')]
 
     # Add an element to the parameter map for the linear dimension (Lz) of
     # the container
-    paramsMap['Container Length'] = paramsMap['Container Dimensions'].split('x')[-1]
+    paramsMap['Container Length'] = paramsMap['Container Dimensions'][-1]
 
     # fix a spelling error in some old log files
     if 'Ensenble' in paramsMap:
@@ -55,6 +112,9 @@ def get_parameter_map(logName):
     # add a new key if it doesn't exist
     if 'Specified Imaginary Time Step' not in paramsMap:
         paramsMap['Specified Imaginary Time Step'] = paramsMap['Imaginary Time Step']
+
+    # add the pimcid to the params map
+    paramsMap['PIMCID'] = get_pimcid(logName)
 
     return paramsMap
 
@@ -256,6 +316,72 @@ def checkEnsemble(canonical):
     if (ceFiles and not gceFiles) and not canonical:
         sys.exit('Need to include --canonical for the canonical ensemble!')
 
+# -----------------------------------------------------------------------------
+def get_pimcid(file_name): 
+        '''Return the ID number corresponding to a given filename. '''
+        if os.path.sep in file_name:
+            file_name = os.path.basename(file_name)
+        file_name = os.path.splitext(file_name)[0]
+        # fParts = re.split(r'(?<=[a-zA-Z0-9_])-',file_name.rstrip('.dat'))
+        fparts = file_name.split('-')
+        if len(fparts) > 7:
+            ID = '-'.join(fparts[6:])
+        else:
+            ID = file_name[-1]
+        return ID
+# -------------------------------------------------------------------------------
+def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ=None, 
+                         canonical=False,ftype='log'):
+    ''' Get a list of files based on a set of common parameters. '''
+
+    # we construct a file string from the supplied options
+    if canonical:
+        flagcanonical = 'ce'
+    else:
+        flagcanonical = 'gce'
+
+    if T is not None:
+        flagT = f"{T:06.3f}"
+    else:
+        flagT = "*"
+
+    if N is not None:
+        flagN = f"{N:04d}"
+    else:
+        flagN = "*"
+
+    if n is not None:
+        flagn = f"{n:06.3f}"
+    else:
+        flagn = "*"
+
+    if τ is not None:
+        flagτ = f"{τ:7.5f}"
+    else:
+        flagτ = "*"
+
+    if μ is not None:
+        flagμ = f"{μ:+08.3f}"
+    else:
+        flagμ = "*"
+
+    if L is not None:
+        flagL = f"{L:07.3f}"
+    else:
+        flagL = "*"
+
+    if base_dir != '':
+        if base_dir[-1] != os.path.sep:
+            base_dir = base_dir + os.path.sep
+
+    if canonical: 
+        data_name = base_dir + f'ce-{ftype}-{flagT}-{flagN}-{flagn}-{flagτ}-*.dat'
+    else:
+        data_name = base_dir + f'gce-{ftype}-{flagT}-{flagL}-{flagμ}-{flagτ}-*.dat' 
+
+    file_names = [os.path.basename(fname) for fname in glob.glob(data_name)]
+    return file_names
+
 # -------------------------------------------------------------------------------
 def getFileString_doc(options,reduce=True):
     ''' Using the command line flags, form the input file string that will
@@ -396,8 +522,10 @@ class PIMCResults:
     
         # determine now many header lines we have to determine if we have
         # scalar, vector, q-vector of matrix data
+        estinfo = False
         with open(results_file_name) as results_file:
             lines = results_file.readlines()
+            estinfo = 'ESTINF' in lines[0]
             num_header_lines = 0
             for line in lines:
                 if line[0] == '#':
@@ -411,9 +539,10 @@ class PIMCResults:
             self.headers = self.data.dtype.names
 
         # simple vector estimator
-        elif num_header_lines == 2:
-            self.params = [j for j in re.split(r'[ ]{2,}',lines[0][1:-1]) if j != '']
-            cheaders = re.split(r'[ ]{2,}',lines[1][1:-1])
+        if num_header_lines == 2 or (num_header_lines == 3 and estinfo):
+            start_line = 0 + estinfo
+            self.params = [j for j in re.split(r'[ ]{2,}',lines[start_line][1:-1]) if j != '']
+            cheaders = re.split(r'[ ]{2,}',lines[start_line+1][1:-1])
             self.headers = [cheaders[j] for j in range(1,4)] 
             self.data = {}
             for i,param in enumerate(self.params):
@@ -533,7 +662,7 @@ class PimcHelp:
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
                          'linepotential','energy','position','ssf','isf',
-                        'planeavedensity']
+                        'planeavedensity', 'lineardensity']
         if not canonical:
             self.dataType.append('number')
 

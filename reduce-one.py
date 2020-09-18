@@ -348,12 +348,12 @@ def main():
     parser.add_argument("-s", "--skip", dest="skip", type=int, default=0,
                help="number of measurements to skip") 
     parser.add_argument("-e", "--estimator", dest="estimator", type=str,
-                        nargs='*', help="specify a single estimator to reduce") 
-    parser.add_argument("-i", "--pimcid", dest="pimcid", type=str, nargs='*',
-                      help="specify a single pimcid") 
+                        action='append', help="specify a single estimator to reduce") 
+    parser.add_argument("-i", "--pimcid", dest="pimcid", type=str,
+                        action='append', help="specify a single pimcid") 
     parser.add_argument("base_dir", help='The base directory\
                         where the data files to be reduced are located.',
-                        default='./', nargs='?')
+                        default=os.getcwd(), nargs='?')
     # parser.add_argument("-p", "--plot", action="store_true", dest="plot",
     #            help="do we want to produce data plots?") 
 
