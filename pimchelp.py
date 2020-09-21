@@ -7,7 +7,8 @@ from operator import itemgetter, attrgetter
 
 # ----------------------------------------------------------------------
 def get_reduce_name(par_map,est_name,pimcid=None,base_dir=None):
-    cL = [float(Lj) for Lj in par_map['Container Dimensions'].split('x')]
+    # cL = [float(Lj) for Lj in par_map['Container Dimensions'].split('x')]
+    cL = par_map['Container Dimensions']
     
     τ_key = 'Specified Imaginary Time Step'
     if τ_key not in par_map:
