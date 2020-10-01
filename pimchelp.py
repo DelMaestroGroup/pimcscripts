@@ -27,6 +27,29 @@ def get_reduce_name(par_map,est_name,pimcid=None,base_dir=None):
     red_name = (base_dir + os.path.sep + red_name if base_dir is not None else red_name)
     return red_name
 
+# ----------------------------------------------------------------------
+def get_reduce_name(pimcid=None,base_dir=None,L=None,T=None,N=None,n=None,
+                    τ=None,μ=None,canonical=False,reduce=None,estimator='estimator'):
+    '''Get the reduce name from a number of specified parameters.'''
+
+    # We auto-generate a class that is used by getFileString
+    lvars = dict(vars().items())
+    class Options:
+        def __init__(self, lvars):
+            for k, v in lvars.items():
+                if k == 'τ':
+                    k = 'tau'
+                elif k == 'μ':
+                    k = 'mu'
+                setattr(self, k, v)
+                
+    data_name,reduce_name = getFileString(Options(lvars))
+
+    reduce_name = f'{estimator}-{reduce_name}.dat'
+    reduce_name = (base_dir + os.path.sep + reduce_name if base_dir is not None else reduce_name)
+
+    return reduce_name
+
 # -------------------------------------------------------------------------------
 def get_parameter_map(logName): 
     '''Given a log file name, return the parameter map. '''
@@ -470,13 +493,13 @@ def getFileString(options,reduce=True):
     else:
         flagn = "*"
 
-    if options.tau is not None:
+    if (options.tau is not None):
         flagtau = "%7.5f" % options.tau
         out += '-t-%s' % flagtau
     else:
         flagtau = "*"
 
-    if options.mu is not None:
+    if (options.mu is not None):
         flagmu = "%+08.3f" % options.mu
         out += '-u-%s' % flagmu
     else:
@@ -487,6 +510,12 @@ def getFileString(options,reduce=True):
         out += '-L-%s' % flagL
     else:
         flagL = "*"
+
+    if options.pimcid is not None:
+        flagpimcid = options.pimcid
+        out += f'-{options.pimcid}'
+    else:
+        flagpimcid = "*"
 #
 #    if options.pimcid is not None:
 #        flagpimcid = options.pimcid

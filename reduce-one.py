@@ -12,7 +12,14 @@ import pimchelp
 import MCstat
 from collections import defaultdict
 import argparse 
+import subprocess
 
+# ----------------------------------------------------------------------
+def line_counts(filename):
+    '''Use wc to count the number of lines and header lines in a file. '''
+    num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
+    num_header = str(subprocess.check_output(['grep','-o','-i','\#',filename])).count('#')
+    return num_header,num_lines
 
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
@@ -52,14 +59,21 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',id
 
     # we make sure that we have a valid list of filenames
     try:
-        headers   = pimchelp.getHeadersFromFile(fileNames[0])
+        headers = pimchelp.getHeadersFromFile(fileNames[0])
 
         ave = np.zeros([len(fileNames),len(headers)],float)
         err = np.zeros([len(fileNames),len(headers)],float)
         for i,fname in enumerate(fileNames):
 
+            # Get the number of lines to skip
+            num_headers,num_lines = line_counts(fname)
+            if isinstance(skip, float):
+                cskip = int(num_lines*skip)+num_headers
+            else:
+                cskip = skip+num_headers
+
             # Compute the averages and error
-            data = np.loadtxt(fname,ndmin=2)[skip:,:]
+            data = np.loadtxt(fname,ndmin=2,skiprows=cskip)#[skip:,:]
             ave[i,:],err[i,:] = getStats(data)
         
         # compute single centroid virial specific heat if possible
@@ -132,8 +146,15 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
         
         for i,fname in enumerate(fileNames):
 
+            # Get the number of lines to skip
+            num_headers,num_lines = line_counts(fname)
+            if isinstance(skip, float):
+                cskip = int(num_lines*skip)+num_headers
+            else:
+                cskip = skip+num_headers
+
             # Get the estimator data and compute averages
-            data = np.loadtxt(fname,ndmin=2)[skip:,:]
+            data = np.loadtxt(fname,ndmin=2,skiprows=cskip)#[skip:,:]
             ave[i,:],err[i,:] = getStats(data)
 
             # get the headers
@@ -345,8 +366,7 @@ def main():
                help="are we in the canonical ensemble?")
     parser.add_argument("-R", "--radius", dest="R", type=float,
                help="radius in Angstroms") 
-    parser.add_argument("-s", "--skip", dest="skip", type=int, default=0,
-               help="number of measurements to skip") 
+    parser.add_argument("-s", "--skip", help="number of measurements to skip [0]") 
     parser.add_argument("-e", "--estimator", dest="estimator", type=str,
                         action='append', help="specify a single estimator to reduce") 
     parser.add_argument("-i", "--pimcid", dest="pimcid", type=str,
@@ -363,8 +383,16 @@ def main():
     # Determine the working directory
     baseDir = os.path.join(args.base_dir,'')
 
-    skip = args.skip
-    
+    if not args.skip:
+        skip = 0
+    else:
+        if '.' in args.skip:
+            skip = float(args.skip)
+            if skip < 0.0 or skip >= 1.0:
+                raise ValueError('skip < 0.0 or skip >= 1.0')
+        else:
+            skip = int(args.skip)
+
     # Check that we are in the correct ensemble
     pimchelp.checkEnsemble(args.canonical)
 

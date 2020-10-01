@@ -22,6 +22,8 @@ Options:
 
 import argparse
 import numpy as np
+import sys
+import subprocess
 
 # -----------------------------------------------------------------------------
 def stats(data):
@@ -32,12 +34,19 @@ def stats(data):
 
     return ave,err
 
+# ----------------------------------------------------------------------
+def line_counts(filename):
+    '''Use wc to count the number of lines and header lines in a file. '''
+    num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
+    num_header = str(subprocess.check_output(['grep','-o','-i','\#',filename])).count('#')
+    return num_header,num_lines
+
 # -----------------------------------------------------------------------------
 # Begin Main Program
 # -----------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description='Generates averages from pimc output data.')
-    parser.add_argument('-s', '--skip', type=int, dest='skip', default = 0, 
+    parser.add_argument('-s', '--skip', 
                         help='How many input lines should we skip? [default: 0]')
     parser.add_argument('-l', '--header_lines', type=int, dest='header_lines', 
                         help='How many header lines to skip?')
@@ -49,7 +58,16 @@ def main():
     args = parser.parse_args()
 
     fileNames = args.file
-    skip = args.skip
+
+    if not args.skip:
+        skip = 0
+    else:
+        if '.' in args.skip:
+            skip = float(args.skip)
+            if skip < 0.0 or skip >= 1.0:
+                raise ValueError('skip < 0.0 or skip >= 1.0')
+        else:
+            skip = int(args.skip)
 
     for fileName in fileNames:
 
@@ -77,6 +95,10 @@ def main():
             estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
             numLines = estData.size
             
+            # Determine how many lines to skip if we have defined a fraction 
+            if isinstance(skip, float):
+                skip = int(numLines*skip)
+
             # If we have data, compute averages and error
             if numLines-skip > 0:
                 print('# PIMCID %s' % pimcid)
