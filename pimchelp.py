@@ -355,7 +355,7 @@ def get_pimcid(file_name):
         return ID
 # -------------------------------------------------------------------------------
 def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ=None, 
-                         canonical=False,ftype='log'):
+                         canonical=False,ftype='log',β=None):
     ''' Get a list of files based on a set of common parameters. '''
 
     # we construct a file string from the supplied options
@@ -364,8 +364,10 @@ def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ
     else:
         flagcanonical = 'gce'
 
-    if T is not None:
+    if (T is not None) and (T > 0.0):
         flagT = f"{T:06.3f}"
+    elif (T is not None) and (β is not None):
+        flagT = f"{1.0/β:06.3f}"
     else:
         flagT = "*"
 
@@ -483,13 +485,15 @@ def getFileString(options,reduce=True):
 
     if options.N is not None:
         flagN = "%04d" % options.N
-        out += '-N-%s' % flagN
+        if options.canonical:
+            out += '-N-%s' % flagN
     else:
         flagN = "*"
 
     if options.n is not None:
         flagn = "%06.3f" % options.n
-        out += '-n-%s' % flagn
+        if options.canonical:
+            out += '-n-%s' % flagn
     else:
         flagn = "*"
 
@@ -501,27 +505,29 @@ def getFileString(options,reduce=True):
 
     if (options.mu is not None):
         flagmu = "%+08.3f" % options.mu
-        out += '-u-%s' % flagmu
+        if not options.canonical:
+            out += '-u-%s' % flagmu
     else:
         flagmu = "*"
 
     if options.L is not None:
         flagL = "%07.3f" % options.L
-        out += '-L-%s' % flagL
+        if not options.canonical:
+            out += '-L-%s' % flagL
     else:
         flagL = "*"
 
     if options.pimcid is not None:
-        flagpimcid = options.pimcid
-        out += f'-{options.pimcid}'
+        if isinstance(options.pimcid,list) and len(options.pimcid) == 1:
+            flagpimcid = options.pimcid[0]
+        elif not isinstance(options.pimcid,list):
+            flagpimcid = options.pimcid
+        else:
+            flagpimcid = "*"
+
+        out += f'-{flagpimcid}'
     else:
         flagpimcid = "*"
-#
-#    if options.pimcid is not None:
-#        flagpimcid = options.pimcid
-#        out += '-id-%s' % flagpimcid
-#    else:
-    flagpimcid = "*"
 
     if options.canonical:
         dataName = '%s-%s-%s-%s-%s.dat' % (flagT,flagN,flagn,flagtau,flagpimcid)
@@ -529,7 +535,11 @@ def getFileString(options,reduce=True):
         dataName = '%s-%s-%s-%s-%s.dat' % (flagT,flagL,flagmu,flagtau,flagpimcid)
 
     if reduce:
-        outName = '%s-reduce%s' % (options.reduce,out)
+        if hasattr(options,'reduce'):
+            outName = '%s-reduce%s' % (options.reduce,out)
+        else:
+            outName = out
+
         return dataName,outName
     else:
         return dataName

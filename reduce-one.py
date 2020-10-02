@@ -369,8 +369,8 @@ def main():
     parser.add_argument("-s", "--skip", help="number of measurements to skip [0]") 
     parser.add_argument("-e", "--estimator", dest="estimator", type=str,
                         action='append', help="specify a single estimator to reduce") 
-    parser.add_argument("-i", "--pimcid", dest="pimcid", type=str,
-                        action='append', help="specify a single pimcid") 
+    parser.add_argument("-i", "--pimcid", dest="pimcid", type=str, 
+                        help="specify a single pimcid", action='append') 
     parser.add_argument("base_dir", help='The base directory\
                         where the data files to be reduced are located.',
                         default=os.getcwd(), nargs='?')
@@ -397,6 +397,7 @@ def main():
     pimchelp.checkEnsemble(args.canonical)
 
     dataName,outName = pimchelp.getFileString(args)
+
     reduceFlag = []
     reduceFlag.append(args.reduce)
     reduceFlag.append(parMap[args.reduce])
@@ -408,8 +409,8 @@ def main():
     # Form the full output file name
     if args.R is not None:
         outName += f'-R-{args.R:04.1f}'
-    if args.pimcid is not None:
-        outName += f'-{args.pimcid[0]}'
+    # if args.pimcid is not None:
+    #     outName += f'-{args.pimcid}'
     outName += '.dat'
 
     # possible types of estimators we may want to reduce

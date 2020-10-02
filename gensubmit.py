@@ -10,6 +10,8 @@
 from __future__ import print_function 
 import os,sys,glob,stat
 import argparse
+import uuid
+import math
 
 # -----------------------------------------------------------------------------
 def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
@@ -42,7 +44,8 @@ def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
         print(f'model {queue} does not exist!')
         sys.exit(1)
 
-    num_nodes = numOptions // num_cpus[cpu_type] + 1
+    # num_nodes = numOptions // num_cpus[cpu_type] + 1
+    num_nodes = int(math.ceil(numOptions / num_cpus[cpu_type]))
 
     # Open the pbs file and write its header
     if 'pigs' in cmd:
@@ -108,7 +111,7 @@ case ${jobid} in\n''')
             else:
                 command += f"--{flag}={val[n]} "
         command += staticPIMCOps 
-        command += ' > out/output.$jobid 2>&1'
+        command += ' > out/output_{str(uuid.uuid4())[-12:]}.$jobid 2>&1'
         pbsFile.write(f'{n})\n{command}\n;;\n')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
