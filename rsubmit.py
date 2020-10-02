@@ -15,7 +15,6 @@ import argparse
 import math
 import uuid
 
-
 # -----------------------------------------------------------------------------
 def getPIMCommand(fname):
     ''' Get the command string from the log file.'''
@@ -258,9 +257,14 @@ def main():
                        for the submission script")
     parser.add_argument("--pigs", help="Is this a pigs simulation?",
                         action="store_true")
+    parser.add_argument("base_dir", help='The base directory\
+                        where the data files to be reduced are located.',
+                        default=os.getcwd(), nargs='?')
 
     # parse the command line options
     args = parser.parse_args() 
+
+    base_dir = os.path.join(args.base_dir,'')
 
     # is this a pigs or pimc simulation?
     if args.pigs:
@@ -276,7 +280,7 @@ def main():
 
     # Get the data string and create the pimc helper object
     dataName,outName = pimchelp.getFileString(args)
-    pimc = pimchelp.PimcHelp(dataName,args.canonical)
+    pimc = pimchelp.PimcHelp(dataName,args.canonical,baseDir=base_dir)
 
     # We get either all the log files in the current directory, or just the
     # requested files by their ID number
