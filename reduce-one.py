@@ -14,11 +14,16 @@ from collections import defaultdict
 import argparse 
 import subprocess
 
+from joblib import Parallel, delayed
+import multiprocessing
+num_cores = multiprocessing.cpu_count()
+
 # ----------------------------------------------------------------------
 def line_counts(filename):
     '''Use wc to count the number of lines and header lines in a file. '''
     num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
-    num_header = str(subprocess.check_output(['grep','-o','-i','\#',filename])).count('#')
+    num_header = str(subprocess.check_output(['head','-5',filename])).count('#')
+    # num_header = str(subprocess.check_output(['grep','-o','-i','\#',filename])).count('#')
     return num_header,num_lines
 
 # ----------------------------------------------------------------------
@@ -51,6 +56,25 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
+def process_stats(fname,skip,get_headers=False):
+    '''Get the average and error for a estimator file. '''
+
+    # determine the structure of the headers
+    num_headers,num_lines = line_counts(fname)
+
+    # Get the number of lines to skip
+    if isinstance(skip, float):
+        cskip = int(num_lines*skip)+num_headers
+    else:
+        cskip = skip+num_headers
+
+    # Compute the averages and error
+    if get_headers:
+        return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip)),pimchelp.getHeadersFromFile(fname)
+    else:
+        return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip))
+
+# -----------------------------------------------------------------------------
 def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',idList=None):
     ''' Return the arrays containing the reduced averaged scalar
         estimators in question.'''
@@ -63,19 +87,12 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',id
 
         ave = np.zeros([len(fileNames),len(headers)],float)
         err = np.zeros([len(fileNames),len(headers)],float)
-        for i,fname in enumerate(fileNames):
 
-            # Get the number of lines to skip
-            num_headers,num_lines = line_counts(fname)
-            if isinstance(skip, float):
-                cskip = int(num_lines*skip)+num_headers
-            else:
-                cskip = skip+num_headers
+        # process all files in parallel
+        results = Parallel(n_jobs=num_cores)(delayed(process_stats)(fname,skip) for fname in fileNames)
+        for i,result in enumerate(results):
+            ave[i,:],err[i,:] = result
 
-            # Compute the averages and error
-            data = np.loadtxt(fname,ndmin=2,skiprows=cskip)#[skip:,:]
-            ave[i,:],err[i,:] = getStats(data)
-        
         # compute single centroid virial specific heat if possible
         # if 'dEdB' in headers:
         #     Cv = ave[:,headers.index('EEcv*Beta^2')] - ave[:,headers.index('Ecv*Beta')]**2 - ave[:,headers.index('dEdB')]
@@ -143,29 +160,22 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
         x   = np.zeros([numParams,Nx],float)
         ave = np.zeros([numParams,Nx],float)
         err = np.zeros([numParams,Nx],float)
-        
-        for i,fname in enumerate(fileNames):
 
-            # Get the number of lines to skip
-            num_headers,num_lines = line_counts(fname)
-            if isinstance(skip, float):
-                cskip = int(num_lines*skip)+num_headers
-            else:
-                cskip = skip+num_headers
+        # process all files in parallel
+        results = Parallel(n_jobs=num_cores)(delayed(process_stats)(fname,skip,get_headers=True) 
+                                   for fname in fileNames)
 
-            # Get the estimator data and compute averages
-            data = np.loadtxt(fname,ndmin=2,skiprows=cskip)#[skip:,:]
-            ave[i,:],err[i,:] = getStats(data)
-
-            # get the headers
-            x[i,:] = pimchelp.getHeadersFromFile(fname)
+        # collect the results
+        for i,result in enumerate(results):
+            ave[i,:],err[i,:] = result[0]
+            x[i,:] = result[1]
 
             # Compute the normalized averages and error for the OBDM
             if etype == 'obdm':
                 norm = ave[i,0]
                 ave[i,:] /= norm
                 err[i,:] /= norm
-
+        
         # the param and data headers
         header_p = ''
         header_d = ''

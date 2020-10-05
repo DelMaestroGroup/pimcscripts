@@ -183,9 +183,6 @@ def getFileNameParameters(fname):
     return re.split(r'(?<=[a-zA-Z0-9_])-',fname.rstrip('.dat'))
 
 # -----------------------------------------------------------------------------
-# !!! BROKEN FOR CANONICAL ENSEMBLE
-# !!! due to different file labelling scheme
-# -----------------------------------------------------------------------------
 def sortFileNames(fileNames): 
     '''Try to sort filenames by the numeric values of their parameter
     strings.'''
@@ -208,11 +205,11 @@ def sortFileNames(fileNames):
             fileTuples.append(tup)
 
     # sort by keys for each column from left to right
-    for n in range(1,7):
-        fileTuples = sorted(fileTuples, key=itemgetter(n))
+    # for n in range(1,7):
+    #     fileTuples = sorted(fileTuples, key=itemgetter(n))
     
     # this is the new fangled way, but it is not backwards compatible
-    #fileTuples = sorted(fileTuples, key=itemgetter(1,2,3,4,5,6))
+    fileTuples = sorted(fileTuples, key=itemgetter(1,2,3,4,5,6))
     
     # get the sorted file names
     sortedFileNames = []
@@ -559,6 +556,8 @@ class PIMCResults:
         
         # the raw data
         self.rdata = np.loadtxt(results_file_name)
+        self.params = []
+        self.qparams = []
     
         # determine now many header lines we have to determine if we have
         # scalar, vector, q-vector of matrix data
@@ -615,6 +614,11 @@ class PIMCResults:
             # get the correct key formatting
             self.qwidth,self.qprecision,self.qformat = self.key_format(self.qparams[0])
             self.pwidth,self.pprecision,self.pformat = self.key_format(self.params[0])
+
+        # make params a numpy array so it can be easily sorted
+        self.params = np.array(self.params)
+        self.qparams = np.array(self.qparams)
+
                     
     # ----------------------------------------------------------------------
     def key_format(self,key):
