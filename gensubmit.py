@@ -111,7 +111,7 @@ case ${jobid} in\n''')
             else:
                 command += f"--{flag}={val[n]} "
         command += staticPIMCOps 
-        command += ' > out/output_{str(uuid.uuid4())[-12:]}.$jobid 2>&1'
+        command += f' > out/output_{str(uuid.uuid4())[-12:]}.$jobid 2>&1'
         pbsFile.write(f'{n})\n{command}\n;;\n')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
