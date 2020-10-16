@@ -89,7 +89,8 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',id
         err = np.zeros([len(fileNames),len(headers)],float)
 
         # process all files in parallel
-        results = Parallel(n_jobs=num_cores)(delayed(process_stats)(fname,skip) for fname in fileNames)
+        nc = min(len(fileNames),num_cores)
+        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip) for fname in fileNames)
         for i,result in enumerate(results):
             ave[i,:],err[i,:] = result
 
@@ -162,7 +163,8 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
         err = np.zeros([numParams,Nx],float)
 
         # process all files in parallel
-        results = Parallel(n_jobs=num_cores)(delayed(process_stats)(fname,skip,get_headers=True) 
+        nc = min(len(fileNames),num_cores)
+        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip,get_headers=True) 
                                    for fname in fileNames)
 
         # collect the results

@@ -352,7 +352,7 @@ def get_pimcid(file_name):
         return ID
 # -------------------------------------------------------------------------------
 def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ=None, 
-                         canonical=False,ftype='log',β=None):
+                         canonical=False,ftype='log',β=None,pimcid=None):
     ''' Get a list of files based on a set of common parameters. '''
 
     # we construct a file string from the supplied options
@@ -393,16 +393,24 @@ def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ
     else:
         flagL = "*"
 
+
     if base_dir != '':
         if base_dir[-1] != os.path.sep:
             base_dir = base_dir + os.path.sep
 
     if canonical: 
-        data_name = base_dir + f'ce-{ftype}-{flagT}-{flagN}-{flagn}-{flagτ}-*.dat'
+        data_name = base_dir + f'ce-{ftype}-{flagT}-{flagN}-{flagn}-{flagτ}-'
     else:
-        data_name = base_dir + f'gce-{ftype}-{flagT}-{flagL}-{flagμ}-{flagτ}-*.dat' 
+        data_name = base_dir + f'gce-{ftype}-{flagT}-{flagL}-{flagμ}-{flagτ}-' 
 
-    file_names = [os.path.basename(fname) for fname in glob.glob(data_name)]
+    if pimcid is not None:
+        flagp = pimcid.split('|')
+    else:
+        flagp = ['*']
+
+    file_names = []
+    for pid in flagp:
+        file_names.extend([os.path.basename(fname) for fname in glob.glob(data_name + pid + '.dat')])
     return file_names
 
 # -------------------------------------------------------------------------------
@@ -619,7 +627,6 @@ class PIMCResults:
         self.params = np.array(self.params)
         self.qparams = np.array(self.qparams)
 
-                    
     # ----------------------------------------------------------------------
     def key_format(self,key):
         ''' Determine how lookup keys are formatted. '''
