@@ -3,7 +3,7 @@
 class submit:
     inputFile = None
     fileName = None
-    #FIXME this script is old and can be severly improved
+    #FIXME this script is old and can be severly improved (and possibly redundant)
     print("FIXME: this script is old and can be severly improved, some redunancy with gensubmit.py")
     def __init__(self, inputFile=None, fileName='submit.pbs'):
         """Fix this description""" #FIXME
