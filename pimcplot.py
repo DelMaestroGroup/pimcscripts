@@ -292,7 +292,6 @@ def main():
         # Figure 3 : plot the estimator histogram along with t-test values
         # ============================================================================
         fig = plt.figure(3)
-        # connect('key_press_event',kevent.press)
         for i in range(N):
             n, bins, patches = plt.hist(data[i], 100, normed=True, facecolor=colors[i], 
                                     alpha=0.75, label=leglabel[i],

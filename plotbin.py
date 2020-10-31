@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # plotbin.py
 # Chris Herdman
 # 12.03.2012
 # 
 # Plot binning analysis for raw MC data
-
-import pyutils
-
 import numpy as np
 
 import argparse
@@ -90,7 +87,7 @@ def main():
         
         if len(dataLines) > 2:
             data = np.loadtxt(fileName,usecols=col)
-            if not pyutils.isList(data):
+            if not isinstance(data, list):
                data = list([data])
             
             delta = MCstat.bin(data[args.skip:])

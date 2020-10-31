@@ -488,8 +488,6 @@ def main():
     #    for ID in pimc.id:
     #        param.append(float(pimc.params[ID][reduceFlag[1]]))
     #    numParams = len(param)
-    #    markers = loadgmt.getMarkerList()
-    #    colors  = loadgmt.getColorList('cw/1','cw1-029',10)
 
     #    # -----------------------------------------------------------------------------
     #    # Plot the averaged data

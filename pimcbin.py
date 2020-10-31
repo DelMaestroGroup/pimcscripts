@@ -59,14 +59,14 @@ def main():
             estErr = bins[-1,:]
             numData = len(estData)
 
-            print pimcid, '# Number Samples %6d' %  numData
+            print(pimcid, '# Number Samples %6d' %  numData)
             if not normalize:
                 for n,ave in enumerate(estAve):
                     if len(headers) - 1 ==  len(estAve):
                         label = headers[n+1]
                     else:
                         label = 'Col #%02d:' % n
-                    print '%-16s%12.5f\t%12.5f' % (label,estAve[n],estErr[n])
+                    print('%-16s%12.5f\t%12.5f' % (label,estAve[n],estErr[n]))
             else:
                 for n,ave in enumerate(estAve):
                     normAve = estAve[n]/estAve[0]
@@ -79,7 +79,7 @@ def main():
                         label = headers[n+1]
                     else:
                         label = 'Col #%02d:' % n
-                    print '%-16s%12.5f\t%12.5f' % (label,normAve,normErr)
+                    print('%-16s%12.5f\t%12.5f' % (label,normAve,normErr))
     
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

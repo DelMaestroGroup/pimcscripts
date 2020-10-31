@@ -16,19 +16,12 @@ Options:
   -h --help                               Show this screen.
 """
 
-
 import pylab as pl
 import pimchelp
 from docopt import docopt
-import loadgmt,kevent
 import itertools
 
-#cmap = loadgmt.getcmap('dca','alarm.p1.0.1')
-#cmap = loadgmt.getcmap('cb/div','Spectral_11')
-#cmap = loadgmt.getcmap('cb/div','RdGy_11')
-cmap = loadgmt.getcmap('gist','earth')
-cmap = loadgmt.getcmap('ncl','precip3_16lev')
-#cmap = loadgmt.getcmap('ncl','temp_diff_18lev')
+cmap = 'viridis'
 
 # ===================================================================
 def main():

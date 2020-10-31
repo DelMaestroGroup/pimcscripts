@@ -6,7 +6,6 @@
 
 import os,sys
 import argparse
-import pyutils
 import pimchelp
 import numpy as np
 import pylab as pl
@@ -102,12 +101,6 @@ def main():
         pl.xlabel(descrip.estimatorXLongName[estimatorName])
         pl.ylabel(descrip.estimatorLongName[estimatorName])
         leg = pl.legend(frameon=False, loc='best', prop={'size':18})
-
-#        # Add a colorbar
-#        cmap = loadgmt.getcmap('cb/div','Spectral_08')
-#        T = reduceVec.param()[::2]
-#        cb = pl.colorbar(loadgmt.getMap(cmap,T),ax=ax,ticks=T)
-#        cb.ax.set_ylabel('Temperature',rotation=-90)
 
         if xLim != None:
             pl.xlim(xLim[0],xLim[1])

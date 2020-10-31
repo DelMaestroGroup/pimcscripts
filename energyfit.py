@@ -11,7 +11,6 @@
 # Modified:    2017-07-17 by Nathan Nichols
 # =============================================================================
 
-import kevent
 import os,sys
 import argparse
 import pimchelp
@@ -198,7 +197,6 @@ def main():
     
     # Set up plots with shared axes
     fig1 = pl.figure(1,figsize=(12,12))
-    pl.connect('key_press_event',kevent.press)
 
     ax1 = pl.subplot(311)
     pl.setp(ax1.get_xticklabels(), visible=False)

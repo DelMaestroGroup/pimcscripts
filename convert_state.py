@@ -8,7 +8,6 @@
 import matplotlib
 
 import os,sys
-import pyutils
 import argparse
 import re
 
@@ -145,7 +144,7 @@ def main():
         newState = newState.rstrip()
 
         # output the new state
-        print newState
+        print(newState)
         oldStateFile.close()
 
 # ----------------------------------------------------------------------

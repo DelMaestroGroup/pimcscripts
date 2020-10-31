@@ -30,7 +30,6 @@ Options:
 """
 
 from docopt import docopt
-import pyutils
 import pimchelp
 import numpy as np
 import matplotlib.pyplot as plt

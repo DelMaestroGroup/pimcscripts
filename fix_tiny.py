@@ -17,7 +17,6 @@ Options:
 
 from docopt import docopt
 import os,sys
-import pyutils
 import re
 
 # -----------------------------------------------------------------------------
@@ -62,7 +61,7 @@ def main():
             oldEstFile.close()
         else:
             # output the new estimator
-            print newEst
+            print(newEst)
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
