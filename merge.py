@@ -44,7 +44,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         return
 
     # determine if we are trying to merge a cumulative estimator
-    cumulative = etype in ['position', 'locsuper','planeavedensity']
+    cumulative = etype in ['position','locsuper','planeavedensity','planeaveVext']
 
     # Determine if we are considering an off-diagonal estimator
     diagonalEst = not (etype == 'obdm' or etype == 'worm')

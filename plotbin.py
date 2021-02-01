@@ -87,8 +87,8 @@ def main():
         
         if len(dataLines) > 2:
             data = np.loadtxt(fileName,usecols=col)
-            if not isinstance(data, list):
-               data = list([data])
+            #if not isinstance(data, list):
+            #   data = list([data])
             
             delta = MCstat.bin(data[args.skip:])
             if n == 0:
