@@ -26,10 +26,9 @@ setuptools.setup(
     ],
     include_package_data=True,
     install_requires=["numpy", "matplotlib", "scipy", "docopt", "joblib"],
-    scripts=[
-        "bin/pimcave.py",
+    scripts=["bin/pimcave.py",
         "bin/pimcplot.py",
-        "bin/reduce_one.py",
+        "bin/reduce-one.py",
         ],
 )
 
