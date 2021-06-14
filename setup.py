@@ -12,8 +12,7 @@ setuptools.setup(
     name="pimcscripts",
     version="0.1",
     packages=setuptools.find_packages(),
-    description="Scripts for analzying the results of path integral quantum
-    Monte Carlo simulations",
+    description="Scripts for analzying the results of path integral quantum Monte Carlo simulations",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/DelMaestroGroup/pimcscripts",
