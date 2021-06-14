@@ -22,7 +22,6 @@ Below we describe a few useful ones.
 
 ### `pimcave.py`
 
-    pimcave
     usage: pimcave.py [-h] [-s SKIP] [-l HEADER_LINES] [-r] file [file ...]
 
     Generates averages from pimc output data.
@@ -70,5 +69,32 @@ Below we describe a few useful ones.
 
 ### `reduce-one.py`
 
+    usage: reduce-one.py [-h] [-T T] [-N N] [-n N] [-t TAU] [-u MU] [-L L] [-V V] -r {T,N,n,u,t,L,V,M} [--canonical] [-R R] [-s SKIP] [-e ESTIMATOR] [-i PIMCID] [base_dir]
 
+    Reduce quantum Monte Carlo output over some parameter.
 
+    positional arguments:
+      base_dir              The base directory where the data files to be reduced are located.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -T T, --temperature T
+                            simulation temperature in Kelvin
+      -N N, --number-particles N
+                            number of particles
+      -n N, --density N     number density in Angstroms^{-d}
+      -t TAU, --imag-time-step TAU
+                            imaginary time step
+      -u MU, --chemical-potential MU
+                            chemical potential in Kelvin
+      -L L, --Lz L          Length in Angstroms
+      -V V, --volume V      volume in Angstroms^d
+      -r {T,N,n,u,t,L,V,M}, --reduce {T,N,n,u,t,L,V,M}
+                            variable name for reduction [T,N,n,u,t,L,V,W,M]
+      --canonical           are we in the canonical ensemble?
+      -R R, --radius R      radius in Angstroms
+      -s SKIP, --skip SKIP  number of measurements to skip [0]
+      -e ESTIMATOR, --estimator ESTIMATOR
+                            specify a single estimator to reduce
+      -i PIMCID, --pimcid PIMCID
+                            specify a single pimcid
