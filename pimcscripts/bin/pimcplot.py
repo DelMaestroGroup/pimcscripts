@@ -36,10 +36,10 @@ Options:
 
 from __future__ import print_function 
 import numpy as np
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 from docopt import docopt
 from scipy import stats
-import MCstat
+import pimcscripts.MCstat as MCstat
 import re
 from os import path
 

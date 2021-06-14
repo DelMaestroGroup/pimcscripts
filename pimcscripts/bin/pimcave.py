@@ -118,7 +118,7 @@ def main():
                     print('%-16s%12.5f\t%12.5f\t%5.2f' % (cname,ave,err,rel_err))
 
         except:
-          print(f"Couldn't Average File {fileName}")
+            print(f"Couldn't Average File {fileName}")
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
