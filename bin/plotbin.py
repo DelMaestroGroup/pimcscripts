@@ -7,8 +7,8 @@
 import numpy as np
 
 import argparse
-import pimchelp
-import MCstat
+import pimcscripts.pimchelp as pimchelp
+import pimcscripts.MCstat as MCstat
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 

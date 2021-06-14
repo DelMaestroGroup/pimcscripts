@@ -18,7 +18,7 @@ Options:
 
 
 import pylab as pl
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 from docopt import docopt
 import loadgmt,kevent
 import itertools

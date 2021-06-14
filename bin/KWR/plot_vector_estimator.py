@@ -8,7 +8,7 @@ import os,sys
 import loadgmt,kevent
 import argparse
 import pyutils
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import numpy as np
 import pylab as pl
 import plotoptions

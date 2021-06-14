@@ -20,7 +20,7 @@
 
 import os,sys,subprocess,argparse,commands
 import numpy as np
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 from optparse import OptionParser
 from visual import *
 #import visual as vis

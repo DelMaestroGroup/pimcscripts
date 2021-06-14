@@ -6,7 +6,7 @@
 
 import os,sys
 import argparse
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import numpy as np
 import pylab as pl
 import plotoptions

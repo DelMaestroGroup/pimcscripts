@@ -7,7 +7,7 @@
 
 import os,sys,glob,shutil
 import tarfile
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 from optparse import OptionParser
 from pylab import *
 

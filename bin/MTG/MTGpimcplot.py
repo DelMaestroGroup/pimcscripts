@@ -34,7 +34,7 @@ import os,sys
 import pyutils
 import loadgmt,kevent
 from pylab import *
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 from docopt import docopt
 from scipy import stats
 import MCstat

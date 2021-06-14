@@ -7,7 +7,7 @@
 
 import os,sys,glob
 import loadgmt,kevent
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import MCstat
 from optparse import OptionParser
 from pylab import *

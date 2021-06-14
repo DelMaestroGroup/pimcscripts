@@ -10,7 +10,7 @@
 # take a list of id numbers from the command line
 
 import sys,os
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import argparse
 import math
 import uuid

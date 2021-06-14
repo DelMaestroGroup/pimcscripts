@@ -13,7 +13,7 @@ import argparse
 import numpy as np
 import re
 import glob,os
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 
 # Get the number of lines in a file
 # -----------------------------------------------------------------------------

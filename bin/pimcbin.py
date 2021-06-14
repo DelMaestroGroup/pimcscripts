@@ -8,10 +8,10 @@
 # data file supplied as an input
 
 import os,sys
-import pyutils
+import pimscripts.pyutils as pyutils
 import argparse
 import numpy as np
-import MCstat
+import pimcscripts.MCstat as MCstat
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 

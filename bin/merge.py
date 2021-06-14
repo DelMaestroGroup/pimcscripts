@@ -31,7 +31,7 @@ import os,sys
 import numpy as np
 import glob
 import tarfile
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import uuid
 import re
 

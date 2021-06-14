@@ -30,7 +30,7 @@ Options:
 """
 
 from docopt import docopt
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import numpy as np
 import matplotlib.pyplot as plt
 import plotoptions

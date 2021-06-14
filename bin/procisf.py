@@ -27,7 +27,7 @@ Options:
 from __future__ import print_function
 from docopt import docopt
 import numpy as np
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 
 # -----------------------------------------------------------------------------
 def splitISF(pimc,idList,baseDir,cyldir=''):

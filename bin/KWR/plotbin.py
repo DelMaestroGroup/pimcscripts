@@ -13,7 +13,7 @@ import pyutils
 import loadgmt,kevent
 from pylab import *
 import argparse
-import pimchelp
+import pimcscripts.pimchelp as pimchelp
 import MCstat
 
 # -----------------------------------------------------------------------------
