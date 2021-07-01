@@ -194,7 +194,7 @@ case ${SLURM_ARRAY_TASK_ID} in
             command = time_cmd + f'./{cmd} '
 
         else:
-            command = time_cmd + './{cmd} -p %d ' % (n)
+            command = time_cmd + f'./{cmd} -p {n} '
 
         for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
