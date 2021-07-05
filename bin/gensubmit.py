@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 #
 # gensubmit.py
 # Adrian Del Maestro
@@ -18,7 +18,9 @@ import subprocess
 def validate(cmd):
     '''Validate a sample executable command for debugging purposes.'''
 
-    output = subprocess.run(cmd.split(' ') + ['--validate'], capture_output=True).stderr.decode("utf-8")
+    # this seems to have problem on NASA machines, so we will use a shell
+#    output = subprocess.run(cmd.split(' ') + ['--validate'], capture_output=True).stderr.decode("utf-8")
+    output = subprocess.run(cmd + ' --validate', capture_output=True,shell=True).stderr.decode("utf-8")
     if 'SUCCESS' not in output:
         sys.exit(f'Error with command: {cmd} \n {output}')
 
