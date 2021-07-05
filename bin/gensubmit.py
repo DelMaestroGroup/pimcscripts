@@ -87,8 +87,8 @@ cd $PBS_O_WORKDIR
     print(f'\nSubmit jobs with: qsub {fileName}\n')
 
     # Now we create the case-file structure to submit the jobs
-    fileName = f'input-{lab}{outName}.sh'
-    pbsFile = open(fileName,'w')
+    ifileName = f'input-{lab}{outName}.sh'
+    pbsFile = open(ifileName,'w')
     pbsFile.write('''#!/bin/bash
 
 echo \"Starting run at: `date`\"
@@ -116,7 +116,7 @@ case ${jobid} in\n''')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
-    os.chmod(fileName,0o744)
+    os.chmod(ifileName,0o744)
     
 
 # -----------------------------------------------------------------------------
