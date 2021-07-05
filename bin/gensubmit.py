@@ -12,6 +12,15 @@ import os,sys,glob,stat
 import argparse
 import uuid
 import math
+import subprocess
+
+# -----------------------------------------------------------------------------
+def validate(cmd):
+    '''Validate a sample executable command for debugging purposes.'''
+
+    output = subprocess.run(cmd.split(' ') + ['--validate'], capture_output=True).stderr.decode("utf-8")
+    if 'SUCCESS' not in output:
+        sys.exit(f'Error with command: {cmd} \n {output}')
 
 # -----------------------------------------------------------------------------
 def nasa(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
@@ -84,7 +93,6 @@ cd $PBS_O_WORKDIR
 --sshloginfile $PBS_NODEFILE "cd $PWD; ./input-{lab}{outName}.sh {{}}"')
     pbsFile.close();
 
-    print(f'\nSubmit jobs with: qsub {fileName}\n')
 
     # Now we create the case-file structure to submit the jobs
     ifileName = f'input-{lab}{outName}.sh'
@@ -111,14 +119,20 @@ case ${jobid} in\n''')
             else:
                 command += f"--{flag}={val[n]} "
         command += staticPIMCOps 
+
+        # test to make sure we have a valid command
+        if n == 0:
+            validate(command)
+
         command += f' > out/output_{str(uuid.uuid4())[-12:]}.$jobid 2>&1'
         pbsFile.write(f'{n})\n{command}\n;;\n')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
     os.chmod(ifileName,0o744)
-    
 
+    print(f'\nSubmit jobs with: qsub {fileName}\n')
+    
 # -----------------------------------------------------------------------------
 def vacc(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
          queue=None):
@@ -194,11 +208,16 @@ case ${SLURM_ARRAY_TASK_ID} in
             command = time_cmd + f'./{cmd} '
 
         else:
-            command = time_cmd + './{cmd} -p %d ' % (n)
+            command = time_cmd + f'./{cmd} -p {n} '
 
         for flag,val in optionValue.items():
             command += '-%s %s ' % (flag,val[n])
         command += staticPIMCOps #'$opts'
+
+        # test to make sure we have a valid command
+        if n == 0:
+            validate(command)
+
         pbsFile.write('%d)\nsleep %d\n%s\n;;\n' % (n,2*n,command))
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
