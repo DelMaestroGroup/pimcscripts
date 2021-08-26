@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 #
 # gensubmit.py
 # Adrian Del Maestro
@@ -18,7 +18,9 @@ import subprocess
 def validate(cmd):
     '''Validate a sample executable command for debugging purposes.'''
 
-    output = subprocess.run(cmd.split(' ') + ['--validate'], capture_output=True).stderr.decode("utf-8")
+    # this seems to have problem on NASA machines, so we will use a shell
+#    output = subprocess.run(cmd.split(' ') + ['--validate'], capture_output=True).stderr.decode("utf-8")
+    output = subprocess.run(cmd + ' --validate', capture_output=True,shell=True).stderr.decode("utf-8")
     if 'SUCCESS' not in output:
         sys.exit(f'Error with command: {cmd} \n {output}')
 
@@ -95,8 +97,8 @@ cd $PBS_O_WORKDIR
 
 
     # Now we create the case-file structure to submit the jobs
-    fileName = f'input-{lab}{outName}.sh'
-    pbsFile = open(fileName,'w')
+    ifileName = f'input-{lab}{outName}.sh'
+    pbsFile = open(ifileName,'w')
     pbsFile.write('''#!/bin/bash
 
 echo \"Starting run at: `date`\"
@@ -129,7 +131,7 @@ case ${jobid} in\n''')
     
     pbsFile.write('esac\necho \"Finished run at: `date`\"')
     pbsFile.close();
-    os.chmod(fileName,0o744)
+    os.chmod(ifileName,0o744)
 
     print(f'\nSubmit jobs with: qsub {fileName}\n')
     

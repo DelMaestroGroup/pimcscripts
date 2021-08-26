@@ -16,6 +16,10 @@ useful helper scripts located in [./bin](https://github.com/DelMaestroGroup/pimc
 
     script_name.py --help
 
+If you are upgrading after a change, it might be useful to use:
+
+    pip install --upgrade --no-deps --force-reinstall git+git://github.com/DelMaestroGroup/pimcscripts.git#egg=pimcscripts
+
 Below we describe a few useful ones.
 
 ## Helper Scripts
