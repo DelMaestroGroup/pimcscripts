@@ -347,7 +347,7 @@ def get_pimcid(file_name):
         # fParts = re.split(r'(?<=[a-zA-Z0-9_])-',file_name.rstrip('.dat'))
         fparts = file_name.split('-')
         if len(fparts) > 7:
-            ID = '-'.join(fparts[6:])
+            ID = '-'.join(fparts[-5:])
         else:
             ID = file_name[-1]
         return ID
