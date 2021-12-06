@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # reduce-one.py
 # Adrian Del Maestro
 # 09.03.2009
