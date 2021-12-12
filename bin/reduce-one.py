@@ -429,7 +429,7 @@ def main():
     est_list = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
                'radwind', 'radarea', 'planedensity', 'planearea',
                'lineardensity', 'planewind','virial','linedensity',
-               'linepotential','energy','isf','ssf']
+               'linepotential','energy','isf','ssf','ssfq']
     est_do = {e:False for e in est_list}
 
     scalar_est_list = ['estimator','energy','virial','super']
@@ -452,7 +452,8 @@ def main():
                    'planewind':['n','ρₛ(x,y)'],'planearea':['n','ρₛ(x,y)'],
                    'planedensity':['n','ρ(x,y)'], 'linedensity':['r [Å]','ρ1d(r)'],
                    'linepotential':['r [Å]','V1d(r)'], 'ssf':['q [1/Å]', 'S(q)'],
-                   'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)']}
+                   'ssfq':['q_index', 'S(q)'], 
+                  'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)']}
 
     # there are no labels for scalar estimators
     for est in scalar_est_list:
