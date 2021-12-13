@@ -104,6 +104,10 @@ def get_parameter_map(logName):
     par_convert['Initial CoM Delta'] = float
     par_convert['Inital CoM Delta'] = float
     par_convert['CoM Delta'] = float
+    par_convert['Plating Radial Width'] = float
+    par_convert['Plating LJ Sigma'] = float
+    par_convert['Plating LJ Epsilon'] = float
+    par_convert['Plating LJ Density'] = float
 
     # Get the values of all simulation parameters
     paramsMap = {}
@@ -118,7 +122,10 @@ def get_parameter_map(logName):
             if params and ':' in line:
                 key,val = line.split(':')
                 key = key.strip()
-                val = par_convert[key](val.strip())
+                if key in par_convert:
+                    val = par_convert[key](val.strip())
+                else:
+                    val = float(val.strip())
                 paramsMap[key] = val
 
     # reformat the container dimensions and lookup table
@@ -412,7 +419,11 @@ def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ
     file_names = []
     for pid in flagp:
         file_names.extend([os.path.basename(fname) for fname in glob.glob(data_name + pid + '.dat')])
-    return file_names
+
+    if len(file_names) == 1:
+        return files_names[0]
+    else:
+        return file_names
 
 # -------------------------------------------------------------------------------
 def getFileString_doc(options,reduce=True):

@@ -1,9 +1,12 @@
 Script Changes
 ==============
 
+2021-12-13 0.3.3
+- Added some LJ log parameters to parameter map
+
 2021-12-12 0.3.2
 - Added a q-resolved `ssfq` to reduce-one
-- 
+
 2021-12-06 0.3.1
 - added static structure factor (`ssf`) to reduce-one
 
