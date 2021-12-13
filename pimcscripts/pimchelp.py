@@ -421,7 +421,7 @@ def get_file_list_from_params(base_dir='',T=None,N=None,n=None,τ=None,L=None,μ
         file_names.extend([os.path.basename(fname) for fname in glob.glob(data_name + pid + '.dat')])
 
     if len(file_names) == 1:
-        return files_names[0]
+        return file_names[0]
     else:
         return file_names
 
