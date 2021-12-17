@@ -178,7 +178,6 @@ def main():
 
     # Merge all the output files
     print('Merged data files:')
-    print(pimc.dataType)
     for ftype in pimc.dataType:
         if ftype not in exclude_estimators:
             mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID) 
