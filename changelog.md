@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+2021-12-17 
+- Adding ssfq files to merge.py
+
 2021-12-13 0.3.3
 - Added some LJ log parameters to parameter map
 

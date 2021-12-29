@@ -158,7 +158,7 @@ def get_estimator_names(base_dir,pimcid,verbose=False):
     est_name = ['log', 'estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                 'radial', 'radwind', 'radarea', 'planedensity',
                 'planewind', 'planearea','virial', 'linedensity',
-                'linepotential','energy','position','ssf','isf', 
+                'linepotential','energy','position','ssf','isf','ssfq',
                 'planeavedensity','planeaveVext','lineardensity']
 
     file_names = {}
@@ -724,7 +724,7 @@ class PimcHelp:
         self.dataType = ['estimator', 'obdm', 'pair', 'pcycle', 'super', 'worm', 
                          'radial', 'radwind', 'radarea', 'planedensity',
                          'planewind', 'planearea','virial', 'linedensity',
-                         'linepotential','energy','position','ssf','isf', 
+                         'linepotential','energy','position','ssf','isf','ssfq', 
                          'planeavedensity','planeaveVext','lineardensity']
         if not canonical:
             self.dataType.append('number')
