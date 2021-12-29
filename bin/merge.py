@@ -25,6 +25,7 @@ Options:
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --canonical                       Are we in the canonical ensemble?
+  --label=<label>                   A custom uuid label 
 '''
 
 from __future__ import print_function
@@ -177,6 +178,10 @@ def main():
 
     # get a new unique uuid
     newID = str(uuid.uuid4())
+
+    # If we have a custom label, append
+    if args['--label']:
+        newID = newID[:-len(args['--label'])] + args['--label']
 
     # Merge all the output files
     print('Merged data files:')
