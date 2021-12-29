@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+2021-12-29
+- Added custom output lablels to merge.py
+
 2021-12-17 
 - Adding ssfq files to merge.py
 
