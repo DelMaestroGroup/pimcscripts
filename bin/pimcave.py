@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # Author:      2009-07-20 Adrian Del Maestro
 # Modified:    2017-07-17 Nathan Nichols

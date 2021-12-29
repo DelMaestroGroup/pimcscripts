@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # convert_state.py
 # Adrian Del Maestro
 # 06.18.2012

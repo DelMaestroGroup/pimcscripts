@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # merge.py
 # Adrian Del Maestro
 # 10.19.2009

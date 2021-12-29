@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Plot one or more reduced scalar estimators.
 Author: Adrian Del Maestro
 Date: 11.29.2011

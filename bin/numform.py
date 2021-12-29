@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 ''' Update the number format of output files. '''
 import os
 
