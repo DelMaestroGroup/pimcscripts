@@ -56,7 +56,7 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
-def process_stats(fname,skip,get_headers=False):
+def process_stats(fname,skip,get_headers=False,ave_est=False):
     '''Get the average and error for a estimator file. '''
 
     # determine the structure of the headers
@@ -68,14 +68,23 @@ def process_stats(fname,skip,get_headers=False):
     else:
         cskip = skip+num_headers
 
+    # Pre-averaged estimators require no processing
+    if ave_est:
+        x = np.arange(0,num_lines-num_headers,1)
+        y = np.loadtxt(fname,ndmin=1)
+        Δy = np.zeros_like(y)
+        return (y,Δy),x
+
     # Compute the averages and error
-    if get_headers:
-        return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip)),pimchelp.getHeadersFromFile(fname)
     else:
-        return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip))
+        if get_headers:
+            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip)),pimchelp.getHeadersFromFile(fname)
+        else:
+            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip))
 
 # -----------------------------------------------------------------------------
-def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',idList=None):
+def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
+                 baseDir='',idList=None,ave_est=False):
     ''' Return the arrays containing the reduced averaged scalar
         estimators in question.'''
 
@@ -138,7 +147,7 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0, baseDir='',id
 
 # -----------------------------------------------------------------------------
 def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
-                 idList=None):
+                 idList=None,ave_est=False):
     ''' Return the arrays consisting of the reduec averaged vector 
         estimators. '''
 
@@ -156,7 +165,13 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
             headers = headers[1]
 
         numParams = len(fileNames)
-        Nx = len(headers)
+
+        # Do we have a pre-averaged vector estimator? No headers are included.
+        if ave_est:
+            num_headers,num_lines = line_counts(fileNames[0])
+            Nx = num_lines-num_headers
+        else:
+            Nx = len(headers)
 
         x   = np.zeros([numParams,Nx],float)
         ave = np.zeros([numParams,Nx],float)
@@ -164,7 +179,7 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
 
         # process all files in parallel
         nc = min(len(fileNames),num_cores)
-        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip,get_headers=True) 
+        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip,get_headers=True,ave_est=ave_est) 
                                    for fname in fileNames)
 
         # collect the results
@@ -200,7 +215,6 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
         print('Problem Reducing %s files' % etype)
         print(' '.join(sys.argv))
         return 0,0,0,0
-
 
 # -----------------------------------------------------------------------------
 def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
@@ -265,7 +279,8 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
     return aveKappa,errKappa
 
 # -----------------------------------------------------------------------------
-def getISFEst(pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',idList=None):
+def getISFEst(pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
+              idList=None,ave_est=False):
     ''' Return the arrays consisting of the reduced averaged intermediate
         scattering function. '''
 
@@ -426,10 +441,7 @@ def main():
     outName += '.dat'
 
     # possible types of estimators we may want to reduce
-    est_list = ['estimator', 'super', 'obdm', 'pair', 'radial', 'number', 
-               'radwind', 'radarea', 'planedensity', 'planearea',
-               'lineardensity', 'planewind','virial','linedensity',
-               'linepotential','energy','isf','ssf','ssfq']
+    est_list = pimc.dataType
     est_do = {e:False for e in est_list}
 
     scalar_est_list = ['estimator','energy','virial','super']
@@ -452,7 +464,7 @@ def main():
                    'planewind':['n','ρₛ(x,y)'],'planearea':['n','ρₛ(x,y)'],
                    'planedensity':['n','ρ(x,y)'], 'linedensity':['r [Å]','ρ1d(r)'],
                    'linepotential':['r [Å]','V1d(r)'], 'ssf':['q [1/Å]', 'S(q)'],
-                   'ssfq':['q_index', 'S(q)'], 
+                   'ssfq':['q_index', 'S(q)'], 'planeavedensity':['n','ρ(x,y)'],
                   'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)']}
 
     # there are no labels for scalar estimators
@@ -472,8 +484,10 @@ def main():
 
     # perform the reduction
     for est in est_do:
+        ave_est = 'ave' in est
         est_return = getEst[est](est,pimc,outName,reduceFlag,axis_label[est],
-                                 skip=skip, baseDir=baseDir, idList=args.pimcid)
+                                 skip=skip, baseDir=baseDir,
+                                 idList=args.pimcid,ave_est=ave_est)
         if est_return[-1]:
             print(f'Reduced {est} over {est_return[-1]} {parMap[args.reduce]} value(s).')
 
