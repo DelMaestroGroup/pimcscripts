@@ -8,7 +8,7 @@ which is located at https://code.delmaestro.org.
 For now, we have not uploaded to pypi but the scripts can be installed directly
 from git:
 
-    pip install --upgrade git+git://github.com/DelMaestroGroup/pimcscripts.git#egg=pimcscripts
+    pip install --upgrade git+https://github.com/DelMaestroGroup/pimcscripts.git#egg=pimcscripts
 
 This will install the base library `pimcscripts` which includes the modules
 `pimcscripts.pimchelp` and `pimcscripts.MCStat` as well as a number of very
@@ -18,7 +18,7 @@ useful helper scripts located in [./bin](https://github.com/DelMaestroGroup/pimc
 
 If you are upgrading after a change, it might be useful to use:
 
-    pip install --upgrade --no-deps --force-reinstall git+git://github.com/DelMaestroGroup/pimcscripts.git#egg=pimcscripts
+    pip install --upgrade --no-deps --force-reinstall git+https://github.com/DelMaestroGroup/pimcscripts.git#egg=pimcscripts
 
 Below we describe a few useful ones.
 
