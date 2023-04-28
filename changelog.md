@@ -1,5 +1,7 @@
 Script Changes
 ==============
+## 2023-4-23
+- Added parallel to gensubmit.py and rsubmit.py to run parallel tasks on the cluster easier
 
 ## 2022-01-10 
 - Updated reduce-one.py to deal with "average" estimators

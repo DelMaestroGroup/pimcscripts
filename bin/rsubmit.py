@@ -1,5 +1,4 @@
-#!/spack/spack-0.17.1/apps/linux-rhel8-cascadelake/gcc-10.2.0/python-3.9.10-y63csltfuw5dhi5qffpdm4zmmfupfkqg/bin/python3.9
-#
+#! /usr/bin/env python#
 # rsubmit.py
 # Adrian Del Maestro
 # 09.04.2009
