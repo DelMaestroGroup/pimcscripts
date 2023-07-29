@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # Author:      2020-09-25 Adrian Del Maestro
 # =============================================================================

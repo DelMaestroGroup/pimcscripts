@@ -1,4 +1,4 @@
-#! /usr/bin/env python#
+#!/usr/bin/env python
 # rsubmit.py
 # Adrian Del Maestro
 # 09.04.2009
