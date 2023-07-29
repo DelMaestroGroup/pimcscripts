@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 #Filename: make_pbs_resubmit_script.py
 
 import argparse

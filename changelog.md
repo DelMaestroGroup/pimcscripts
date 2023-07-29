@@ -1,5 +1,7 @@
 Script Changes
 ==============
+## 2023-7-29
+- Fixed Shebang error causing improper path communication with the python interpreter
 ## 2023-4-23
 - Added parallel to gensubmit.py and rsubmit.py to run parallel tasks on the cluster easier
 

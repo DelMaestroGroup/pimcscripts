@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # gensubmit.py
 # Adrian Del Maestro
 # 06.03.2009
