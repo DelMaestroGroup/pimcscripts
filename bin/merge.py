@@ -109,7 +109,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
             # if we have data, append to the array
             if cdata.size:
-                data.append(cdata)
+                if cumulative:
+                    data[0] += cdata
+                else:
+                    data.append(cdata)
 
     # Get the name of the new output file
     outName = os.path.basename(fileNames[0]).replace(pimc.id[0],newID)
@@ -117,8 +120,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
     # for cumulative estimators we average, for all others we stack
     if cumulative:
-        data = np.hstack(data)
-        data = np.average(data,axis=1)
+        data = np.array(data[0]/(1.0*len(fileNames)))
     else:
         data = np.vstack(data)
 

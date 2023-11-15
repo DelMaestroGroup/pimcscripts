@@ -1,5 +1,8 @@
 Script Changes
 ==============
+## 2023-11-15
+- Updated merge.py to use less memory for cumulative estimators
+
 ## 2023-4-23
 - Added parallel to gensubmit.py and rsubmit.py to run parallel tasks on the cluster easier
 
