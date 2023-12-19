@@ -6,18 +6,23 @@
 
 '''pimcave.py
 
-Description:
-    Generates averages from pimc output data. 
+usage: pimcave.py [-h] [-s SKIP] [-l HEADER_LINES] [-e ESTIMATOR] [-r]
+                  file [file ...]
 
-Usage: pimcave.py [ -s <skip> -r] (<file>...)
+Generates averages from pimc output data.
 
+positional arguments:
+  file                  File or files to average.
 
-Options:
-  -h, --help                Show this help message and exit
-  -s <skip>, --skip=<skip>  How many input lines should we skip? [default: 0]
-  -r, --repeated_header     Deal with repeated headers
-  -l, --header_lines        Number of header lines to skip
-
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SKIP, --skip SKIP  How many input lines should we skip? [default: 0]
+  -l HEADER_LINES, --header_lines HEADER_LINES
+                        How many header lines to skip?
+  -e ESTIMATOR, --estimator ESTIMATOR
+                        Plot a single estimator average.
+  -r, --repeated_header
+                        deal with duplicate headers
 '''
 
 import argparse
@@ -50,13 +55,14 @@ def main():
                         help='How many input lines should we skip? [default: 0]')
     parser.add_argument('-l', '--header_lines', type=int, dest='header_lines', 
                         help='How many header lines to skip?')
+    parser.add_argument('-e', '--estimator', type=str, dest='estimator', 
+                        help='Plot a single estimator average.')
     parser.add_argument('file', type=str, nargs='+', 
                         help='File or files to average.')
     parser.add_argument('-r','--repeated_header', 
                         help='deal with duplicate headers', action='store_true')
 
     args = parser.parse_args()
-
     fileNames = args.file
 
     if not args.skip:
@@ -94,7 +100,14 @@ def main():
             # open the file and determine how many measurements there are
             estData = np.genfromtxt(fileName,names=True,skip_header=header_lines, deletechars="")
             numLines = estData.size
-            
+
+            # if we have specified an estimator, define it, otherwise, we
+            # average all estimators for the file
+            if args.estimator: 
+                names = [args.estimator]
+            else:
+                names = estData.dtype.names
+
             # Determine how many lines to skip if we have defined a fraction 
             if isinstance(skip, float):
                 skip = int(numLines*skip)
@@ -103,7 +116,8 @@ def main():
             if numLines-skip > 0:
                 print('# PIMCID %s' % pimcid)
                 print('# Number Samples %6d' % (numLines-skip))
-                for name in estData.dtype.names:
+
+                for name in names:
                     ave,err = stats(estData[name][skip:])
 
                     if err != 0.0:
