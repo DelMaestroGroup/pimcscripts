@@ -1,5 +1,10 @@
 Script Changes
 ==============
+## 2023-12-19
+- Added considerable functionality to use multiple estimators and multiple
+  values.  Useful for comparing two different measurements of the same
+  estimator.
+
 ## 2023-11-15
 - Updated merge.py to use less memory for cumulative estimators
 
