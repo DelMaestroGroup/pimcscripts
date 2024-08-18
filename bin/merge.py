@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #  Adrian Del Maestro
 # 10.19.2009
 
@@ -24,6 +26,7 @@ Options:
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --seeds                           Create merge of average of individual seeds
   --canonical                       Are we in the canonical ensemble?
+  --label=<label>                   A custom uuid label 
 '''
 
 from __future__ import print_function
@@ -145,7 +148,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
                     numBins.append(cdata.shape[0])
                     data.append(np.average(cdata,0))
                 else:
-                    data.append(cdata)
+                    if cumulative:
+                        data[0] += cdata
+                    else:
+                        data.append(cdata)
 
     # Get the name of the new output file
     outName = os.path.basename(fileNames[0]).replace(pimc.id[0],newID)
@@ -153,8 +159,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
 
     # for cumulative estimators we average, for all others we stack
     if cumulative:
-        data = np.hstack(data)
-        data = np.average(data,axis=1)
+        data = np.array(data[0]/(1.0*len(fileNames)))
     else:
         data = np.vstack(data)
         if aveSeeds:
@@ -220,6 +225,10 @@ def main():
 
     # get a new unique uuid
     newID = str(uuid.uuid4())
+
+    # If we have a custom label, append
+    if args['--label']:
+        newID = newID[:-len(args['--label'])] + args['--label']
 
     # Merge all the output files
     print('Merged data files:')

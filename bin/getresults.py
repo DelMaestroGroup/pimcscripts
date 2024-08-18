@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # getresults.py
 # Adrian Del Maestro
 # 01.l5.2010

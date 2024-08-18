@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # plot_vector_estimator.py
 # Adrian Del Maestro
 # 12.02.2011

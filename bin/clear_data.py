@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''clear_data.py
 
 Description:

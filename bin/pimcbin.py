@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 # pimcbin.py
 # Author:      2012-11-30 Chris Herdman
 # Modified:    2017-07-17 Nathan Nichols

@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 # hescrew.py
 # Adrian Del Maestro
 # 05.03.2010

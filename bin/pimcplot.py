@@ -5,7 +5,7 @@ Description:
   Performs a cumulative average plot of raw Monte Carlo data
 
 Usage:
-    pimcplot.py [options] [--legend=<label>...] --estimator=<name> <file>...
+    pimcplot.py [options] [--legend=<label>...] [--hline=<val>...]  [--hlabel=<hl>...] --estimator=<name>... <file>...
 
     pimcplot.py -h | --help 
 
@@ -14,7 +14,7 @@ Options:
   --estimator=<name>, -e <name> The estimator to be plotted.
   --skip=<n>, -s <n>            Number of measurements to be skipped [default: 0].
   --period=<m>, -p <m>          The period of the average window [default: 50].
-  --truncateid=<t>, -t <t>      Truncate PIMCID to last <t> characters [default: 0].
+  --truncateid=<t>, -t <t>      Truncate PIMCID to last <t> characters [default: 12].
   --legend=<label>, -l <label>  A legend label
   --period=<m>, -p <m>          The period of the average window [default: 50].
   --error=<units>, -d           Size of the error bars
@@ -42,6 +42,7 @@ from scipy import stats
 import pimcscripts.MCstat as MCstat
 import re
 from os import path
+import sys
 
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
@@ -105,10 +106,10 @@ def main():
            skip=raw_skip
 
     period = int(args['--period'])
-    estimator = args['--estimator']
+    estimator = args['--estimator'] 
     leglabel = args['--legend'] and args['--legend']
     error = args['--error'] and float(args['--error'])
-    val = args['--hline'] and float(args['--hline'])
+    val = args['--hline']# and float(args['--hline'])
     plttitle = args['--title']
     trunc = int(args['--truncateid'])
     if args['--savefig']:
@@ -129,68 +130,56 @@ def main():
     # some data and grab the headers
     headers = pimchelp.getHeadersDict(fileNames[0])
 
-    # If we don't choose an estimator, provide a list of possible ones
-    # if estimator not in headers:
-    #     errorString = "Need to specify one of:\n"
-    #     for head,index in headers.items():
-    #         errorString += "\"%s\"" % head + "   "
-    #     parser.error(errorString)
-
     numFiles = len(fileNames)
-    col = list([headers[estimator]])
 
+    # Get the estimators to plot
+    col = []
+    try:
+        for est in estimator:
+            col.append(headers[est])
+    except:
+        print(f'Estimator {est} did not appear in {headers}')
+        raise
+
+    # if we don't specify multiple estimators, assume they are all the same
+    if (len(est) < numFiles):
+        col = [col[0]]*numFiles
+        estimator = [estimator[0]]*numFiles
+        
     # Attempt to find a 'pretty name' for the label, otherwise just default to
     # the column heading
     label = pimchelp.Description()
     try:
-        yLong = label.estimatorLongName[estimator]
+        yLong = label.estimatorLongName[estimator[0]]
     except:
-        yLong = estimator.replace('_', '')
+        yLong = estimator[0].replace('_', '')
     try:
-        yShort = label.estimatorShortName[estimator]
+        yShort = label.estimatorShortName[estimator[0]]
     except:
-        yShort = estimator.replace('_', '')
+        yShort = estimator[0].replace('_', '')
 
-    # get a label for a possible horizontal line
-    if args['--hline']:
-        if args['--hlabel']:
-            hlabel = args['--hlabel']
-        else:
-            hlabel = yShort.split()[0] + ' = ' + args['--hline']
 
     # First we load and store all the data 
     data = []
-    for fileName in fileNames:
+    for n,fileName in enumerate(fileNames):
 
         dataFile = open(fileName,'r');
         dataLines = dataFile.readlines();
         dataFile.close()
 
         if len(dataLines) > 2:
-            data.append(np.loadtxt(fileName,usecols=col,unpack=True))
+            data.append(np.loadtxt(fileName,usecols=col[n],unpack=True))
 
     # ============================================================================
     # Figure 1 : column vs. MC Steps
     # ============================================================================
     plt.figure(1)
 
-    # colors = ["#70D44A", "#BE5AD4", "#D04537", "#81D0D5", "#393A2E", "#C49ECA", 
-    #           "#C5CB7A", "#523767", "#D39139", "#C8488C", "#CB817A", "#73D999", 
-    #           "#6F2836", "#6978CF", "#588569", "#CDC3AD", "#5C7890", "#7F5327", 
-    #           "#D0D33D", "#5B7D2E"]
-    # colors = ["#53B0AD", "#D74C20", "#CD53DA", "#58C038", "#5F4B7A", "#49622A", 
-    #           "#CE4379", "#D2912E", "#7970D2", "#749AC9", "#7D5121", "#5EAC72", 
-    #           "#CB85AA", "#853B46", "#396465", "#A5A33E", "#D47F5B", "#BA4EA5", 
-    #           "#C93F44", "#5D9937"]
-    # colors =["#CAC5E8", "#E1D273", "#82DFCE", "#F1AF92", "#E1E7CF", "#92C798", 
-    #         "#CDF197", "#DDD199", "#ECB1D1", "#91C7DE", "#E3AF6E", "#ECAAAC", 
-    #         "#CEB29C", "#B2BCA9", "#B0C778", "#DBCDD7", "#B5DEE0", "#A5ECB4", 
-    #         "#C5E6C0", "#E5CCC0"] 
     colors = ["#688EAF", "#FC991D", "#7DEB74", "#FA6781", "#8B981D", "#BB7548", 
             "#AD8FE4", "#96E4AA", "#D669B0", "#E1C947", "#A78200", "#7C9FE4", 
             "#957DA6", "#75BF38", "#C3B059", "#51C17A", "#79AEBB", "#2790AC", 
             "#688ECE", "#749DB7"]
-    for i in range(3):
+    for i in range(5):
         colors += colors
 
     for n,cdata in enumerate(data):
@@ -209,7 +198,7 @@ def main():
     if plttitle:
         plt.title(plttitle)
     if not args['--nolegend']:
-        leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+        leg = plt.legend(loc='best', frameon=False, prop={'size':16}, markerscale=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
     if args['--savefig']:
@@ -248,11 +237,17 @@ def main():
             plt.plot(x,cma[x],color=colors[n%len(colors)],linewidth=1.0,marker='None',linestyle='-',
                 label=leglabel[n])
             plt.fill_between(x, cma[x]-sem[x], cma[x]+sem[x],color=colors[n%len(colors)], alpha=0.1)
-            n += 1
 
     # Add a possible horizontal line indicating some value
-    if args['--hline']:
-        plt.axhline(y=val,color='gray',linewidth=2.5, label=hlabel)
+    for ival,cval in enumerate(args['--hline']):
+
+        # get a label for a possible horizontal line
+        if args['--hlabel']:
+            hlabel = args['--hlabel'][ival]
+        else:
+            hlabel = yShort.split()[0] + ' = ' + cval
+
+        plt.axhline(y=float(cval),color='gray',linewidth=2.5, label=hlabel,zorder=-10)
 
     plt.ylabel(yLong)
     plt.xlabel("MC Bin Number")
@@ -260,14 +255,16 @@ def main():
         plt.title(plttitle)
 
     if not args['--nolegend']:
-        leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2, ncol=2)
+        leg = plt.legend(loc='best', frameon=False, prop={'size':16},markerscale=2)
         for l in leg.get_lines():
             l.set_linewidth(4.0)
 
     if args['--savefig']:
         plt.savefig('2-' + args['--savefig'],bbox_inches='tight')
 
+    # ============================================================================
     # Perform a Welch's t-test
+    # ============================================================================
     if args['--ttest']:
         # We only perform the Welch's t test if we have multiple samples we are
         # comparing
@@ -293,7 +290,7 @@ def main():
         # ============================================================================
         fig = plt.figure(3)
         for i in range(N):
-            n, bins, patches = plt.hist(data[i], 100, normed=True, facecolor=colors[i], 
+            n, bins, patches = plt.hist(data[i], 100, density=True, facecolor=colors[i], 
                                     alpha=0.75, label=leglabel[i],
                                     edgecolor='w')
         # Add the p-values from the t-test
@@ -313,7 +310,7 @@ def main():
         if not args['--nolegend']:
             plt.legend(loc='upper left', fontsize=15, frameon=False)
         plt.xlabel(yLong)
-        plt.ylabel(r'$P($' + estimator + r'$)$')
+        plt.ylabel(r'$P($' + estimator[0] + r'$)$')
         if plttitle:
             plt.title(plttitle)
         if args['--savefig']:

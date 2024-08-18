@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Fix Tiny Numbers
 Author: Adrian Del Maestro
 Date: 07.08.2013

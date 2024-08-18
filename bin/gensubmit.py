@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-#
+#! /usr/bin/env python
 # gensubmit.py
 # Adrian Del Maestro
 # 06.03.2009
@@ -13,6 +12,7 @@ import argparse
 import uuid
 import math
 import subprocess
+
 
 # -----------------------------------------------------------------------------
 def validate(cmd):
@@ -298,6 +298,165 @@ def sharcnet(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=Fals
     os.system('chmod u+x %s'%fileName)
 
 # -----------------------------------------------------------------------------
+def parallel(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
+          queue=None):
+    user_qos="";
+    user_partition="";
+    user_Node=-1;
+    user_avgcores=-1;
+    user_cpu=-1;
+    if QUE=="slurm":
+        print("On most computers that use slurm as a job allocator you must request resources, thus we will help you with that\n If you do not want that do not use -q slurm as a flag and you will get a skeleton file to print in\n")
+        try:
+            output = subprocess.check_output(["sacctmgr", "-p", "show", "qos"])
+        except subprocess.CalledProcessError as e:
+            print(f"Error running command: {e}\nskipping step")
+        else:
+            output_str = output.decode("utf-8")
+            output_lines = output_str.strip().split("\n")
+            for line in output_lines:
+                print(line)
+            print("\nHere are the quality of services")
+            user_qos = input("Input the qos you want to use, if none leave blank\n name:")
+            while True:
+                try:
+                    num = input("Look at the qos of your choice and type the max number of nodes you can use, if none leave blank\n Please enter an integer greater than 1: ")
+                    if num != "" and int(num)>0:
+                        user_Node =int(num)
+                    break
+                except ValueError:
+                    print("Invalid input. Please enter an integer.")
+
+        try:
+            output = subprocess.check_output(["scontrol", "show", "partitions"])
+        except subprocess.CalledProcessError as e:
+            print(f"Error running command: {e}\nskipping step")
+        else:
+            output_str = output.decode("utf-8")
+            output_lines = output_str.strip().split("\n")
+            for line in output_lines:
+                print(line)
+            print("\nHere are all the possible partitions")
+            user_partition = input("Input the parition you want to use, if none leave blank\n name:")
+            while True:
+                try:
+                    num = input("Please enter the total cpu, if none leave blank\n Please enter an integer greater than 1: ")
+                    if num != "" and int(num)>0:
+                        user_cpu =int(num)
+                    break
+                except ValueError:
+                    print("Invalid input. Please enter an integer.")
+            try:
+                cmd = ["sinfo", "-N", "-o", "%n %C", "-p", user_partition]
+                output = subprocess.check_output(cmd)
+            except subprocess.CalledProcessError as e:
+                print(f"Error running command: {e}\nskipping step")
+            else:
+                output_str = output.decode("utf-8")
+                output_lines = output_str.strip().split("\n")
+                for line in output_lines:
+                    print(line)
+                print("\nHere are all the possible nodes in the partition you chose and the amount of cores on each one")
+                while True:
+                    try:
+                        num = input("Set the number of cores per node, I recommend a avgerage, if none leave blank\n Please enter an integer greater than 1: ")
+                        if num != "" and int(num)>0:
+                            user_avgcores =int(num)
+                        break
+                    except ValueError:
+                        print("Invalid input. Please enter an integer.")
+        
+    ''' Write a job scirpt script for a local machine. '''
+    # Open the script file and write its header
+    
+    fileName = 'commands-pimc%s.txt' % outName
+    scriptFile = open(fileName,'w')
+    # Create the command string and output to submit file
+    for n in range(numOptions):
+        if 'p' in optionValue:
+            command = './pimc.e '
+        else:
+            command = './pimc.e -p %d ' % (n)
+        for flag,val in optionValue.items():
+            command += '-%s %s ' % (flag,val[n])
+        command += staticPIMCOps
+        scriptFile.write('srun -n 1 -N 1 --exclusive %s\n' % (command))
+    scriptFile.close();
+
+
+    ''' Write a submit script for a local machine. '''
+    # Open the script file and write its header
+    fileName = 'submit-pimc%s' % outName
+    scriptFile = open(fileName,'w')
+    scriptFile.write('''#!/bin/bash
+# local pimc submit script: write your pimc script 
+#--------------------------------------------------''')
+    # Create the command string and output to submit file
+    if (QUE == "slurm"):
+        nodes = int(math.ceil(len(range(numOptions))/user_avgcores));
+
+    scriptFile.write('# You need to run %s jobs\n' % len(range(numOptions)))
+    if (QUE =="slurm" and user_qos != ""):
+         scriptFile.write('#SBATCH --qos=%s\n' % user_qos)
+
+    if (QUE == "slurm" and user_partition != ""):
+        scriptFile.write('#SBATCH --partition=%s\n' % user_partition)
+    
+    if(QUE == "slurm" and nodes > user_Node and user_Node != -1):
+        scriptFile.write('#SBATCH -N %s\n#if you do not want all of them to run on the same cores leave blank\n' % user_Node)
+    elif(QUE == "slurm" and nodes <= user_Node and user_Node !=-1):
+        scriptFile.write('#SBATCH -N %s\n#if you do not want all of them to run on the same cores leave blank\n' % nodes)
+    #I have it like this so that if user specificies maximum node size and cores per node then it overides maximum cpu in a partition else it is either maximum cpu or number of total tasks
+    if (QUE == "slurm" and user_avgcores != -1 and user_Node != -1 and len(range(numOptions))>(user_avgcores*user_Node)):
+        scriptFile.write('#SBATCH -n %s\n' % (user_avgcores*user_Node))
+    elif(QUE == "slurm" and len(range(numOptions))<user_cpu):
+        scriptFile.write('#SBATCH -n %s\n' % len(range(numOptions)))
+    elif(QUE =="slurm" and len(range(numOptions))>user_cpu and user_cpu>1):
+        scriptFile.write('#SBATCH -n %s\n' % user_cpu)
+    
+    if (QUE =="slurm"):
+        scriptFile.write("#SBATCH --ntasks-per-core 1\n")
+
+
+    scriptFile.write('''\n#--------------------------------------------------
+######################
+# -N     Sets the number of nodes to be allocated to job
+# --ntasks-per-core     Sets the maximum number of tasks per allocated core, set this to 1.
+# --ntasks-per-node      Sets the maximum number of tasks per allocated core
+# --ntasks      Sets the number of tasks to be created for job, set this to the number of tasks for your job (i.e. number of lines of commands in the command file).
+# Each user has a limit to number of nodes that can be requested at once use "/sacctmgr -p show qos". The number of maximum tasks that can be made at once is the number of cpu cores on every node.
+#####################
+\n
+# write down the working directory of the pimc code to run the programs
+wd= \ncd $wd\n
+# Must have GNU PARALLEL to run this, if you do not have parallel then copy and paste the commands file in this file under sbatch commands and use "&"
+# Ex: srun -n 1 -N 1 --exclusive ./pimc.e -p 0 -T 0.2 -t 0.002 -L 20.0 -X harmonic -I free -m 48.48 -N 1 -u 0.11 -M 256 --canonical --relaxmu --window=1 --gaussian_window_width=0.5 --relax --no_save_state --bin_size=1000 -E 100000 -S 5000 --estimator=virial --estimator="linear density rho" &
+# This should set the command to the background and run them parallel, also use "wait" after all the commands. Otherwise the job will finish without running\n
+# write the working directory of the parallel code
+pd=
+#the commands file needs to be in the working directory that the GNU parallel has access to\n
+echo "Starting run at: `date`"\n''')
+
+    scriptFile.write('''# -N 1    This is the number of arguments to pass to each job
+# --delay   if running small jobs add a delay, otherwise the controlling node might be overloaded
+# -j $SLURM_NTASK     The number of concurrent tasks parallel runs, otherwise the number of cpu allocated
+# --joblog name     if you wish to look at the log file of tasks parallel runs add --joblog name, this creates a file in the running directory. Must also add --resume to continue the interrupted run\n\n''')
+    
+    scriptFile.write('$pd -N 1 -j $SLURM_NTASKS :::: commands-pimc%s.txt\n' % outName)
+    
+    scriptFile.write('''\n# The commands file holds a list of all the commands that will be ran. DO NOT ADD ANYTHING BESIDES EXECUTABLE LINES OF CODE
+# srun is used to create job steps and use to launch processes interactively.
+# --exclusive   makes srun use distinct cores for each run, if not used then the tasks may share cores
+# -N 1 -n 1     Similar to the bash file headers, this allocates a single core on a single node to each task.\n\n
+echo "Finished run at: `date`"\n''')
+
+
+    scriptFile.close();
+    os.system('chmod u+x %s'%fileName)
+    print('Run: ./%s'%fileName)
+
+
+#-----------------------------------------------------------------------------
 def local(staticPIMCOps,numOptions,optionValue,walltime,outName,cmd,time=False,
           queue=None):
     ''' Write a submit script for a local machine. '''
@@ -376,14 +535,14 @@ def main():
     parser = argparse.ArgumentParser(description='Generate a batch submission\
                                      script from input file')
     parser.add_argument("-c", "--cluster", dest="cluster",\
-                        choices=['westgrid','sharcnet','scinet','vacc','local','nasa'],\
-            help="target cluster: [westgrid,sharcnet,scinet,vacc,local]",required=True) 
+                        choices=['westgrid','sharcnet','scinet','vacc','local','nasa', 'parallel'],\
+            help="target cluster: [westgrid,sharcnet,scinet,vacc,local, parallel]",required=True) 
     parser.add_argument("-t", "--time", action="store_true", dest="time", 
                       help="Prefix the binary with a timing command?") 
     parser.add_argument("-W", "--walltime", dest="walltime", type=str, 
                       help="Specify the walltime in the format HHH:MM:SS.") 
     parser.add_argument("-q", "--queue", dest="queue", choices=['torque','slurm'],
-                      help="Batch system: [torque,slurm]",default='torque') 
+                      help="Batch system: [torque,slurm], if need help with slurm on parallel use slurm else output is skeleton file",default='torque') 
     parser.add_argument("-m", "--model", dest="model", choices=nasa_cpus,
                       help="NASA CPU types.") 
     parser.add_argument("-l", "--label", dest="label", help="An optional label\
@@ -408,11 +567,11 @@ def main():
 
     # Maps cluster names to functions
     gen = {'westgrid':westgrid, 'sharcnet':sharcnet, 'scinet':scinet,
-           'vacc':vacc, 'local':local, 'nasa':nasa}
+            'vacc':vacc, 'local':local, 'nasa':nasa, 'parallel':parallel}
 
     # setup the default and user specified walltime
     wtime = {'westgrid':'00:00:00', 'sharcnet':'00:00:00', 'scinet':'00:00:00',
-             'vacc':'30:00:00', 'local':'00:00:00', 'nasa':'10:00:00'}
+            'vacc':'30:00:00', 'local':'00:00:00', 'nasa':'10:00:00', 'parallel':'00:00:00'}
     if args.walltime:
         wtime[args.cluster] = args.walltime
 
@@ -498,6 +657,8 @@ def main():
         os.makedirs('out')
 
     queue = args.queue
+    global QUE
+    QUE = args.queue
     if args.cluster == 'nasa' and args.model:
         queue = args.model
     elif args.cluster == 'nasa' and not args.model:

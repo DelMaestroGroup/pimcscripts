@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+
 # Calculating specific heat capacitance and entropy based on the energy and particle
 # numbers from the scalar estimator file. First, a fit is performed to the data. It is 
 # done in 2 steps: a polynomial is fit to the superfluid region whose upper bound is 
