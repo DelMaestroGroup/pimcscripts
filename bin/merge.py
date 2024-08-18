@@ -22,6 +22,7 @@ Options:
   -s <skip>, --skip=<skip>          How many input lines should we skip?  [default: 0]
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
+  --seeds                           Create merge of average of individual seeds
   --canonical                       Are we in the canonical ensemble?
 '''
 
@@ -32,11 +33,33 @@ import numpy as np
 import glob
 import tarfile
 import pimcscripts.pimchelp as pimchelp
+import pimcscripts.MCstat as MCstat
 import uuid
 import re
 
+# ----------------------------------------------------------------------
+def getStats(data,dim=0):
+    ''' Get the average and error of all columns in the data matrix. '''
+
+    if data.ndim > dim:
+        numBins  = data.shape[dim]
+        dataAve  = np.average(data,dim) 
+        try:
+            bins = MCstat.bin(data) 
+            dataErr = np.amax(bins,axis=0)
+        except:
+            dataAve2 = np.average(data*data,dim) 
+            dataErr = np.sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+
+    else:
+        dataAve = data
+        dataErr = 0.0*data
+
+    return dataAve,dataErr
+
 # -----------------------------------------------------------------------------
-def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
+def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
+              aveSeeds=False):
     ''' Merge the results of the PIMC data files to a single file. '''
 
     fileNames = pimc.getFileList(etype,idList=idList,cyldir=cyldir)
@@ -70,6 +93,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         # Get the new header string
         if '#' in inLines[0]:
             header = inLines[0][2:].replace(pimc.id[n],newID)
+
+            if aveSeeds:
+                headerStats = header + f"{'Number Bins':>14}" 
+
             if inLines[2][0] == '#':
                 header += inLines[1][2:]
                 header += inLines[2][2:-1]
@@ -82,7 +109,15 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         else:
             skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
 
-        data = [np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)]
+        cdata = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
+
+        # We either perform an average for each seed, or dump all data together
+        # in one big file.
+        if aveSeeds and not cumulative:
+            numBins = [cdata.shape[0]]
+            data = [np.average(cdata,0)]
+        else:
+            data = [cdata]
 
     # go through all other files and append data
     for i,fname in enumerate(fileNames[n+1:]):
@@ -106,7 +141,11 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
 
             # if we have data, append to the array
             if cdata.size:
-                data.append(cdata)
+                if aveSeeds and not cumulative:
+                    numBins.append(cdata.shape[0])
+                    data.append(np.average(cdata,0))
+                else:
+                    data.append(cdata)
 
     # Get the name of the new output file
     outName = os.path.basename(fileNames[0]).replace(pimc.id[0],newID)
@@ -118,12 +157,18 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir=''):
         data = np.average(data,axis=1)
     else:
         data = np.vstack(data)
+        if aveSeeds:
+            numBins = np.array(numBins)
 
     # open the output file for writing
     np.savetxt(baseDir + 'MERGED/' + cyldir + outName, data, fmt='%16.8E', 
                header=header, delimiter='')
-    print('%10d' % data.shape[0])
 
+    # Do the same for the summary statistics
+    if aveSeeds and not cumulative:
+        np.savetxt(baseDir + 'MERGED/' + cyldir + outName.replace(etype,f'bins-{etype}'), 
+                   numBins, fmt='%16d', header=headerStats, delimiter='')
+    print('%10d' % data.shape[0])
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 
@@ -158,11 +203,11 @@ def main():
     os.system('touch %s/.donotbackup' % mergeDir)
     
     # check if we have any cylinder estimators
-    cylinder = os.path.isdir(baseDir + 'CYLINDER')
+    cylinder = os.path.isdir(os.path.join(baseDir,'CYLINDER'))
     
     # Create any necessary CYLINDER directories
-    if cylinder and not os.path.isdir(mergeDir + '/CYLINDER'):
-        os.mkdir(mergeDir + '/CYLINDER')
+    if cylinder and not os.path.isdir(os.path.join(mergeDir,'CYLINDER')):
+        os.mkdir(os.path.join(mergeDir,'CYLINDER'))
         os.system('touch %s/CYLINDER/.donotbackup' % mergeDir)
 
     # Check that we are in the correct ensemble
@@ -180,14 +225,15 @@ def main():
     print('Merged data files:')
     for ftype in pimc.dataType:
         if ftype not in exclude_estimators:
-            mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID) 
+            mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
+                     aveSeeds=args['--seeds']) 
 
     # Merge cylinder output files
     if cylinder:
         for ftype in pimc.dataType:
             if ftype not in exclude_estimators:
                 mergeData(pimc, ftype, newID, skip, baseDir, idList=pimcID, 
-                          cyldir='CYLINDER/')
+                          cyldir='CYLINDER/', aveSeeds=args['--seeds'])
 
     # Prepare the new log file
     oldLogName = pimc.getFileList('log', idList=pimcID)[0]
