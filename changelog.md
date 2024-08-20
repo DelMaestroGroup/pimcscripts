@@ -1,5 +1,10 @@
 Script Changes
 ==============
+
+## 2024-08-20
+- Modification to `reduce-one.py` to allow for weighted averages and standard
+  errors when merging over different seeds.
+
 ## 2024-08-18
 - Modification to `merge.py` to allow for pre-averaging of seeds using the
   `--seed` cmdline argument.

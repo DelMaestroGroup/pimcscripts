@@ -23,32 +23,31 @@ def line_counts(filename):
     '''Use wc to count the number of lines and header lines in a file. '''
     num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
     num_header = str(subprocess.check_output(['head','-5',filename])).count('#')
-    # num_header = str(subprocess.check_output(['grep','-o','-i','\#',filename])).count('#')
     return num_header,num_lines
 
 # ----------------------------------------------------------------------
-def getStats(data,dim=0):
+def getStats(data,dim=0,weights=np.array([])):
     ''' Get the average and error of all columns in the data matrix. '''
 
     if data.ndim > dim:
         numBins  = data.shape[dim]
-        dataAve  = np.average(data,dim) 
-        try:
-            bins = MCstat.bin(data) 
-            dataErr = np.amax(bins,axis=0)
-        except:
-            dataAve2 = np.average(data*data,dim) 
-            dataErr = np.sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
 
-#        for n,d in enumerate(dataErr):
-#            if d > 2.0*dataErr2[n]:
-#                dataErr[n] = 2.0*dataErr2[n]
+        # perform an unweighted average and compute the error via binning.
+        # Suitable for a single seed.
+        if weights.size == 0:
+            dataAve = np.average(data,axis=dim) 
+            try:
+                bins = MCstat.bin(data) 
+                dataErr = np.amax(bins,axis=0)
+            except:
+                dataErr = np.std(data, axis=dim)/np.sqrt(1.0*numBins-1.0)
 
-#        try:
-#            bins = MCstat.bin(data) 
-#            dataErr = amax(bins,axis=0)
-#        except:
-#            dataErr   = sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
+        # perform the weighted average and unbiased standard weighted error (see
+        # https://stackoverflow.com/questions/2413522/weighted-standard-deviation-in-numpy/2415343#2415343)
+        else:
+            dataAve = np.average(data,weights=weights,axis=dim)
+            var = np.average((data-dataAve)**2, weights=weights,axis=dim)
+            dataErr = np.sqrt(var*np.sum(weights)/(np.sum(weights)-1))/np.sqrt(weights.size-1)
     else:
         dataAve = data
         dataErr = 0.0*data
@@ -56,7 +55,7 @@ def getStats(data,dim=0):
     return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
-def process_stats(fname,skip,get_headers=False,ave_est=False):
+def process_stats(fname,etype,skip,get_headers=False,ave_est=False):
     '''Get the average and error for a estimator file. '''
 
     # determine the structure of the headers
@@ -77,10 +76,21 @@ def process_stats(fname,skip,get_headers=False,ave_est=False):
 
     # Compute the averages and error
     else:
+
+        # We check if we are reducing merged files for different seeds, if so
+        # we need to perform a weighted average as different measurments may have
+        # different numbers of samples
+        try:
+            weights = np.loadtxt(fname.replace(etype,f'bins-{etype}'))
+            print("Performing weighted reduction average")
+        except:
+            weights = np.array([])
+
         if get_headers:
-            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip)),pimchelp.getHeadersFromFile(fname)
+            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip),weights=weights),\
+        pimchelp.getHeadersFromFile(fname)
         else:
-            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip))
+            return getStats(np.loadtxt(fname,ndmin=2,skiprows=cskip),weights=weights)
 
 # -----------------------------------------------------------------------------
 def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
@@ -99,7 +109,7 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
 
         # process all files in parallel
         nc = min(len(fileNames),num_cores)
-        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip) for fname in fileNames)
+        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,etype,skip) for fname in fileNames)
         for i,result in enumerate(results):
             ave[i,:],err[i,:] = result
 
@@ -179,7 +189,7 @@ def getVectorEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
 
         # process all files in parallel
         nc = min(len(fileNames),num_cores)
-        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,skip,get_headers=True,ave_est=ave_est) 
+        results = Parallel(n_jobs=nc)(delayed(process_stats)(fname,etype,skip,get_headers=True,ave_est=ave_est) 
                                    for fname in fileNames)
 
         # collect the results
