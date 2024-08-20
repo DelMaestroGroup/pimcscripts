@@ -21,7 +21,8 @@ Options:
   -u <u>, --chemical_potential=<u>  Chemical potential in Kelvin
   -V <V>, --volume=<V>              Volume in Angstroms^d
   -L <L>, --Lz=<L>                  Length in Angstroms
-  -s <skip>, --skip=<skip>          How many input lines should we skip?  [default: 0]
+  -s <skip>, --skip=<skip>          How many input lines should we skip? 
+                                    Can also take a fraction (e.g. 0.45) [default: 0]
   -i <PIMCID>, --id=<PIMCID>        A list of PIMC ID numbers to include 
   -e <exclude> --exclude=<exclude>  A list of file types to exclude
   --seeds                           Create merge of average of individual seeds
@@ -112,7 +113,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
         else:
             skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
 
-        cdata = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
+        try:
+            cdata = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
+        except:
+            print(f'There was in issue reading {fileNames[n]}')
 
         # We either perform an average for each seed, or dump all data together
         # in one big file.
@@ -140,7 +144,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
                     skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
 
                 # load the data
-                cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+                try:
+                    cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+                except:
+                    print(f'There was in issue reading {fname}')
 
             # if we have data, append to the array
             if cdata.size:
@@ -186,6 +193,8 @@ def main():
     if args['--skip']:
         if '.' in args['--skip']:
             skip = float(args['--skip'])
+            if skip < 0.0 or skip >= 1.0:
+                raise ValueError('skip < 0.0 or skip >= 1.0')
         else:
             skip = int(args['--skip'])
 

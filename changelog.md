@@ -1,7 +1,10 @@
 Script Changes
 ==============
 
-## 2024-08-20
+## 2024-08-20 v0.4.2
+- Updated `merge.py` to deal with possibly empty/corrupt files upon open
+
+## 2024-08-20 v0.4.1
 - Modification to `reduce-one.py` to allow for weighted averages and standard
   errors when merging over different seeds.
 
