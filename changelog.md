@@ -1,14 +1,14 @@
 Script Changes
 ==============
 
-## 2024-08-20 v0.4.2
+## 2024-08-20 v0.4.4
 - Updated `merge.py` to deal with possibly empty/corrupt files upon open
 
-## 2024-08-20 v0.4.1
+## 2024-08-20 v0.4.3
 - Modification to `reduce-one.py` to allow for weighted averages and standard
   errors when merging over different seeds.
 
-## 2024-08-18
+## 2024-08-18 v0.42
 - Modification to `merge.py` to allow for pre-averaging of seeds using the
   `--seed` cmdline argument.
 
