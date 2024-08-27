@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2024-08-27 v0.4.5
+- fixed a bug in pimchelp when reading parameters from a file
+
 ## 2024-08-20 v0.4.4
 - Updated `merge.py` to deal with possibly empty/corrupt files upon open
 

@@ -108,6 +108,7 @@ def get_parameter_map(logName):
     par_convert['Plating LJ Sigma'] = float
     par_convert['Plating LJ Epsilon'] = float
     par_convert['Plating LJ Density'] = float
+    par_convert['PIMCID Label'] = float
 
     # Get the values of all simulation parameters
     paramsMap = {}
@@ -125,7 +126,7 @@ def get_parameter_map(logName):
                 if key in par_convert:
                     val = par_convert[key](val.strip())
                 else:
-                    val = float(val.strip())
+                    val = val.strip()
                 paramsMap[key] = val
 
     # reformat the container dimensions and lookup table
