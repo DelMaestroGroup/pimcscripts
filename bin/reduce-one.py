@@ -102,7 +102,13 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
 
     # we make sure that we have a valid list of filenames
     try:
-        headers = pimchelp.getHeadersFromFile(fileNames[0])
+        #We look at all the files and pick the minimum number of estimators and reduce them.
+        headlen = np.array([])	
+        
+        for i in range(len(fileNames)):
+    	    headlen = np.append(headlen,len(pimchelp.getHeadersFromFile(fileNames[i])))
+        ind = np.argmin(headlen)
+        headers = pimchelp.getHeadersFromFile(fileNames[ind])
 
         ave = np.zeros([len(fileNames),len(headers)],float)
         err = np.zeros([len(fileNames),len(headers)],float)
