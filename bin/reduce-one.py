@@ -102,7 +102,13 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
 
     # we make sure that we have a valid list of filenames
     try:
-        headers = pimchelp.getHeadersFromFile(fileNames[0])
+        #We look at all the files and pick the minimum number of estimators and reduce them.
+        headlen = np.array([])	
+        
+        for i in range(len(fileNames)):
+    	    headlen = np.append(headlen,len(pimchelp.getHeadersFromFile(fileNames[i])))
+        ind = np.argmin(headlen)
+        headers = pimchelp.getHeadersFromFile(fileNames[ind])
 
         ave = np.zeros([len(fileNames),len(headers)],float)
         err = np.zeros([len(fileNames),len(headers)],float)
@@ -289,11 +295,9 @@ def getKappa(pimc,outName,reduceFlag,skip=0,baseDir=''):
     return aveKappa,errKappa
 
 # -----------------------------------------------------------------------------
-def getISFEst(pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
-              idList=None,ave_est=False):
+def getISFEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',idList=None,ave_est=False):
     ''' Return the arrays consisting of the reduced averaged intermediate
-        scattering function. '''
-
+        scattering function. '''        
     try:    
         xlab,ylab = axis_labels
         fileNames = pimc.getFileList('isf',idList)
@@ -301,18 +305,29 @@ def getISFEst(pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
         # get the number of time slices
         pimcID = pimc.getID(fileNames[0])
         numTimeSlices = int(pimc.params[pimcID]['Number Time Slices'])
-
+        #print(numtTimeSlices)
+        #paramsMap = pimchelp.getParFromPIMCFile(fileNames[0])
+    
         # get information on the q-values from the header
         with open(fileNames[0],'r') as inFile:
             lines = inFile.readlines()
-            qvals = lines[1].lstrip('#').rstrip('\n').split()
-            tvals = lines[2].lstrip('#').rstrip('\n').split()
-
+            vals = lines[1].lstrip('#').rstrip('\n').split()
+    
         numParams = len(fileNames)
-
-        Nq = len(qvals)
-        Nx = int(len(tvals)/Nq) + 1
-
+        
+        #Calculate Nq and Nx
+        #print(paramsMap)
+        #Nx = 1/(paramsMap['T'] * paramsMap['tau'])
+        Nx = int((numTimeSlices/2.0)) + 1
+        Nv = len(vals)
+        Nq = int(Nv/Nx)
+        Nqmax = (Nq - 1) / 2
+        #Construct the q-vals array 
+        #qvals = np.arange(-Nqmax,Nqmax+1,1)*2*np.pi/paramsMap['V']
+        qvals = np.arange(0,Nq,1)
+        #print(len(qvals))
+        tvals = np.tile(np.arange(0,Nx,1),Nq)
+        #print(Nv,Nq,Nx)
         ave = np.zeros([Nq,numParams,Nx],float)
         err = np.zeros([Nq,numParams,Nx],float)
 
@@ -320,44 +335,43 @@ def getISFEst(pimc,outName,reduceFlag,axis_labels,skip=0,baseDir='',
 
             # load all the data
             isf_data = np.loadtxt(fname)
-
+            #print(isf_data.shape)
             # break into pieces corresonding to each q
             isf = {}
             τ = {}
             for j,cq in enumerate(qvals):
-                isf[cq] = isf_data[skip:,numTimeSlices*j:(j+1)*numTimeSlices]
-                τ[cq] = np.array([float(cτ) for cτ in tvals[numTimeSlices*j:(j+1)*numTimeSlices]])
-            
-            # add duplicate entry for tau = 1/T and get the averages and error
-            for j,cq in enumerate(qvals):
-                isf[cq] = np.hstack((isf[cq],isf[cq][:,:1]))
-                τ[cq] = np.append(τ[cq],τ[cq][1] + τ[cq][-1])
 
+                isf[cq] = isf_data[skip:,Nx*j:(j+1)*Nx]
+                τ[cq] = np.array([float(cτ) for cτ in tvals[Nx*j:(j+1)*Nx]])
+                #print(τ[cq]) 
+                #print(isf[cq].shape)
                 # Get the estimator data and compute averages
+                #print(getStats(isf[cq]))
                 ave[j,i,:],err[j,i,:] = getStats(isf[cq])
 
         # output the vector data to disk
         outFileName = baseDir+'%s-%s' % ('isf',outName)
-
         # the param and data headers
         header_q = ''
         header_p = ''
         header_d = ''
         for cq in qvals:
-            header_q += '{:^48}'.format('q = {:s}'.format(cq))
+            header_q += '{:^48}'.format('q = {:s}'.format(str(cq)))
             for j in range(numParams):
                 lab = '%s = %4.2f' % (reduceFlag[0],float(pimc.params[pimc.id[j]][reduceFlag[1]]))
                 header_p += '{:^48s}'.format(lab)
                 header_d += '{:>16s}{:>16s}{:>16s}'.format(xlab,ylab,'Δ'+ylab)
-
+    
         header = '# ' + header_q[2:] + '\n' + '# ' + header_p[2:] + '\n' + '# ' + header_d[2:]
-
+    
         # collapse the data
         out_data = []
         for i,cq in enumerate(qvals):
             for j in range(numParams):
+                #print(len(τ[cq]),len(ave[i,j,:]))
                 out_data.append(np.vstack((τ[cq],ave[i,j,:],err[i,j,:])).T)
-
+            
+    
         out_data = np.hstack(out_data)
         np.savetxt(outFileName,out_data,delimiter='',comments='', header=header,fmt='% 16.8E')
         return 0,0,0,len(fileNames)
