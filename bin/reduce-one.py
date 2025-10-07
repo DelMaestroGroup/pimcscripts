@@ -119,25 +119,6 @@ def getScalarEst(etype,pimc,outName,reduceFlag,axis_labels,skip=0,
         for i,result in enumerate(results):
             ave[i,:],err[i,:] = result
 
-        # compute single centroid virial specific heat if possible
-        # if 'dEdB' in headers:
-        #     Cv = ave[:,headers.index('EEcv*Beta^2')] - ave[:,headers.index('Ecv*Beta')]**2 - ave[:,headers.index('dEdB')]
-        #     aveNew = np.zeros([len(fileNames),len(headers)+1],float)
-        #     errNew = np.zeros([len(fileNames),len(headers)+1],float)
-        #     for i,a in enumerate(ave):
-        #         a = append(a, ave[:,headers.index('EEcv*Beta^2')][i] \
-        #                 - ave[:,headers.index('Ecv*Beta')][i]**2 \
-        #                 - ave[:,headers.index('dEdB')][i])
-        #         aveNew[i] = a
-        #     for i, e in enumerate(err):
-        #         e = append(e, err[:,headers.index('EEcv*Beta^2')][i] \
-        #                 - err[:,headers.index('Ecv*Beta')][i]**2 \
-        #                 - err[:,headers.index('dEdB')][i])
-        #         errNew[i] = e 
-        #     headers.append('Cv')
-        #     ave = aveNew
-        #     err = errNew
-
         # output the estimator data to disk
         outFile = open(baseDir + '%s-%s' % (etype,outName),'w');
 
@@ -482,12 +463,13 @@ def main():
             getEst[est] = getVectorEst
 
     # setup the x- and y-labels
+    # Note 2025-10-06: ssf and ssfq are duplicated for backwards compatibility
     axis_label = {'obdm':['r [Å]','n(r)'], 'pair':['r [Å]','g(r)'], 
                    'radial':['r [Å]','ρ(r)'], 'number':['N','P(N)'],
                    'radwind':['r [Å]','ρₛ(r)'],'radarea':['r [Å]','ρₛ(r)'],
                    'planewind':['n','ρₛ(x,y)'],'planearea':['n','ρₛ(x,y)'],
                    'planedensity':['n','ρ(x,y)'], 'linedensity':['r [Å]','ρ1d(r)'],
-                   'linepotential':['r [Å]','V1d(r)'], 'ssf':['q [1/Å]', 'S(q)'],
+                   'linepotential':['r [Å]','V1d(r)'], 'ssf':['q_index', 'S(q)'],
                    'ssfq':['q_index', 'S(q)'], 'planeavedensity':['n','ρ(x,y)'],
                   'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)']}
 

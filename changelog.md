@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-10-27 v0.4.7
+- Removed some old code related to ssf/ssfq
+
 ## 2024-08-27 v0.4.5
 - fixed a bug in pimchelp when reading parameters from a file
 
