@@ -16,14 +16,20 @@ import uuid
 import math
 import subprocess
 # -----------------------------------------------------------------------------
-def getPIMCommand(fname):
+def getPIMCCommand(fname):
     ''' Get the command string from the log file.'''
     # Open the log file and get the command string
     logFile = open(fname,'r')
     logLines = logFile.readlines()
     line = logLines[2]
 
-    return line[2:]
+    # Replace any absolute or relative path ending in something like pimc.e with ./pimc.e
+    # (?:[\w./-]*/)? — non-capturing group matching an optional path (with /, ., -, _, etc.)
+	# ([A-Za-z0-9_]+\.e) — captures the actual program name like pimc.e
+    # The replacement ./\1 ensures the result is always of the form ./program.e
+    clean_cmd = re.sub(r'(?:[\w./-]*/)?([A-Za-z0-9_]+\.e)\b',r'./\1',line[2:])
+
+    return clean_cmd
 
 # -----------------------------------------------------------------------------
 def nasa(commands,walltime,outName,cmd,time=False,queue='broadwell'):
@@ -146,7 +152,7 @@ echo \"Starting run at: `date`\"\n''')
     # Create the command string and make the case structure
     for n,fname in enumerate(logFileNames):
         # Get the command string
-        command = getPIMCommand(fname)
+        command = getPIMCCommand(fname)
         if numID > 1:
             pbsFile.write('%d)\n%s;;\n' % (n,command))
         else:
@@ -173,7 +179,7 @@ def sharcnet(logFileNames,outName):
     # Get the command string and output to submit file
     name = '''out/pimc-%J'''
     for n,fname in enumerate(logFileNames):
-        command = getPIMCommand(fname)
+        command = getPIMCCommand(fname)
         scriptFile.write('sqsub -q serial -o %s -r 6d %s' % (name,command))
     scriptFile.close();
     os.system('chmod u+x %s'%fileName)
@@ -204,7 +210,7 @@ echo \"Starting run at: `date`\"\n\n''')
 
     # Get the command string and output to submit file
     for n,fname in enumerate(logFileNames):
-        command = getPIMCommand(fname).rstrip('\n')
+        command = getPIMCCommand(fname).rstrip('\n')
         pbsFile.write('(%s) &\n' % command)
     pbsFile.write('wait')
     pbsFile.close();
@@ -330,8 +336,7 @@ def parallel(commands,walltime,outName,cmd,time=False,queue=None):
 # write down the working directory of the pimc code to run the programs
 wd= \ncd $wd\n
 # Must have GNU PARALLEL to run this, if you do not have parallel then copy and paste the commands file in this file under sbatch commands and use "&"
-# Ex: srun -n 1 -N 1 --exclusive ./pimc.e -p 0 -T 0.2 -t 0.002 -L 20.0 -X harmonic -I free -m 48.48 -N 1 -u 0.11 -M 256 --canonical --relaxmu --window=1 --gaussian_window_width=0.5 --relax --no_save_state --bin_size=1000 -E 100000 -S 500
-0 --estimator=virial --estimator="linear density rho" &
+# Ex: srun -n 1 -N 1 --exclusive ./pimc.e -p 0 -T 0.2 -t 0.002 -L 20.0 -X harmonic -I free -m 48.48 -N 1 -u 0.11 -M 256 --canonical --relaxmu --window=1 --gaussian_window_width=0.5 --relax --no_save_state --bin_size=1000 -E 100000 -S 500 0 --estimator=virial --estimator="linear density rho" &
 # This should set the command to the background and run them parallel, also use "wait" after all the commands. Otherwise the job will finish without running\n
 # write the working directory of the parallel code
 pd=
@@ -443,7 +448,7 @@ def main():
 
     restart_commands = []
     for logFile in logFileNames:
-        restart_commands.append(getPIMCommand(logFile))
+        restart_commands.append(getPIMCCommand(logFile))
 
     # create the out directory that qsub will write status files to
     if not os.path.exists('out'):
