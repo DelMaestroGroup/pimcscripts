@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-10-30 v0.4.8
+- Fixed a bug in the header of `rsubmit.py`
+
 ## 2025-10-27 v0.4.7
 - Removed some old code related to ssf/ssfq
 
