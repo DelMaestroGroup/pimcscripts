@@ -8,7 +8,7 @@
 # reads all log files in a current directory by default, or will
 # take a list of id numbers from the command line
 
-import sys,os
+import sys,os,re
 import pimcscripts.pimchelp as pimchelp
 import argparse
 import math

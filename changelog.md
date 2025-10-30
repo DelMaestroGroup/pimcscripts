@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-10-30 v0.4.10
+- Fixed a bug in `rsubmit.py`
+
 ## 2025-10-30 v0.4.9
 - Stripped absolute path to pimc.e executable from `rsubmit.py` to avoid issues
 
