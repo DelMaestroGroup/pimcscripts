@@ -41,6 +41,8 @@ import pimcscripts.MCstat as MCstat
 import uuid
 import subprocess
 import re
+import pandas as pd
+
 
 # ----------------------------------------------------------------------
 def line_counts(filename):
@@ -98,13 +100,17 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
                 header += inLines[1][2:-1]
 
         # get the data from the first file
+        skiprows = numHeaders
         if isinstance(skip,int):
-            skiprows=(1-cumulative)*(skip+2)*diagonalEst
+            skiprows += (1-cumulative)*skip*diagonalEst
         else:
-            skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
+            skiprows += (1-cumulative)*int(skip*numLines)*diagonalEst
 
         try:
-            cdata = np.loadtxt(fileNames[n],ndmin=2,comments='#',skiprows=skiprows)
+            #cdata = np.loadtxt(fileNames[n],ndmin=2,skiprows=skiprows)
+            cdata = pd.read_csv(fileNames[n], sep='\s+', header=None,
+                                skiprows=skiprows,dtype=float, engine="c").to_numpy()
+            #cdata = np.atleast_2d(cdata)
         except:
             print(f'There was in issue reading {fileNames[n]}')
 
@@ -127,14 +133,18 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
 
             # if yes, figure out if we are skipping any rows
             if numLines:
+                skiprows = numHeaders
                 if isinstance(skip,int):
-                    skiprows=(1-cumulative)*(skip+2)*diagonalEst
+                    skiprows += (1-cumulative)*skip*diagonalEst
                 else:
-                    skiprows=(1-cumulative)*(int(skip*numLines)+2)*diagonalEst
+                    skiprows += (1-cumulative)*(int(skip*numLines))*diagonalEst
 
                 # load the data
                 try:
-                    cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+                    #cdata = np.loadtxt(fname,ndmin=2,skiprows=skiprows)
+                    cdata = pd.read_csv(fname, sep='\s+', header=None,
+                                        skiprows=skiprows,dtype=float, engine="c").to_numpy()
+                    #cdata = np.atleast_2d(cdata)
                 except:
                     print(f'There was in issue reading {fname}')
 

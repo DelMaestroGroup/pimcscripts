@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-11-01 v0.6.0
+- Updated `merge.py` to use pandas.read_csv() for faster large file management
+
 ## 2025-11-01 v0.5.0
 - Updated `merge.py` to use subprocess for line counting
 - This massively increases performance for large files

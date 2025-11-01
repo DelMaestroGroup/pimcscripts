@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setuptools.setup(
     name="pimcscripts",
-    version="0.5.0",
+    version="0.6.0",
     packages=setuptools.find_packages(),
     description="Scripts for analzying the results of path integral quantum Monte Carlo simulations",
     long_description=README,
@@ -25,7 +25,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
     ],
     include_package_data=True,
-    install_requires=["numpy", "matplotlib", "scipy", "docopt", "joblib"],
+    install_requires=["numpy", "matplotlib", "scipy", "docopt", "joblib", "pandas"],
     scripts=["bin/pimcave.py",
         "bin/pimcplot.py",
         "bin/reduce-one.py",
