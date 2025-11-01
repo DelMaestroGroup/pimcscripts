@@ -39,7 +39,15 @@ import tarfile
 import pimcscripts.pimchelp as pimchelp
 import pimcscripts.MCstat as MCstat
 import uuid
+import subprocess
 import re
+
+# ----------------------------------------------------------------------
+def line_counts(filename):
+    '''Use wc to count the number of lines and header lines in a file. '''
+    num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
+    num_header = str(subprocess.check_output(['head','-5',filename])).count('#')
+    return num_header,num_lines
 
 # ----------------------------------------------------------------------
 def getStats(data,dim=0):
@@ -80,15 +88,12 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
     n = 0
     empty = True
     while empty:
-        with open(fileNames[n], 'r') as inFile:
-
-            numLines = sum(1 for line in inFile) - 2
-             
-            if not numLines:
-                n += 1
-                empty = True
-            else:
-                empty = False
+        numHeaders,numLines = line_counts(fileNames[n])
+        if not numLines:
+            n += 1
+            empty = True
+        else:
+            empty = False
 
     with open(fileNames[n], 'r') as inFile:
 
@@ -133,8 +138,7 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
         if len(glob.glob(fname)) > 0:
 
             # Does it contain any data?
-            with open(fname, 'r') as inFile:
-                numLines = sum(1 for line in inFile) - 2
+            numHeaders,numLines = line_counts(fileNames[n])
 
             # if yes, figure out if we are skipping any rows
             if numLines:
@@ -180,7 +184,10 @@ def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',
     if aveSeeds and not cumulative:
         np.savetxt(baseDir + 'MERGED/' + cyldir + outName.replace(etype,f'bins-{etype}'), 
                    numBins, fmt='%16d', header=headerStats, delimiter='')
-    print('%10d' % data.shape[0])
+    if aveSeeds:
+        print(f" - Num. Seeds = {data.shape[0]},  Num. Bins = {np.sum(numBins)}")
+    else:
+        print(f" - Num. Bins = {data.shape[0]}")
 
 # -----------------------------------------------------------------------------
 # Begin Main Program 

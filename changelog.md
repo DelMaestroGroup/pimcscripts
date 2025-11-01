@@ -1,6 +1,10 @@
 Script Changes
 ==============
 
+## 2025-11-01 v0.5.0
+- Updated `merge.py` to use subprocess for line counting
+- This massively increases performance for large files
+
 ## 2025-10-30 v0.4.10
 - Fixed a bug in `rsubmit.py`
 
