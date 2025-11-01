@@ -45,29 +45,14 @@ import re
 # ----------------------------------------------------------------------
 def line_counts(filename):
     '''Use wc to count the number of lines and header lines in a file. '''
-    num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
-    num_header = str(subprocess.check_output(['head','-5',filename])).count('#')
+    result = subprocess.run(['wc', '-l', filename], 
+                            capture_output=True, text=True, check=True)
+    num_lines = int(result.stdout.strip().split()[0])
+
+    result = subprocess.run(['grep', '-c', '^#', filename],
+                            capture_output=True, text=True, check=True)
+    num_header = int(result.stdout.strip())
     return num_header,num_lines
-
-# ----------------------------------------------------------------------
-def getStats(data,dim=0):
-    ''' Get the average and error of all columns in the data matrix. '''
-
-    if data.ndim > dim:
-        numBins  = data.shape[dim]
-        dataAve  = np.average(data,dim) 
-        try:
-            bins = MCstat.bin(data) 
-            dataErr = np.amax(bins,axis=0)
-        except:
-            dataAve2 = np.average(data*data,dim) 
-            dataErr = np.sqrt( abs(dataAve2-dataAve**2)/(1.0*numBins-1.0) ) 
-
-    else:
-        dataAve = data
-        dataErr = 0.0*data
-
-    return dataAve,dataErr
 
 # -----------------------------------------------------------------------------
 def mergeData(pimc,etype,newID,skip,baseDir,idList=None,cyldir='',

@@ -21,8 +21,13 @@ num_cores = multiprocessing.cpu_count()
 # ----------------------------------------------------------------------
 def line_counts(filename):
     '''Use wc to count the number of lines and header lines in a file. '''
-    num_lines = int(subprocess.check_output(['wc', '-l', filename]).split()[0])
-    num_header = str(subprocess.check_output(['head','-5',filename])).count('#')
+    result = subprocess.run(['wc', '-l', filename], 
+                            capture_output=True, text=True, check=True)
+    num_lines = int(result.stdout.strip().split()[0])
+
+    result = subprocess.run(['grep', '-c', '^#', filename],
+                            capture_output=True, text=True, check=True)
+    num_header = int(result.stdout.strip())
     return num_header,num_lines
 
 # ----------------------------------------------------------------------
