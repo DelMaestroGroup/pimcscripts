@@ -698,11 +698,21 @@ class PIMCResults:
     # ----------------------------------------------------------------------
     def pdata(self,*param):
         return self.x(*param),self.y(*param)
+
+    # ----------------------------------------------------------------------
+    def pdata_byval(self,pval):
+        """ Convenience method using parameter value. """
+        return self.pdata(self.pkey(pval))
     
     # ----------------------------------------------------------------------
     def epdata(self,*param):
         return self.x(*param),self.y(*param),self.Δy(*param)
-    
+
+    # ----------------------------------------------------------------------
+    def epdata_byval(self,pval):
+        """ Convenience method using parameter value. """
+        return self.epdata(self.pkey(pval))
+
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------

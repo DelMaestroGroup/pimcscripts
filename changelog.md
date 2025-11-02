@@ -1,6 +1,10 @@
 Script Changes
 ==============
 
+## 2025-11-01 v0.6.1
+- Updated `PIMCResults` to have a convenience method `.epdata_byval()` aiding the extraction of 
+  data for reduced vector estimators
+
 ## 2025-11-01 v0.6.0
 - Updated `merge.py` to use pandas.read_csv() for faster large file management
 
