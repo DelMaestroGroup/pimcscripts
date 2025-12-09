@@ -476,7 +476,9 @@ def main():
                    'planedensity':['n','ρ(x,y)'], 'linedensity':['r [Å]','ρ1d(r)'],
                    'linepotential':['r [Å]','V1d(r)'], 'ssf':['q_index', 'S(q)'],
                    'ssfq':['q_index', 'S(q)'], 'planeavedensity':['n','ρ(x,y)'],
-                  'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)']}
+                  'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)'],
+                  'planeaveVext':['n','Vext(x,y)']}
+    
 
     # there are no labels for scalar estimators
     for est in scalar_est_list:

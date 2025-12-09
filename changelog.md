@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-12-08 v0.6.2
+- Fixed a small but in `reduce-one.py` related to axis labels for planeaveVext
+
 ## 2025-11-01 v0.6.1
 - Updated `PIMCResults` to have a convenience method `.epdata_byval()` aiding the extraction of 
   data for reduced vector estimators

@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setuptools.setup(
     name="pimcscripts",
-    version="0.6.1",
+    version="0.6.2",
     packages=setuptools.find_packages(),
     description="Scripts for analzying the results of path integral quantum Monte Carlo simulations",
     long_description=README,
