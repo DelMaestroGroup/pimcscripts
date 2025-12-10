@@ -1,6 +1,9 @@
 Script Changes
 ==============
 
+## 2025-12-10 v0.6.3
+- Fixed a small but in `reduce-one.py` related to axis labels for pcycle
+- 
 ## 2025-12-08 v0.6.2
 - Fixed a small but in `reduce-one.py` related to axis labels for planeaveVext
 

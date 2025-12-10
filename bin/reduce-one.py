@@ -477,7 +477,7 @@ def main():
                    'linepotential':['r [Å]','V1d(r)'], 'ssf':['q_index', 'S(q)'],
                    'ssfq':['q_index', 'S(q)'], 'planeavedensity':['n','ρ(x,y)'],
                   'lineardensity':['r [Å]','ρ(r)'], 'isf':['τ [1/K]','F(q,τ)'],
-                  'planeaveVext':['n','Vext(x,y)']}
+                  'planeaveVext':['n','Vext(x,y)'],'pcycle':['m','P(m)']}
     
 
     # there are no labels for scalar estimators
