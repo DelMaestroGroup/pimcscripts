@@ -34,13 +34,14 @@ EST_TYPE = (
     "planeaveVext",
     "lineardensity",
     "number",
+    "swap",
 )
 
 # Cumulative estimators
 CUM_EST_TYPE = ("position", "planeavedensity", "planeaveVext", "locsuper")
 
 # Scalar estimators
-SCALAR_EST_TYPE = ('estimator','energy','virial','super')
+SCALAR_EST_TYPE = ('estimator','energy','virial','super','swap')
 
 # Vector estimators
 VECTOR_EST_TYPE = (est for est in EST_TYPE if est not in SCALAR_EST_TYPE)
@@ -229,7 +230,8 @@ class Desc:
             'estimator':'',
             'energy':'',
             'super':'',
-            'virial':''
+            'virial':'',
+            'swap':''
         }
 
 # --------------------------------------------------------------------------------
